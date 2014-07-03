@@ -210,7 +210,7 @@ public final class CloudBlobClient extends ServiceClient {
      * Returns a result segment of an enumerable collection of blob containers for this Blob service client.
      * 
      * @return A {@link ResultSegment} object that contains a segment of the enumerable collection of
-     *         {@link CloudBlobContainer} objects that represent the containers in this container.
+     *         {@link CloudBlobContainer} objects that represent the containers for this client.
      * 
      * @throws StorageException
      *             If a storage service error occurred.
@@ -243,7 +243,8 @@ public final class CloudBlobClient extends ServiceClient {
 
     /**
      * Returns a result segment of an enumerable collection of blob containers whose names begin with the specified
-     * prefix for this container, using the specified listing details options, request options, and operation context.
+     * prefix for this Blob service client, using the specified listing details options, request options, and operation
+     * context.
      * 
      * @param prefix
      *            A <code>String</code> that represents the prefix of the container name.
@@ -264,7 +265,7 @@ public final class CloudBlobClient extends ServiceClient {
      *            the operation.
      * 
      * @return A {@link ResultSegment} object that contains a segment of the enumerable collection of
-     *         {@link CloudBlobContainer} objects that represent the containers in this container.
+     *         {@link CloudBlobContainer} objects that represent the containers for this Blob service client.
      * 
      * @throws StorageException
      *             If a storage service error occurred.
@@ -280,7 +281,8 @@ public final class CloudBlobClient extends ServiceClient {
     }
 
     /**
-     * Returns an enumerable collection of blob containers whose names begin with the specified prefix, using the
+     * Returns an enumerable collection of blob containers for this Blob service client whose names begin with the
+     * specified prefix, using the
      * specified details setting, request options, and operation context.
      * 
      * @param prefix
@@ -317,7 +319,8 @@ public final class CloudBlobClient extends ServiceClient {
 
     /**
      * Returns a result segment of an enumerable collection of blob containers whose names begin with the specified
-     * prefix for this container, using the specified listing details options, request options, and operation context.
+     * prefix for this Blob service client, using the specified listing details options, request options, and operation
+     * context.
      * 
      * @param prefix
      *            A <code>String</code> that represents the prefix of the container name.
@@ -338,7 +341,7 @@ public final class CloudBlobClient extends ServiceClient {
      *            the operation.
      * 
      * @return A {@link ResultSegment} object that contains a segment of the enumerable collection of
-     *         {@link CloudBlobContainer} objects that represent the containers in this container.
+     *         {@link CloudBlobContainer} objects that represent the containers for this client.
      * 
      * @throws StorageException
      *             If a storage service error occurred.
@@ -384,14 +387,15 @@ public final class CloudBlobClient extends ServiceClient {
                     throws Exception {
                 listingContext.setMarker(segmentedRequest.getToken() != null ? segmentedRequest.getToken()
                         .getNextMarker() : null);
-                return BlobRequest.listContainers(client.getEndpoint(), options, context, listingContext,
-                        detailsIncluded);
+                return BlobRequest.listContainers(
+                        client.getCredentials().transformUri(client.getStorageUri()).getUri(this.getCurrentLocation()),
+                        options, context, listingContext, detailsIncluded);
             }
 
             @Override
             public void signRequest(HttpURLConnection connection, CloudBlobClient client, OperationContext context)
                     throws Exception {
-                StorageRequest.signBlobAndQueueRequest(connection, client, -1L, null);
+                StorageRequest.signBlobQueueAndFileRequest(connection, client, -1L, null);
             }
 
             @Override

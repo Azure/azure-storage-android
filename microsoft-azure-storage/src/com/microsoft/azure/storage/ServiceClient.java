@@ -89,7 +89,7 @@ public abstract class ServiceClient {
                     StorageRequest.signTableRequest(connection, client, -1, null);
                 }
                 else {
-                    StorageRequest.signBlobAndQueueRequest(connection, client, -1, null);
+                    StorageRequest.signBlobQueueAndFileRequest(connection, client, -1, null);
                 }
             }
 
@@ -138,7 +138,7 @@ public abstract class ServiceClient {
                     StorageRequest.signTableRequest(connection, client, -1, null);
                 }
                 else {
-                    StorageRequest.signBlobAndQueueRequest(connection, client, -1, null);
+                    StorageRequest.signBlobQueueAndFileRequest(connection, client, -1, null);
                 }
             }
 
@@ -273,7 +273,7 @@ public abstract class ServiceClient {
                         StorageRequest.signTableRequest(connection, client, descriptor.getLength(), null);
                     }
                     else {
-                        StorageRequest.signBlobAndQueueRequest(connection, client, descriptor.getLength(), null);
+                        StorageRequest.signBlobQueueAndFileRequest(connection, client, descriptor.getLength(), null);
                     }
                 }
 

@@ -8,9 +8,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.microsoft.windowsazure.storage</groupId>
-	<artifactId>microsoft-windowsazure-storage-android-sdk</artifactId>
-	<version>0.1.0</version>
+	<groupId>com.microsoft.azure.android</groupId>
+	<artifactId>azure-storage-android</artifactId>
+	<version>0.2.0</version>
 	<packaging>aar</packaging>
 
 	<name>Microsoft Azure Storage Android Client SDK</name>
@@ -89,7 +89,8 @@
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>2.8</version>
 				<configuration>
-					<excludePackageNames>*.storage.core</excludePackageNames>
+					<excludePackageNames>*.core</excludePackageNames>
+					<show>public</show>
 					<bottom><![CDATA[<code>/**
 <br/>* Copyright Microsoft Corporation
 <br/>*

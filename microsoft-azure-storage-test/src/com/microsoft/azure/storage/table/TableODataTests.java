@@ -14,6 +14,7 @@
  */
 package com.microsoft.azure.storage.table;
 
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 import junit.framework.TestCase;
@@ -30,30 +31,30 @@ public class TableODataTests extends TestCase {
     private CloudTable table;
 
     @Override
-    public void setUp() throws Exception {
-        table = TableTestHelper.getRandomTableReference();
-        table.createIfNotExists();
+    public void setUp() throws StorageException, URISyntaxException {
+        this.table = TableTestHelper.getRandomTableReference();
+        this.table.createIfNotExists();
 
         final CloudTableClient tClient = TableTestHelper.createCloudTableClient();
         this.options = TableRequestOptions.applyDefaults(this.options, tClient);
         this.options.setTablePayloadFormat(TablePayloadFormat.JsonNoMetadata);
 
         // Insert Entity
-        ent = new DynamicTableEntity();
-        ent.setPartitionKey("jxscl_odata");
-        ent.setRowKey(UUID.randomUUID().toString());
+        this.ent = new DynamicTableEntity();
+        this.ent.setPartitionKey("jxscl_odata");
+        this.ent.setRowKey(UUID.randomUUID().toString());
 
-        ent.getProperties().put("foo2", new EntityProperty("bar2"));
-        ent.getProperties().put("foo", new EntityProperty("bar"));
-        ent.getProperties().put("fooint", new EntityProperty(1234));
+        this.ent.getProperties().put("foo2", new EntityProperty("bar2"));
+        this.ent.getProperties().put("foo", new EntityProperty("bar"));
+        this.ent.getProperties().put("fooint", new EntityProperty(1234));
 
-        table.execute(TableOperation.insert(ent), options, null);
+        this.table.execute(TableOperation.insert(this.ent), this.options, null);
     }
 
     @Override
-    public void tearDown() throws Exception {
-        table.execute(TableOperation.delete(ent), options, null);
-        table.deleteIfExists();
+    public void tearDown() throws StorageException {
+        this.table.execute(TableOperation.delete(this.ent), this.options, null);
+        this.table.deleteIfExists();
     }
 
     public void testTableOperationRetrieveJsonNoMetadataFail() {
@@ -62,7 +63,8 @@ public class TableODataTests extends TestCase {
         this.options.setPropertyResolver(new CustomPropertyResolver());
 
         try {
-            table.execute(TableOperation.retrieve(ent.getPartitionKey(), ent.getRowKey(), Class1.class), options, null);
+            this.table.execute(TableOperation.retrieve(this.ent.getPartitionKey(), this.ent.getRowKey(), Class1.class),
+                    this.options, null);
             fail("Invalid property resolver should throw");
         }
         catch (StorageException e) {
@@ -76,7 +78,8 @@ public class TableODataTests extends TestCase {
         this.options.setPropertyResolver(new ThrowingPropertyResolver());
 
         try {
-            table.execute(TableOperation.retrieve(ent.getPartitionKey(), ent.getRowKey(), Class1.class), options, null);
+            this.table.execute(TableOperation.retrieve(this.ent.getPartitionKey(), this.ent.getRowKey(), Class1.class),
+                    this.options, null);
             fail("Invalid property resolver should throw");
         }
         catch (StorageException e) {

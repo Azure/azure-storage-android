@@ -14,6 +14,7 @@
  */
 package com.microsoft.azure.storage.table;
 
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 import junit.framework.TestCase;
@@ -29,14 +30,14 @@ public class TableEscapingTests extends TestCase {
     private CloudTable table;
 
     @Override
-    public void setUp() throws Exception {
-        table = TableTestHelper.getRandomTableReference();
-        table.createIfNotExists();
+    public void setUp() throws URISyntaxException, StorageException {
+        this.table = TableTestHelper.getRandomTableReference();
+        this.table.createIfNotExists();
     }
 
     @Override
-    public void tearDown() throws Exception {
-        table.deleteIfExists();
+    public void tearDown() throws StorageException {
+        this.table.deleteIfExists();
     }
 
     public void testEmptyString() throws StorageException {
@@ -155,10 +156,10 @@ public class TableEscapingTests extends TestCase {
         if (useBatch) {
             TableBatchOperation batch = new TableBatchOperation();
             batch.insert(ref);
-            table.execute(batch, options, null);
+            this.table.execute(batch, options, null);
         }
         else {
-            table.execute(TableOperation.insert(ref), options, null);
+            this.table.execute(TableOperation.insert(ref), options, null);
         }
 
         TableResult res = null;
@@ -166,11 +167,11 @@ public class TableEscapingTests extends TestCase {
         if (useBatch) {
             TableBatchOperation batch = new TableBatchOperation();
             batch.retrieve(ref.getPartitionKey(), ref.getRowKey(), Class1.class);
-            res = table.execute(batch, options, null).get(0);
+            res = this.table.execute(batch, options, null).get(0);
         }
         else {
-            res = table.execute(TableOperation.retrieve(ref.getPartitionKey(), ref.getRowKey(), Class1.class), options,
-                    null);
+            res = this.table.execute(TableOperation.retrieve(ref.getPartitionKey(), ref.getRowKey(), Class1.class),
+                    options, null);
         }
 
         Class1 retObj = res.getResultAsType();
@@ -184,20 +185,20 @@ public class TableEscapingTests extends TestCase {
         if (useBatch) {
             TableBatchOperation batch = new TableBatchOperation();
             batch.merge(ref);
-            table.execute(batch, options, null);
+            this.table.execute(batch, options, null);
         }
         else {
-            table.execute(TableOperation.merge(ref), options, null);
+            this.table.execute(TableOperation.merge(ref), options, null);
         }
 
         if (useBatch) {
             TableBatchOperation batch = new TableBatchOperation();
             batch.retrieve(ref.getPartitionKey(), ref.getRowKey(), Class1.class);
-            res = table.execute(batch, options, null).get(0);
+            res = this.table.execute(batch, options, null).get(0);
         }
         else {
-            res = table.execute(TableOperation.retrieve(ref.getPartitionKey(), ref.getRowKey(), Class1.class), options,
-                    null);
+            res = this.table.execute(TableOperation.retrieve(ref.getPartitionKey(), ref.getRowKey(), Class1.class),
+                    options, null);
         }
 
         retObj = res.getResultAsType();
@@ -211,20 +212,20 @@ public class TableEscapingTests extends TestCase {
         if (useBatch) {
             TableBatchOperation batch = new TableBatchOperation();
             batch.replace(ref);
-            table.execute(batch, options, null);
+            this.table.execute(batch, options, null);
         }
         else {
-            table.execute(TableOperation.replace(ref), options, null);
+            this.table.execute(TableOperation.replace(ref), options, null);
         }
 
         if (useBatch) {
             TableBatchOperation batch = new TableBatchOperation();
             batch.retrieve(ref.getPartitionKey(), ref.getRowKey(), Class1.class);
-            res = table.execute(batch, options, null).get(0);
+            res = this.table.execute(batch, options, null).get(0);
         }
         else {
-            res = table.execute(TableOperation.retrieve(ref.getPartitionKey(), ref.getRowKey(), Class1.class), options,
-                    null);
+            res = this.table.execute(TableOperation.retrieve(ref.getPartitionKey(), ref.getRowKey(), Class1.class),
+                    options, null);
         }
 
         retObj = res.getResultAsType();
@@ -235,10 +236,10 @@ public class TableEscapingTests extends TestCase {
         if (useBatch) {
             TableBatchOperation batch = new TableBatchOperation();
             batch.delete(retObj);
-            res = table.execute(batch, options, null).get(0);
+            res = this.table.execute(batch, options, null).get(0);
         }
         else {
-            res = table.execute(TableOperation.delete(retObj), options, null);
+            res = this.table.execute(TableOperation.delete(retObj), options, null);
         }
     }
 
@@ -265,13 +266,13 @@ public class TableEscapingTests extends TestCase {
         ref.setPartitionKey(UUID.randomUUID().toString());
         ref.setRowKey("foo");
 
-        table.execute(TableOperation.insert(ref), options, null);
+        this.table.execute(TableOperation.insert(ref), options, null);
         TableQuery<Class1> query = TableQuery.from(Class1.class).where(
                 String.format("(PartitionKey eq '%s') and (A eq '%s')", ref.getPartitionKey(), data));
 
         int count = 0;
 
-        for (Class1 ent : table.execute(query, options, null)) {
+        for (Class1 ent : this.table.execute(query, options, null)) {
             count++;
             assertEquals(ent.getA(), ref.getA());
             assertEquals(ent.getB(), ref.getB());
