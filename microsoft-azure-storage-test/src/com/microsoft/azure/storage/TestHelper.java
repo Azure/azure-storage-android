@@ -14,14 +14,21 @@
  */
 package com.microsoft.azure.storage;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Random;
+
 import junit.framework.Assert;
 
+import com.microsoft.azure.storage.analytics.CloudAnalyticsClient;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.file.CloudFileClient;
 import com.microsoft.azure.storage.queue.CloudQueueClient;
 import com.microsoft.azure.storage.table.CloudTableClient;
 
 public class TestHelper {
-
 	private static CloudStorageAccount account;
 
 	private final static AuthenticationScheme defaultAuthenticationScheme = AuthenticationScheme.SHAREDKEYFULL;
@@ -38,6 +45,12 @@ public class TestHelper {
 		client.setAuthenticationScheme(defaultAuthenticationScheme);
 		return client;
 	}
+	
+    public static CloudFileClient createCloudFileClient() throws StorageException {
+        CloudFileClient client = getAccount().createCloudFileClient();
+        client.setAuthenticationScheme(defaultAuthenticationScheme);
+        return client;
+    }
 
 	public static CloudQueueClient createCloudQueueClient() throws StorageException {
 		CloudQueueClient client = getAccount().createCloudQueueClient();
@@ -50,6 +63,11 @@ public class TestHelper {
 		client.setAuthenticationScheme(defaultAuthenticationScheme);
 		return client;
 	}
+
+    public static CloudAnalyticsClient createCloudAnalyticsClient() throws StorageException {
+        CloudAnalyticsClient client = getAccount().createCloudAnalyticsClient();
+        return client;
+    }
 
 	public static void verifyServiceStats(ServiceStats stats) {
 		Assert.assertNotNull(stats);
@@ -106,4 +124,62 @@ public class TestHelper {
 		}
 		return account;
 	}
+
+    protected static void enableFiddler() {
+        System.setProperty("http.proxyHost", "localhost");
+        System.setProperty("http.proxyPort", "8888");
+    }
+
+    public static byte[] getRandomBuffer(int length) {
+        final Random randGenerator = new Random();
+        final byte[] buff = new byte[length];
+        randGenerator.nextBytes(buff);
+        return buff;
+    }
+
+    public static ByteArrayInputStream getRandomDataStream(int length) {
+        return new ByteArrayInputStream(getRandomBuffer(length));
+    }
+
+    public static void assertStreamsAreEqual(ByteArrayInputStream src, ByteArrayInputStream dst) {
+        dst.reset();
+        src.reset();
+        Assert.assertEquals(src.available(), dst.available());
+
+        while (src.available() > 0) {
+            Assert.assertEquals(src.read(), dst.read());
+        }
+
+        Assert.assertFalse(dst.available() > 0);
+    }
+
+    public static void assertStreamsAreEqualAtIndex(ByteArrayInputStream src, ByteArrayInputStream dst, int srcIndex,
+            int dstIndex, int length, int bufferSize) throws IOException {
+        dst.reset();
+        src.reset();
+
+        dst.skip(dstIndex);
+        src.skip(srcIndex);
+        byte[] srcBuffer = new byte[bufferSize];
+        byte[] destBuffer = new byte[bufferSize];
+        src.read(srcBuffer);
+        dst.read(destBuffer);
+
+        for (int i = 0; i < length; i++) {
+            Assert.assertEquals(src.read(), dst.read());
+        }
+    }
+
+    public static URI defiddler(URI uri) throws URISyntaxException {
+        String fiddlerString = "ipv4.fiddler";
+        String replacementString = "127.0.0.1";
+
+        String uriString = uri.toString();
+        if (uriString.contains(fiddlerString)) {
+            return new URI(uriString.replace(fiddlerString, replacementString));
+        }
+        else {
+            return uri;
+        }
+    }
 }

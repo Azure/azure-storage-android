@@ -384,7 +384,9 @@ public class TableOperation {
 
         ByteArrayOutputStream entityStream = new ByteArrayOutputStream();
         try {
-            TableEntitySerializer.writeSingleEntity(entityStream, entity, isTableEntry, opContext);
+            TableEntitySerializer.writeSingleEntity(entityStream, this.entity,
+                    isTableEntry, opContext);
+
             // We need to buffer once and use it for all retries instead of serializing the entity every single time. 
             // In the future, this could also be used to calculate transactional MD5 for table operations.
             final byte[] entityBytes = entityStream.toByteArray();
@@ -875,17 +877,18 @@ public class TableOperation {
     /**
      * Gets the boolean representing whether the message payload should be returned in the response.
      * 
-     * @return <code>true</code> if the message payload should be returned in the response; otherwise <code>false</code>.
+     * @return <code>true</code> if the message payload should be returned in the response; otherwise <code>false</code>
      */
     protected boolean getEchoContent() {
-        return echoContent;
+        return this.echoContent;
     }
 
     /**
      * Sets the boolean representing whether the message payload should be returned in the response.
      * 
      * @param echoContent
-     *        <code>true</code> if the message payload should be returned in the response; otherwise <code>false</code>.
+     *            <code>true</code> if the message payload should be returned in the response; otherwise
+     *            <code>false</code>.
      */
     protected void setEchoContent(boolean echoContent) {
         this.echoContent = echoContent;

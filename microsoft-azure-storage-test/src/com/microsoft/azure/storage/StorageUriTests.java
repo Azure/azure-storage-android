@@ -42,7 +42,7 @@ public class StorageUriTests extends TestCase {
 
     public void testStorageUriWithTwoUris() throws URISyntaxException {
         URI primaryClientUri = new URI("http://" + ACCOUNT_NAME + BLOB_SERVICE + ENDPOINT_SUFFIX);
-        URI primaryContainerUri = new URI(primaryClientUri + "container");
+        URI primaryContainerUri = new URI(primaryClientUri + "/container");
         URI secondaryClientUri = new URI("http://" + ACCOUNT_NAME + SECONDARY_SUFFIX + BLOB_SERVICE + ENDPOINT_SUFFIX);
         URI dummyClientUri = new URI("http://" + ACCOUNT_NAME + "-dummy" + BLOB_SERVICE + ENDPOINT_SUFFIX);
 
@@ -68,8 +68,8 @@ public class StorageUriTests extends TestCase {
 
         // secondary uri only
         StorageUri singleSecondaryUri = new StorageUri(null, secondaryClientUri);
-        assertEquals(primaryClientUri, singleSecondaryUri.getPrimaryUri());
-        assertNull(singleUri.getSecondaryUri());
+        assertEquals(secondaryClientUri, singleSecondaryUri.getSecondaryUri());
+        assertNull(singleSecondaryUri.getPrimaryUri());
 
         StorageUri singleSecondarUri2 = new StorageUri(null, secondaryClientUri);
         assertEquals(singleSecondaryUri, singleSecondarUri2);

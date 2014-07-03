@@ -22,8 +22,10 @@ public class AllTestSuite {
         TestSuite suite = new TestSuite("AllTestSuite");
         suite.addTest(CoreTestSuite.suite());
         suite.addTest(BlobTestSuite.suite());
+        suite.addTest(FileTestSuite.suite());
         suite.addTest(QueueTestSuite.suite());
         suite.addTest(TableTestSuite.suite());
+        suite.addTest(AnalyticsTestSuite.suite());
         return suite;
     }
 }

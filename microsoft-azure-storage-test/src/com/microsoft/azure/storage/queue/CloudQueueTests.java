@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,8 +34,10 @@ import com.microsoft.azure.storage.AuthenticationScheme;
 import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.RetryNoRetry;
+import com.microsoft.azure.storage.SendingRequestEvent;
 import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
+import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.TestHelper;
 import com.microsoft.azure.storage.core.PathUtility;
@@ -48,20 +50,19 @@ public class CloudQueueTests extends TestCase {
     private CloudQueue queue;
 
     @Override
-    public void setUp() throws Exception {
-        queue = QueueTestHelper.getRandomQueueReference();
-        queue.createIfNotExists();
+    public void setUp() throws URISyntaxException, StorageException {
+        this.queue = QueueTestHelper.getRandomQueueReference();
+        this.queue.createIfNotExists();
     }
 
     @Override
-    public void tearDown() throws Exception {
-        queue.deleteIfExists();
+    public void tearDown() throws StorageException {
+        this.queue.deleteIfExists();
     }
 
     /**
      * Get permissions from string
      */
-
     public void testQueuePermissionsFromString() {
         Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
         Date start = cal.getTime();
@@ -95,13 +96,13 @@ public class CloudQueueTests extends TestCase {
 
         // Test new permissions.
         expectedPermissions = new QueuePermissions();
-        testPermissions = queue.downloadPermissions();
+        testPermissions = this.queue.downloadPermissions();
         assertQueuePermissionsEqual(expectedPermissions, testPermissions);
 
         // Test setting empty permissions.
-        queue.uploadPermissions(expectedPermissions);
+        this.queue.uploadPermissions(expectedPermissions);
         Thread.sleep(30000);
-        testPermissions = queue.downloadPermissions();
+        testPermissions = this.queue.downloadPermissions();
         assertQueuePermissionsEqual(expectedPermissions, testPermissions);
 
         // Add a policy, check setting and getting.
@@ -116,14 +117,14 @@ public class CloudQueueTests extends TestCase {
                 SharedAccessQueuePermissions.UPDATE));
         expectedPermissions.getSharedAccessPolicies().put(UUID.randomUUID().toString(), policy1);
 
-        queue.uploadPermissions(expectedPermissions);
+        this.queue.uploadPermissions(expectedPermissions);
         Thread.sleep(30000);
-        testPermissions = queue.downloadPermissions();
+        testPermissions = this.queue.downloadPermissions();
         assertQueuePermissionsEqual(expectedPermissions, testPermissions);
     }
 
     public void testQueueSAS() throws StorageException, URISyntaxException, InvalidKeyException, InterruptedException {
-        queue.addMessage(new CloudQueueMessage("sas queue test"));
+        this.queue.addMessage(new CloudQueueMessage("sas queue test"));
         QueuePermissions expectedPermissions;
 
         expectedPermissions = new QueuePermissions();
@@ -141,11 +142,11 @@ public class CloudQueueTests extends TestCase {
                 SharedAccessQueuePermissions.UPDATE));
         expectedPermissions.getSharedAccessPolicies().put(identifier, policy1);
 
-        queue.uploadPermissions(expectedPermissions);
+        this.queue.uploadPermissions(expectedPermissions);
         Thread.sleep(30000);
 
-        CloudQueue identifierSasQueue = new CloudQueue(PathUtility.addToQuery(queue.getUri(),
-                queue.generateSharedAccessSignature(null, identifier)));
+        CloudQueue identifierSasQueue = new CloudQueue(PathUtility.addToQuery(this.queue.getUri(),
+                this.queue.generateSharedAccessSignature(null, identifier)));
 
         identifierSasQueue.downloadAttributes();
         identifierSasQueue.exists();
@@ -154,8 +155,8 @@ public class CloudQueueTests extends TestCase {
         CloudQueueMessage message1 = identifierSasQueue.retrieveMessage();
         identifierSasQueue.deleteMessage(message1);
 
-        CloudQueue policySasQueue = new CloudQueue(PathUtility.addToQuery(queue.getUri(),
-                queue.generateSharedAccessSignature(policy1, null)));
+        CloudQueue policySasQueue = new CloudQueue(PathUtility.addToQuery(this.queue.getUri(),
+                this.queue.generateSharedAccessSignature(policy1, null)));
         policySasQueue.exists();
         policySasQueue.downloadAttributes();
 
@@ -164,8 +165,8 @@ public class CloudQueueTests extends TestCase {
         policySasQueue.deleteMessage(message2);
 
         // do not give the client and check that the new queue's client has the correct perms
-        CloudQueue queueFromUri = new CloudQueue(PathUtility.addToQuery(queue.getStorageUri(),
-                queue.generateSharedAccessSignature(null, "readperm")));
+        CloudQueue queueFromUri = new CloudQueue(PathUtility.addToQuery(this.queue.getStorageUri(),
+                this.queue.generateSharedAccessSignature(null, "readperm")));
         assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), queueFromUri.getServiceClient()
                 .getCredentials().getClass().toString());
 
@@ -178,8 +179,8 @@ public class CloudQueueTests extends TestCase {
         queueClient.getDefaultRequestOptions().setTimeoutIntervalInMs(1000);
         queueClient.getDefaultRequestOptions().setRetryPolicyFactory(new RetryNoRetry());
 
-        queueFromUri = new CloudQueue(PathUtility.addToQuery(queue.getStorageUri(),
-                queue.generateSharedAccessSignature(null, "readperm")), queueClient);
+        queueFromUri = new CloudQueue(PathUtility.addToQuery(this.queue.getStorageUri(),
+                this.queue.generateSharedAccessSignature(null, "readperm")), queueClient);
         assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), queueFromUri.getServiceClient()
                 .getCredentials().getClass().toString());
 
@@ -233,69 +234,69 @@ public class CloudQueueTests extends TestCase {
     public void testGetMetadata() throws StorageException {
         HashMap<String, String> metadata = new HashMap<String, String>();
         metadata.put("ExistingMetadata", "ExistingMetadataValue");
-        queue.setMetadata(metadata);
-        queue.uploadMetadata();
-        queue.downloadAttributes();
-        assertEquals(queue.getMetadata().get("ExistingMetadata"), "ExistingMetadataValue");
-        assertTrue(queue.getMetadata().containsKey("ExistingMetadata"));
+        this.queue.setMetadata(metadata);
+        this.queue.uploadMetadata();
+        this.queue.downloadAttributes();
+        assertEquals(this.queue.getMetadata().get("ExistingMetadata"), "ExistingMetadataValue");
+        assertTrue(this.queue.getMetadata().containsKey("ExistingMetadata"));
 
         HashMap<String, String> empytMetadata = null;
-        queue.setMetadata(empytMetadata);
-        queue.uploadMetadata();
-        queue.downloadAttributes();
-        assertTrue(queue.getMetadata().size() == 0);
+        this.queue.setMetadata(empytMetadata);
+        this.queue.uploadMetadata();
+        this.queue.downloadAttributes();
+        assertTrue(this.queue.getMetadata().size() == 0);
     }
 
     public void testUploadMetadata() throws URISyntaxException, StorageException {
-        CloudQueue queueForGet = new CloudQueue(queue.getUri(), queue.getServiceClient());
+        CloudQueue queueForGet = new CloudQueue(this.queue.getUri(), this.queue.getServiceClient());
 
         HashMap<String, String> metadata1 = new HashMap<String, String>();
         metadata1.put("ExistingMetadata1", "ExistingMetadataValue1");
-        queue.setMetadata(metadata1);
+        this.queue.setMetadata(metadata1);
 
         queueForGet.downloadAttributes();
         assertFalse(queueForGet.getMetadata().containsKey("ExistingMetadata1"));
 
-        queue.uploadMetadata();
+        this.queue.uploadMetadata();
         queueForGet.downloadAttributes();
         assertTrue(queueForGet.getMetadata().containsKey("ExistingMetadata1"));
     }
 
     public void testUploadMetadataNullInput() throws URISyntaxException, StorageException {
-        CloudQueue queueForGet = new CloudQueue(queue.getUri(), queue.getServiceClient());
+        CloudQueue queueForGet = new CloudQueue(this.queue.getUri(), this.queue.getServiceClient());
 
         HashMap<String, String> metadata1 = new HashMap<String, String>();
         String key = "ExistingMetadata1" + UUID.randomUUID().toString().replace("-", "");
         metadata1.put(key, "ExistingMetadataValue1");
-        queue.setMetadata(metadata1);
+        this.queue.setMetadata(metadata1);
 
         queueForGet.downloadAttributes();
         assertFalse(queueForGet.getMetadata().containsKey(key));
 
-        queue.uploadMetadata();
+        this.queue.uploadMetadata();
         queueForGet.downloadAttributes();
         assertTrue(queueForGet.getMetadata().containsKey(key));
 
-        queue.setMetadata(null);
-        queue.uploadMetadata();
+        this.queue.setMetadata(null);
+        this.queue.uploadMetadata();
         queueForGet.downloadAttributes();
         assertTrue(queueForGet.getMetadata().size() == 0);
     }
 
     public void testUploadMetadataClearExisting() throws URISyntaxException, StorageException {
-        CloudQueue queueForGet = new CloudQueue(queue.getUri(), queue.getServiceClient());
+        CloudQueue queueForGet = new CloudQueue(this.queue.getUri(), this.queue.getServiceClient());
 
         HashMap<String, String> metadata1 = new HashMap<String, String>();
         String key = "ExistingMetadata1" + UUID.randomUUID().toString().replace("-", "");
         metadata1.put(key, "ExistingMetadataValue1");
-        queue.setMetadata(metadata1);
+        this.queue.setMetadata(metadata1);
 
         queueForGet.downloadAttributes();
         assertFalse(queueForGet.getMetadata().containsKey(key));
 
         HashMap<String, String> metadata2 = new HashMap<String, String>();
-        queue.setMetadata(metadata2);
-        queue.uploadMetadata();
+        this.queue.setMetadata(metadata2);
+        this.queue.uploadMetadata();
         queueForGet.downloadAttributes();
         assertTrue(queueForGet.getMetadata().size() == 0);
     }
@@ -512,6 +513,44 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    public void testCloudQueueDeleteIfExistsErrorCode() throws StorageException, URISyntaxException {
+        final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
+        try {
+            queue.delete();
+            fail("Queue should not already exist.");
+        }
+        catch (StorageException e) {
+            assertEquals(StorageErrorCodeStrings.QUEUE_NOT_FOUND, e.getErrorCode());
+        }
+
+        OperationContext ctx = new OperationContext();
+        ctx.getSendingRequestEventHandler().addListener(new StorageEvent<SendingRequestEvent>() {
+
+            @Override
+            public void eventOccurred(SendingRequestEvent eventArg) {
+                if (((HttpURLConnection) eventArg.getConnectionObject()).getRequestMethod().equals("DELETE")) {
+                    try {
+                        queue.delete();
+                        assertFalse(queue.exists());
+                    }
+                    catch (StorageException e) {
+                        fail("Delete should succeed.");
+                    }
+                }
+            }
+        });
+
+        try {
+            queue.create();
+
+            // Queue deletes succeed before garbage collection occurs.
+            assertTrue(queue.deleteIfExists(null, ctx));
+        }
+        finally {
+            queue.deleteIfExists();
+        }
+    }
+
     public void testDeleteNonExistingQueue() throws URISyntaxException, StorageException {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
 
@@ -551,13 +590,13 @@ public class CloudQueueTests extends TestCase {
 
     public void testClearMessages() throws  StorageException {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
-        queue.addMessage(message1);
+        this.queue.addMessage(message1);
 
         CloudQueueMessage message2 = new CloudQueueMessage("messagetest2");
-        queue.addMessage(message2);
+        this.queue.addMessage(message2);
 
         int count = 0;
-        for (CloudQueueMessage m : queue.peekMessages(32)) {
+        for (CloudQueueMessage m : this.queue.peekMessages(32)) {
             assertNotNull(m);
             count++;
         }
@@ -565,11 +604,11 @@ public class CloudQueueTests extends TestCase {
         assertTrue(count == 2);
 
         OperationContext oc = new OperationContext();
-        queue.clear(null, oc);
+        this.queue.clear(null, oc);
         assertEquals(oc.getLastResult().getStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
 
         count = 0;
-        for (CloudQueueMessage m : queue.peekMessages(32)) {
+        for (CloudQueueMessage m : this.queue.peekMessages(32)) {
             assertNotNull(m);
             count++;
         }
@@ -577,9 +616,9 @@ public class CloudQueueTests extends TestCase {
         assertTrue(count == 0);
     }
 
-    public void testClearMessagesEmptyQueue() throws  StorageException {
-        queue.clear();
-        queue.delete();
+    public void testClearMessagesEmptyQueue() throws StorageException {
+        this.queue.clear();
+        this.queue.delete();
     }
 
     public void testClearMessagesNotFound() throws  StorageException, URISyntaxException {
@@ -596,38 +635,38 @@ public class CloudQueueTests extends TestCase {
     public void testAddMessage() throws  StorageException {
         String msgContent = UUID.randomUUID().toString();
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
-        queue.addMessage(message);
-        CloudQueueMessage msgFromRetrieve1 = queue.retrieveMessage();
+        this.queue.addMessage(message);
+        CloudQueueMessage msgFromRetrieve1 = this.queue.retrieveMessage();
         assertEquals(message.getMessageContentAsString(), msgContent);
         assertEquals(msgFromRetrieve1.getMessageContentAsString(), msgContent);
     }
 
     public void testAddMessageUnicode() throws  StorageException {
         ArrayList<String> messages = new ArrayList<String>();
-        messages.add("Le dÃ©bat sur l'identitÃ© nationale, l'idÃ©e du prÃ©sident Nicolas Sarkozy de dÃ©choir des personnes d'origine Ã©trangÃ¨re de la nationalitÃ© franÃ§aise ... certains cas et les rÃ©centes mesures prises contre les Roms ont choquÃ© les experts, qui rendront leurs conclusions le 27 aoÃ»t.");
-        messages.add("Ð’Ð°Ñˆ Ð»Ð¾Ð³Ð¸Ð½ Yahoo! Ð´Ð°ÐµÑ‚ Ð´Ð¾Ñ�Ñ‚ÑƒÐ¿ Ðº Ñ‚Ð°ÐºÐ¸Ð¼ Ð¼Ð¾Ñ‰Ð½Ñ‹Ð¼ Ð¸Ð½Ñ�Ñ‚Ñ€ÑƒÐ¼ÐµÐ½Ñ‚Ð°Ð¼ Ñ�Ð²Ñ�Ð·Ð¸, ÐºÐ°Ðº Ñ�Ð»ÐµÐºÑ‚Ñ€Ð¾Ð½Ð½Ð°Ñ� Ð¿Ð¾Ñ‡Ñ‚Ð°, Ð¾Ñ‚Ð¿Ñ€Ð°Ð²ÐºÐ° Ð¼Ð³Ð½Ð¾Ð²ÐµÐ½Ð½Ñ‹Ñ… Ñ�Ð¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ð¹, Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸ Ð±ÐµÐ·Ð¾Ð¿Ð°Ñ�Ð½Ð¾Ñ�Ñ‚Ð¸, Ð² Ñ‡Ð°Ñ�Ñ‚Ð½Ð¾Ñ�Ñ‚Ð¸, Ð°Ð½Ñ‚Ð¸Ð²Ð¸Ñ€ÑƒÑ�Ð½Ñ‹Ðµ Ñ�Ñ€ÐµÐ´Ñ�Ñ‚Ð²Ð° Ð¸ Ð±Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²Ñ‰Ð¸Ðº Ð²Ñ�Ð¿Ð»Ñ‹Ð²Ð°ÑŽÑ‰ÐµÐ¹ Ñ€ÐµÐºÐ»Ð°Ð¼Ñ‹, Ð¸ Ð¸Ð·Ð±Ñ€Ð°Ð½Ð½Ð¾Ðµ, Ð½Ð°Ð¿Ñ€Ð¸Ð¼ÐµÑ€, Ñ„Ð¾Ñ‚Ð¾ Ð¸ Ð¼ÑƒÐ·Ñ‹ÐºÐ° Ð² Ñ�ÐµÑ‚Ð¸ â€” Ð²Ñ�Ðµ Ð±ÐµÑ�Ð¿Ð»Ð°Ñ‚");
-        messages.add("æ�®æ–°å�Žç¤¾8æœˆ12æ—¥ç”µ 8æœˆ11æ—¥æ™šï¼ŒèˆŸæ›²å¢ƒå†…å†�æ¬¡å‡ºçŽ°å¼ºé™�é›¨å¤©æ°”ï¼Œä½¿ç‰¹å¤§å±±æ´ªæ³¥çŸ³æµ�ç�¾æƒ…é›ªä¸ŠåŠ éœœã€‚ç™½é¾™æ±Ÿæ°´åœ¨æ¢¨å��å­�æ�‘çš„äº¤æ±‡åœ°å¸¦å½¢æˆ�ä¸€ä¸ªæ–°çš„å °å¡žæ¹–ï¼Œæ°´ä½�æ¯”å¹³æ—¶é«˜å‡º3ç±³ã€‚ç”˜è‚ƒçœ�å›½åœŸèµ„æº�åŽ…å‰¯åŽ…é•¿å¼ å›½å�Žå½“æ—¥22æ—¶è®¸åœ¨æ–°é—»å�‘å¸ƒä¼šä¸Šä»‹ç»�ï¼Œæˆªè‡³12æ—¥21æ—¶50åˆ†ï¼ŒèˆŸæ›²å °å¡žæ¹–å °å¡žä½“å·²æ¶ˆé™¤ï¼Œæºƒå��é™©æƒ…å·²æ¶ˆé™¤ï¼Œç›®å‰�é’ˆå¯¹å °å¡žæ¹–çš„ä¸»è¦�å·¥ä½œæ˜¯ç–�é€šæ²³é�“ã€‚");
-        messages.add("×œ ×›×•×œ×�\", ×”×“×”×™×� ×™×¢×œ×•×Ÿ, ×•×™×™×©×¨ ×§×• ×¢×� ×”×¢×“×•×ª ×©×ž×¡×¨ ×¨×�×© ×”×ž×ž×©×œ×”, ×‘× ×™×ž×™×Ÿ × ×ª× ×™×”×•, ×œ×•×•×¢×“×ª ×˜×™×¨×§×œ. ×œ×“×‘×¨×™×•, ×�×›×Ÿ ×”×©×¨×™×� ×“× ×• ×¨×§ ×‘×”×™×‘×˜×™×� ×”×ª×§×©×•×¨×ª×™×™×� ×©×œ ×¢×¦×™×¨×ª ×”×ž×©×˜: \"×‘×©×‘×™×¢×™×™×” ×œ×� ×”×ª×§×™×™×� ×“×™×•×Ÿ ×¢×œ ×”×�×œ×˜×¨× ×˜×™×‘×•×ª. ×¢×¡×§× ×• ×‘×”×™×‘×˜×™×� ");
-        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis MÃ¤rz um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprÃ¼nglich waren es hier 1,7 Prozent");
+        messages.add("Le dÃƒÆ’Ã‚Â©bat sur l'identitÃƒÆ’Ã‚Â© nationale, l'idÃƒÆ’Ã‚Â©e du prÃƒÆ’Ã‚Â©sident Nicolas Sarkozy de dÃƒÆ’Ã‚Â©choir des personnes d'origine ÃƒÆ’Ã‚Â©trangÃƒÆ’Ã‚Â¨re de la nationalitÃƒÆ’Ã‚Â© franÃƒÆ’Ã‚Â§aise ... certains cas et les rÃƒÆ’Ã‚Â©centes mesures prises contre les Roms ont choquÃƒÆ’Ã‚Â© les experts, qui rendront leurs conclusions le 27 aoÃƒÆ’Ã‚Â»t.");
+        messages.add("Ãƒï¿½Ã¢â‚¬â„¢Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã‹â€  Ãƒï¿½Ã‚Â»Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â³Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â½ Yahoo! Ãƒï¿½Ã‚Â´Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚ÂµÃƒâ€˜Ã¢â‚¬Å¡ Ãƒï¿½Ã‚Â´Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒâ€˜Ã†â€™Ãƒï¿½Ã‚Â¿ Ãƒï¿½Ã‚Âº Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â¼ Ãƒï¿½Ã‚Â¼Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¢â‚¬Â°Ãƒï¿½Ã‚Â½Ãƒâ€˜Ã¢â‚¬Â¹Ãƒï¿½Ã‚Â¼ Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â½Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒâ€˜Ã¢â€šÂ¬Ãƒâ€˜Ã†â€™Ãƒï¿½Ã‚Â¼Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â¼ Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â²Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â·Ãƒï¿½Ã‚Â¸, Ãƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â°Ãƒï¿½Ã‚Âº Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â»Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚ÂºÃƒâ€˜Ã¢â‚¬Å¡Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã¯Â¿Â½ Ãƒï¿½Ã‚Â¿Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¢â‚¬Â¡Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â°, Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¿Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â²Ãƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â° Ãƒï¿½Ã‚Â¼Ãƒï¿½Ã‚Â³Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â²Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â½Ãƒâ€˜Ã¢â‚¬Â¹Ãƒâ€˜Ã¢â‚¬Â¦ Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â±Ãƒâ€˜Ã¢â‚¬Â°Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â¹, Ãƒâ€˜Ã¢â‚¬Å¾Ãƒâ€˜Ã†â€™Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚ÂºÃƒâ€˜Ã¢â‚¬Â Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â¸ Ãƒï¿½Ã‚Â±Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â·Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â¿Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¸, Ãƒï¿½Ã‚Â² Ãƒâ€˜Ã¢â‚¬Â¡Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¸, Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â²Ãƒï¿½Ã‚Â¸Ãƒâ€˜Ã¢â€šÂ¬Ãƒâ€˜Ã†â€™Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â½Ãƒâ€˜Ã¢â‚¬Â¹Ãƒï¿½Ã‚Âµ Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â´Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â²Ãƒï¿½Ã‚Â° Ãƒï¿½Ã‚Â¸ Ãƒï¿½Ã‚Â±Ãƒï¿½Ã‚Â»Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â¸Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â²Ãƒâ€˜Ã¢â‚¬Â°Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Âº Ãƒï¿½Ã‚Â²Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â¿Ãƒï¿½Ã‚Â»Ãƒâ€˜Ã¢â‚¬Â¹Ãƒï¿½Ã‚Â²Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã…Â½Ãƒâ€˜Ã¢â‚¬Â°Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â¹ Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â»Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â¼Ãƒâ€˜Ã¢â‚¬Â¹, Ãƒï¿½Ã‚Â¸ Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â·Ãƒï¿½Ã‚Â±Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Âµ, Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â¿Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â¼Ãƒï¿½Ã‚ÂµÃƒâ€˜Ã¢â€šÂ¬, Ãƒâ€˜Ã¢â‚¬Å¾Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¾ Ãƒï¿½Ã‚Â¸ Ãƒï¿½Ã‚Â¼Ãƒâ€˜Ã†â€™Ãƒï¿½Ã‚Â·Ãƒâ€˜Ã¢â‚¬Â¹Ãƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â° Ãƒï¿½Ã‚Â² Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚ÂµÃƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¸ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ï¿½ Ãƒï¿½Ã‚Â²Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Âµ Ãƒï¿½Ã‚Â±Ãƒï¿½Ã‚ÂµÃƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â¿Ãƒï¿½Ã‚Â»Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã¢â‚¬Å¡");
+        messages.add("ÃƒÂ¦Ã¯Â¿Â½Ã‚Â®ÃƒÂ¦Ã¢â‚¬â€œÃ‚Â°ÃƒÂ¥Ã¯Â¿Â½Ã…Â½ÃƒÂ§Ã‚Â¤Ã‚Â¾8ÃƒÂ¦Ã…â€œÃ‹â€ 12ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¥ÃƒÂ§Ã¢â‚¬ï¿½Ã‚Âµ 8ÃƒÂ¦Ã…â€œÃ‹â€ 11ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¥ÃƒÂ¦Ã¢â€žÂ¢Ã…Â¡ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¨Ã‹â€ Ã…Â¸ÃƒÂ¦Ã¢â‚¬ÂºÃ‚Â²ÃƒÂ¥Ã‚Â¢Ã†â€™ÃƒÂ¥Ã¢â‚¬Â Ã¢â‚¬Â¦ÃƒÂ¥Ã¢â‚¬Â Ã¯Â¿Â½ÃƒÂ¦Ã‚Â¬Ã‚Â¡ÃƒÂ¥Ã¢â‚¬Â¡Ã‚ÂºÃƒÂ§Ã…Â½Ã‚Â°ÃƒÂ¥Ã‚Â¼Ã‚ÂºÃƒÂ©Ã¢â€žÂ¢Ã¯Â¿Â½ÃƒÂ©Ã¢â‚¬ÂºÃ‚Â¨ÃƒÂ¥Ã‚Â¤Ã‚Â©ÃƒÂ¦Ã‚Â°Ã¢â‚¬ï¿½ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¤Ã‚Â½Ã‚Â¿ÃƒÂ§Ã¢â‚¬Â°Ã‚Â¹ÃƒÂ¥Ã‚Â¤Ã‚Â§ÃƒÂ¥Ã‚Â±Ã‚Â±ÃƒÂ¦Ã‚Â´Ã‚ÂªÃƒÂ¦Ã‚Â³Ã‚Â¥ÃƒÂ§Ã…Â¸Ã‚Â³ÃƒÂ¦Ã‚ÂµÃ¯Â¿Â½ÃƒÂ§Ã¯Â¿Â½Ã‚Â¾ÃƒÂ¦Ã†â€™Ã¢â‚¬Â¦ÃƒÂ©Ã¢â‚¬ÂºÃ‚ÂªÃƒÂ¤Ã‚Â¸Ã…Â ÃƒÂ¥Ã…Â Ã‚Â ÃƒÂ©Ã…â€œÃ…â€œÃƒÂ£Ã¢â€šÂ¬Ã¢â‚¬Å¡ÃƒÂ§Ã¢â€žÂ¢Ã‚Â½ÃƒÂ©Ã‚Â¾Ã¢â€žÂ¢ÃƒÂ¦Ã‚Â±Ã…Â¸ÃƒÂ¦Ã‚Â°Ã‚Â´ÃƒÂ¥Ã…â€œÃ‚Â¨ÃƒÂ¦Ã‚Â¢Ã‚Â¨ÃƒÂ¥Ã¯Â¿Â½Ã¯Â¿Â½ÃƒÂ¥Ã‚Â­Ã¯Â¿Â½ÃƒÂ¦Ã¯Â¿Â½Ã¢â‚¬ËœÃƒÂ§Ã…Â¡Ã¢â‚¬Å¾ÃƒÂ¤Ã‚ÂºÃ‚Â¤ÃƒÂ¦Ã‚Â±Ã¢â‚¬Â¡ÃƒÂ¥Ã…â€œÃ‚Â°ÃƒÂ¥Ã‚Â¸Ã‚Â¦ÃƒÂ¥Ã‚Â½Ã‚Â¢ÃƒÂ¦Ã‹â€ Ã¯Â¿Â½ÃƒÂ¤Ã‚Â¸Ã¢â€šÂ¬ÃƒÂ¤Ã‚Â¸Ã‚ÂªÃƒÂ¦Ã¢â‚¬â€œÃ‚Â°ÃƒÂ§Ã…Â¡Ã¢â‚¬Å¾ÃƒÂ¥Ã‚Â Ã‚Â°ÃƒÂ¥Ã‚Â¡Ã…Â¾ÃƒÂ¦Ã‚Â¹Ã¢â‚¬â€œÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¦Ã‚Â°Ã‚Â´ÃƒÂ¤Ã‚Â½Ã¯Â¿Â½ÃƒÂ¦Ã‚Â¯Ã¢â‚¬ï¿½ÃƒÂ¥Ã‚Â¹Ã‚Â³ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¶ÃƒÂ©Ã‚Â«Ã‹Å“ÃƒÂ¥Ã¢â‚¬Â¡Ã‚Âº3ÃƒÂ§Ã‚Â±Ã‚Â³ÃƒÂ£Ã¢â€šÂ¬Ã¢â‚¬Å¡ÃƒÂ§Ã¢â‚¬ï¿½Ã‹Å“ÃƒÂ¨Ã¢â‚¬Å¡Ã†â€™ÃƒÂ§Ã…â€œÃ¯Â¿Â½ÃƒÂ¥Ã¢â‚¬ÂºÃ‚Â½ÃƒÂ¥Ã…â€œÃ…Â¸ÃƒÂ¨Ã‚ÂµÃ¢â‚¬Å¾ÃƒÂ¦Ã‚ÂºÃ¯Â¿Â½ÃƒÂ¥Ã…Â½Ã¢â‚¬Â¦ÃƒÂ¥Ã¢â‚¬Â°Ã‚Â¯ÃƒÂ¥Ã…Â½Ã¢â‚¬Â¦ÃƒÂ©Ã¢â‚¬Â¢Ã‚Â¿ÃƒÂ¥Ã‚Â¼Ã‚Â ÃƒÂ¥Ã¢â‚¬ÂºÃ‚Â½ÃƒÂ¥Ã¯Â¿Â½Ã…Â½ÃƒÂ¥Ã‚Â½Ã¢â‚¬Å“ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¥22ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¶ÃƒÂ¨Ã‚Â®Ã‚Â¸ÃƒÂ¥Ã…â€œÃ‚Â¨ÃƒÂ¦Ã¢â‚¬â€œÃ‚Â°ÃƒÂ©Ã¢â‚¬â€�Ã‚Â»ÃƒÂ¥Ã¯Â¿Â½Ã¢â‚¬ËœÃƒÂ¥Ã‚Â¸Ã†â€™ÃƒÂ¤Ã‚Â¼Ã…Â¡ÃƒÂ¤Ã‚Â¸Ã…Â ÃƒÂ¤Ã‚Â»Ã¢â‚¬Â¹ÃƒÂ§Ã‚Â»Ã¯Â¿Â½ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¦Ã‹â€ Ã‚ÂªÃƒÂ¨Ã¢â‚¬Â¡Ã‚Â³12ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¥21ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¶50ÃƒÂ¥Ã‹â€ Ã¢â‚¬Â ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¨Ã‹â€ Ã…Â¸ÃƒÂ¦Ã¢â‚¬ÂºÃ‚Â²ÃƒÂ¥Ã‚Â Ã‚Â°ÃƒÂ¥Ã‚Â¡Ã…Â¾ÃƒÂ¦Ã‚Â¹Ã¢â‚¬â€œÃƒÂ¥Ã‚Â Ã‚Â°ÃƒÂ¥Ã‚Â¡Ã…Â¾ÃƒÂ¤Ã‚Â½Ã¢â‚¬Å“ÃƒÂ¥Ã‚Â·Ã‚Â²ÃƒÂ¦Ã‚Â¶Ã‹â€ ÃƒÂ©Ã¢â€žÂ¢Ã‚Â¤ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¦Ã‚ÂºÃ†â€™ÃƒÂ¥Ã¯Â¿Â½Ã¯Â¿Â½ÃƒÂ©Ã¢â€žÂ¢Ã‚Â©ÃƒÂ¦Ã†â€™Ã¢â‚¬Â¦ÃƒÂ¥Ã‚Â·Ã‚Â²ÃƒÂ¦Ã‚Â¶Ã‹â€ ÃƒÂ©Ã¢â€žÂ¢Ã‚Â¤ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ§Ã¢â‚¬ÂºÃ‚Â®ÃƒÂ¥Ã¢â‚¬Â°Ã¯Â¿Â½ÃƒÂ©Ã¢â‚¬â„¢Ã‹â€ ÃƒÂ¥Ã‚Â¯Ã‚Â¹ÃƒÂ¥Ã‚Â Ã‚Â°ÃƒÂ¥Ã‚Â¡Ã…Â¾ÃƒÂ¦Ã‚Â¹Ã¢â‚¬â€œÃƒÂ§Ã…Â¡Ã¢â‚¬Å¾ÃƒÂ¤Ã‚Â¸Ã‚Â»ÃƒÂ¨Ã‚Â¦Ã¯Â¿Â½ÃƒÂ¥Ã‚Â·Ã‚Â¥ÃƒÂ¤Ã‚Â½Ã…â€œÃƒÂ¦Ã‹Å“Ã‚Â¯ÃƒÂ§Ã¢â‚¬â€œÃ¯Â¿Â½ÃƒÂ©Ã¢â€šÂ¬Ã…Â¡ÃƒÂ¦Ã‚Â²Ã‚Â³ÃƒÂ©Ã¯Â¿Â½Ã¢â‚¬Å“ÃƒÂ£Ã¢â€šÂ¬Ã¢â‚¬Å¡");
+        messages.add("Ãƒâ€”Ã…â€œ Ãƒâ€”Ã¢â‚¬ÂºÃƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã…â€œÃƒâ€”Ã¯Â¿Â½\", Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã…â€œÃƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã…Â¸, Ãƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã‚Â©Ãƒâ€”Ã‚Â¨ Ãƒâ€”Ã‚Â§Ãƒâ€”Ã¢â‚¬Â¢ Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã‚Âª Ãƒâ€”Ã‚Â©Ãƒâ€”Ã…Â¾Ãƒâ€”Ã‚Â¡Ãƒâ€”Ã‚Â¨ Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã¯Â¿Â½Ãƒâ€”Ã‚Â© Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã…Â¾Ãƒâ€”Ã…Â¾Ãƒâ€”Ã‚Â©Ãƒâ€”Ã…â€œÃƒâ€”Ã¢â‚¬ï¿½, Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã‚Â Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã…Â¾Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã…Â¸ Ãƒâ€”Ã‚Â Ãƒâ€”Ã‚ÂªÃƒâ€”Ã‚Â Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¢â‚¬Â¢, Ãƒâ€”Ã…â€œÃƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã‚Âª Ãƒâ€”Ã‹Å“Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã‚Â§Ãƒâ€”Ã…â€œ. Ãƒâ€”Ã…â€œÃƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã‚Â¨Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬Â¢, Ãƒâ€”Ã¯Â¿Â½Ãƒâ€”Ã¢â‚¬ÂºÃƒâ€”Ã…Â¸ Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã‚Â©Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã‚Â Ãƒâ€”Ã¢â‚¬Â¢ Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã‚Â§ Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã‹Å“Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã‚ÂªÃƒâ€”Ã‚Â§Ãƒâ€”Ã‚Â©Ãƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã‚ÂªÃƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã‚Â©Ãƒâ€”Ã…â€œ Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã‚Â¦Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã‚Âª Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã…Â¾Ãƒâ€”Ã‚Â©Ãƒâ€”Ã‹Å“: \"Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã‚Â©Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬ï¿½ Ãƒâ€”Ã…â€œÃƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã‚ÂªÃƒâ€”Ã‚Â§Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã…Â¸ Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã…â€œ Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¯Â¿Â½Ãƒâ€”Ã…â€œÃƒâ€”Ã‹Å“Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã‚Â Ãƒâ€”Ã‹Å“Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã‚Âª. Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã‚Â¡Ãƒâ€”Ã‚Â§Ãƒâ€”Ã‚Â Ãƒâ€”Ã¢â‚¬Â¢ Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã‹Å“Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ ");
+        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis MÃƒÆ’Ã‚Â¤rz um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprÃƒÆ’Ã‚Â¼nglich waren es hier 1,7 Prozent");
         messages.add("<?xml version=\"1.0\"?>\n<!DOCTYPE PARTS SYSTEM \"parts.dtd\">\n<?xml-stylesheet type=\"text/css\" href=\"xmlpartsstyle.css\"?>\n<PARTS>\n   <TITLE>Computer Parts</TITLE>\n   <PART>\n      <ITEM>Motherboard</ITEM>\n      <MANUFACTURER>ASUS</MANUFACTURER>\n      <MODEL>"
                 + "P3B-F</MODEL>\n      <COST> 123.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Video Card</ITEM>\n      <MANUFACTURER>ATI</MANUFACTURER>\n      <MODEL>All-in-Wonder Pro</MODEL>\n      <COST> 160.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Sound Card</ITEM>\n      <MANUFACTURER>"
                 + "Creative Labs</MANUFACTURER>\n      <MODEL>Sound Blaster Live</MODEL>\n      <COST> 80.00</COST>\n   </PART>\n   <PART>\n      <ITEM> inch Monitor</ITEM>\n      <MANUFACTURER>LG Electronics</MANUFACTURER>\n      <MODEL> 995E</MODEL>\n      <COST> 290.00</COST>\n   </PART>\n</PARTS>");
 
         for (int i = 0; i < messages.size(); i++) {
             String msg = messages.get(i);
-            queue.addMessage(new CloudQueueMessage(msg));
-            CloudQueueMessage readBack = queue.retrieveMessage();
+            this.queue.addMessage(new CloudQueueMessage(msg));
+            CloudQueueMessage readBack = this.queue.retrieveMessage();
             assertEquals(msg, readBack.getMessageContentAsString());
-            queue.deleteMessage(readBack);
+            this.queue.deleteMessage(readBack);
         }
 
-        queue.setShouldEncodeMessage(false);
+        this.queue.setShouldEncodeMessage(false);
         for (int i = 0; i < messages.size(); i++) {
             String msg = messages.get(i);
-            queue.addMessage(new CloudQueueMessage(msg));
-            CloudQueueMessage readBack = queue.retrieveMessage();
+            this.queue.addMessage(new CloudQueueMessage(msg));
+            CloudQueueMessage readBack = this.queue.retrieveMessage();
             assertEquals(msg, readBack.getMessageContentAsString());
-            queue.deleteMessage(readBack);
+            this.queue.deleteMessage(readBack);
         }
     }
 
@@ -635,8 +674,8 @@ public class CloudQueueTests extends TestCase {
             {
         String msgContent = UUID.randomUUID().toString();
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
-        queue.addMessage(message, 100, 50, null, null);
-        CloudQueueMessage msgFromRetrieve1 = queue.retrieveMessage();
+        this.queue.addMessage(message, 100, 50, null, null);
+        CloudQueueMessage msgFromRetrieve1 = this.queue.retrieveMessage();
         assertNull(msgFromRetrieve1);
     }
 
@@ -680,10 +719,10 @@ public class CloudQueueTests extends TestCase {
 
     public void testQueueUnicodeAndXmlMessageTest() throws  StorageException
             {
-        String msgContent = "å¥½<?xml version= 1.0  encoding= utf-8  ?>";
+        String msgContent = "ÃƒÂ¥Ã‚Â¥Ã‚Â½<?xml version= 1.0  encoding= utf-8  ?>";
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
-        queue.addMessage(message);
-        CloudQueueMessage msgFromRetrieve1 = queue.retrieveMessage();
+        this.queue.addMessage(message);
+        CloudQueueMessage msgFromRetrieve1 = this.queue.retrieveMessage();
         assertEquals(message.getMessageContentAsString(), msgContent);
         assertEquals(msgFromRetrieve1.getMessageContentAsString(), msgContent);
     }
@@ -697,34 +736,33 @@ public class CloudQueueTests extends TestCase {
         CloudQueueMessage message1 = new CloudQueueMessage(new String(content));
 
         try {
-            queue.addMessage(message1);
+            this.queue.addMessage(message1);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
 
-        queue.delete();
+        this.queue.delete();
     }
 
-    public void testAddMessageWithVisibilityTimeout() throws  StorageException,
-            InterruptedException {
-        queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
-        CloudQueueMessage m1 = queue.retrieveMessage();
+    public void testAddMessageWithVisibilityTimeout() throws StorageException, InterruptedException {
+        this.queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
+        CloudQueueMessage m1 = this.queue.retrieveMessage();
         Date d1 = m1.getExpirationTime();
-        queue.deleteMessage(m1);
+        this.queue.deleteMessage(m1);
 
         Thread.sleep(2000);
 
-        queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
-        CloudQueueMessage m2 = queue.retrieveMessage();
+        this.queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
+        CloudQueueMessage m2 = this.queue.retrieveMessage();
         Date d2 = m2.getExpirationTime();
-        queue.deleteMessage(m2);
+        this.queue.deleteMessage(m2);
         assertTrue(d1.before(d2));
     }
 
     public void testAddMessageNullMessage() throws  StorageException {
         try {
-            queue.addMessage(null);
+            this.queue.addMessage(null);
             fail();
         }
         catch (final IllegalArgumentException e) {
@@ -734,47 +772,47 @@ public class CloudQueueTests extends TestCase {
     public void testAddMessageSpecialVisibilityTimeout() throws  StorageException
             {
         CloudQueueMessage message = new CloudQueueMessage("test");
-        queue.addMessage(message, 1, 0, null, null);
-        queue.addMessage(message, 7 * 24 * 60 * 60, 0, null, null);
-        queue.addMessage(message, 7 * 24 * 60 * 60, 7 * 24 * 60 * 60 - 1, null, null);
+        this.queue.addMessage(message, 1, 0, null, null);
+        this.queue.addMessage(message, 7 * 24 * 60 * 60, 0, null, null);
+        this.queue.addMessage(message, 7 * 24 * 60 * 60, 7 * 24 * 60 * 60 - 1, null, null);
 
         try {
-            queue.addMessage(message, -1, 0, null, null);
+            this.queue.addMessage(message, -1, 0, null, null);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
 
         try {
-            queue.addMessage(message, 0, -1, null, null);
+            this.queue.addMessage(message, 0, -1, null, null);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
 
         try {
-            queue.addMessage(message, 7 * 24 * 60 * 60, 7 * 24 * 60 * 60, null, null);
+            this.queue.addMessage(message, 7 * 24 * 60 * 60, 7 * 24 * 60 * 60, null, null);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
 
         try {
-            queue.addMessage(message, 7 * 24 * 60 * 60 + 1, 0, null, null);
+            this.queue.addMessage(message, 7 * 24 * 60 * 60 + 1, 0, null, null);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
 
         try {
-            queue.addMessage(message, 0, 7 * 24 * 60 * 60 + 1, null, null);
+            this.queue.addMessage(message, 0, 7 * 24 * 60 * 60 + 1, null, null);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
 
         try {
-            queue.updateMessage(message, 0, EnumSet.of(MessageUpdateFields.CONTENT), null, null);
+            this.queue.updateMessage(message, 0, EnumSet.of(MessageUpdateFields.CONTENT), null, null);
             fail();
         }
         catch (final IllegalArgumentException e) {
@@ -783,18 +821,18 @@ public class CloudQueueTests extends TestCase {
 
     public void testDeleteMessage() throws  StorageException {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
-        queue.addMessage(message1);
+        this.queue.addMessage(message1);
 
         CloudQueueMessage message2 = new CloudQueueMessage("messagetest2");
-        queue.addMessage(message2);
+        this.queue.addMessage(message2);
 
-        for (CloudQueueMessage message : queue.retrieveMessages(32)) {
+        for (CloudQueueMessage message : this.queue.retrieveMessages(32)) {
             OperationContext deleteQueueContext = new OperationContext();
-            queue.deleteMessage(message, null, deleteQueueContext);
+            this.queue.deleteMessage(message, null, deleteQueueContext);
             assertEquals(deleteQueueContext.getLastResult().getStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
         }
 
-        assertTrue(queue.retrieveMessage() == null);
+        assertTrue(this.queue.retrieveMessage() == null);
     }
 
     public void testQueueCreateAddingMetadata() throws  StorageException, URISyntaxException {
@@ -821,34 +859,33 @@ public class CloudQueueTests extends TestCase {
     public void testDeleteMessageNullMessage() throws  StorageException
             {
         try {
-            queue.deleteMessage(null);
+            this.queue.deleteMessage(null);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
     }
 
-    public void testRetrieveMessage() throws  StorageException,
-            InterruptedException {
-        queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
+    public void testRetrieveMessage() throws StorageException, InterruptedException {
+        this.queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
         OperationContext opContext = new OperationContext();
-        CloudQueueMessage message1 = queue.retrieveMessage(10, null /*QueueRequestOptions*/, opContext);
+        CloudQueueMessage message1 = this.queue.retrieveMessage(10, null /*QueueRequestOptions*/, opContext);
         Date expirationTime1 = message1.getExpirationTime();
         Date insertionTime1 = message1.getInsertionTime();
         Date nextVisibleTime1 = message1.getNextVisibleTime();
 
         assertEquals(HttpURLConnection.HTTP_OK, opContext.getLastResult().getStatusCode());
 
-        queue.deleteMessage(message1);
+        this.queue.deleteMessage(message1);
 
         Thread.sleep(2000);
 
-        queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
-        CloudQueueMessage message2 = queue.retrieveMessage();
+        this.queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
+        CloudQueueMessage message2 = this.queue.retrieveMessage();
         Date expirationTime2 = message2.getExpirationTime();
         Date insertionTime2 = message2.getInsertionTime();
         Date nextVisibleTime2 = message2.getNextVisibleTime();
-        queue.deleteMessage(message2);
+        this.queue.deleteMessage(message2);
         assertTrue(expirationTime1.before(expirationTime2));
         assertTrue(insertionTime1.before(insertionTime2));
         assertTrue(nextVisibleTime1.before(nextVisibleTime2));
@@ -886,9 +923,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
-    public void testRetrieveMessagesFromEmptyQueue() throws  StorageException
-            {
-        for (CloudQueueMessage m : queue.retrieveMessages(32)) {
+    public void testRetrieveMessagesFromEmptyQueue() throws StorageException {
+        for (CloudQueueMessage m : this.queue.retrieveMessages(32)) {
             assertTrue(m.getId() != null);
             assertTrue(m.getPopReceipt() == null);
         }
@@ -907,15 +943,14 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
-    public void testDequeueCountIncreases() throws  StorageException, InterruptedException
-             {
-        queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
-        CloudQueueMessage message1 = queue.retrieveMessage(1, null, null);
+    public void testDequeueCountIncreases() throws StorageException, InterruptedException {
+        this.queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
+        CloudQueueMessage message1 = this.queue.retrieveMessage(1, null, null);
         assertTrue(message1.getDequeueCount() == 1);
 
         for (int i = 2; i < 5; i++) {
             Thread.sleep(2000);
-            CloudQueueMessage message2 = queue.retrieveMessage(1, null, null);
+            CloudQueueMessage message2 = this.queue.retrieveMessage(1, null, null);
             assertTrue(message2.getDequeueCount() == i);
         }
 
@@ -923,9 +958,8 @@ public class CloudQueueTests extends TestCase {
 
     public void testRetrieveMessageSpecialVisibilityTimeout() throws  StorageException
             {
-
         try {
-            queue.retrieveMessage(-1, null, null);
+            this.queue.retrieveMessage(-1, null, null);
             fail();
         }
         catch (final IllegalArgumentException e) {
@@ -934,12 +968,12 @@ public class CloudQueueTests extends TestCase {
 
     public void testRetrieveMessages() throws  StorageException {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
-        queue.addMessage(message1);
+        this.queue.addMessage(message1);
 
         CloudQueueMessage message2 = new CloudQueueMessage("messagetest2");
-        queue.addMessage(message2);
+        this.queue.addMessage(message2);
 
-        for (CloudQueueMessage m : queue.retrieveMessages(32)) {
+        for (CloudQueueMessage m : this.queue.retrieveMessages(32)) {
             assertTrue(m.getId() != null);
             assertTrue(m.getPopReceipt() != null);
         }
@@ -948,28 +982,28 @@ public class CloudQueueTests extends TestCase {
     public void testRetrieveMessagesInvalidInput() throws  StorageException
             {
         for (int i = 0; i < 33; i++) {
-            queue.addMessage(new CloudQueueMessage("test" + i));
+            this.queue.addMessage(new CloudQueueMessage("test" + i));
         }
 
-        queue.retrieveMessages(1, 1, null, null);
-        queue.retrieveMessages(32, 1, null, null);
+        this.queue.retrieveMessages(1, 1, null, null);
+        this.queue.retrieveMessages(32, 1, null, null);
 
         try {
-            queue.retrieveMessages(-1);
+            this.queue.retrieveMessages(-1);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
 
         try {
-            queue.retrieveMessages(0);
+            this.queue.retrieveMessages(0);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
 
         try {
-            queue.retrieveMessages(33);
+            this.queue.retrieveMessages(33);
             fail();
         }
         catch (final IllegalArgumentException e) {
@@ -978,23 +1012,23 @@ public class CloudQueueTests extends TestCase {
 
     public void testPeekMessage() throws  StorageException {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
-        queue.addMessage(message1);
+        this.queue.addMessage(message1);
 
-        CloudQueueMessage msg = queue.peekMessage();
+        CloudQueueMessage msg = this.queue.peekMessage();
         assertTrue(msg.getId() != null);
         assertTrue(msg.getPopReceipt() == null);
 
-        queue.delete();
+        this.queue.delete();
     }
 
     public void testPeekMessages() throws  StorageException {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
-        queue.addMessage(message1);
+        this.queue.addMessage(message1);
 
         CloudQueueMessage message2 = new CloudQueueMessage("messagetest2");
-        queue.addMessage(message2);
+        this.queue.addMessage(message2);
 
-        for (CloudQueueMessage m : queue.peekMessages(32)) {
+        for (CloudQueueMessage m : this.queue.peekMessages(32)) {
             assertTrue(m.getId() != null);
             assertTrue(m.getPopReceipt() == null);
         }
@@ -1003,28 +1037,28 @@ public class CloudQueueTests extends TestCase {
     public void testPeekMessagesInvalidInput() throws  StorageException
             {
         for (int i = 0; i < 33; i++) {
-            queue.addMessage(new CloudQueueMessage("test" + i));
+            this.queue.addMessage(new CloudQueueMessage("test" + i));
         }
 
-        queue.peekMessages(1);
-        queue.peekMessages(32);
+        this.queue.peekMessages(1);
+        this.queue.peekMessages(32);
 
         try {
-            queue.peekMessages(-1);
+            this.queue.peekMessages(-1);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
 
         try {
-            queue.peekMessages(0);
+            this.queue.peekMessages(0);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
 
         try {
-            queue.peekMessages(33);
+            this.queue.peekMessages(33);
             fail();
         }
         catch (final IllegalArgumentException e) {
@@ -1056,33 +1090,32 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
-    public void testPeekMessagesFromEmptyQueue() throws  StorageException
-            {
-        for (CloudQueueMessage m : queue.peekMessages(32)) {
+    public void testPeekMessagesFromEmptyQueue() throws StorageException {
+        for (CloudQueueMessage m : this.queue.peekMessages(32)) {
             assertTrue(m.getId() != null);
             assertTrue(m.getPopReceipt() == null);
         }
     }
 
-    public void testUpdateMessage() throws  StorageException {
 
-        queue.clear();
+    public void testUpdateMessage() throws StorageException {
+        this.queue.clear();
 
         String messageContent = "messagetest";
         CloudQueueMessage message1 = new CloudQueueMessage(messageContent);
-        queue.addMessage(message1);
+        this.queue.addMessage(message1);
 
         CloudQueueMessage message2 = new CloudQueueMessage(messageContent);
-        queue.addMessage(message2);
+        this.queue.addMessage(message2);
 
         String newMesage = message1.getMessageContentAsString() + "updated";
 
-        for (CloudQueueMessage message : queue.retrieveMessages(32)) {
+        for (CloudQueueMessage message : this.queue.retrieveMessages(32)) {
             OperationContext oc = new OperationContext();
             message.setMessageContent(newMesage);
-            queue.updateMessage(message, 0, EnumSet.of(MessageUpdateFields.VISIBILITY), null, oc);
+            this.queue.updateMessage(message, 0, EnumSet.of(MessageUpdateFields.VISIBILITY), null, oc);
             assertEquals(oc.getLastResult().getStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
-            CloudQueueMessage messageFromGet = queue.retrieveMessage();
+            CloudQueueMessage messageFromGet = this.queue.retrieveMessage();
             assertEquals(messageFromGet.getMessageContentAsString(), messageContent);
         }
     }
@@ -1090,11 +1123,11 @@ public class CloudQueueTests extends TestCase {
     public void testUpdateMessageFullPass() throws  StorageException, InterruptedException
              {
         CloudQueueMessage message = new CloudQueueMessage("message");
-        queue.addMessage(message, 20, 0, null, null);
-        CloudQueueMessage message1 = queue.retrieveMessage();
+        this.queue.addMessage(message, 20, 0, null, null);
+        CloudQueueMessage message1 = this.queue.retrieveMessage();
         String popreceipt1 = message1.getPopReceipt();
         Date NextVisibleTim1 = message1.getNextVisibleTime();
-        queue.updateMessage(message1, 100, EnumSet.of(MessageUpdateFields.VISIBILITY), null, null);
+        this.queue.updateMessage(message1, 100, EnumSet.of(MessageUpdateFields.VISIBILITY), null, null);
         String popreceipt2 = message1.getPopReceipt();
         Date NextVisibleTim2 = message1.getNextVisibleTime();
         assertTrue(popreceipt2 != popreceipt1);
@@ -1105,34 +1138,33 @@ public class CloudQueueTests extends TestCase {
         String newMesage = message.getMessageContentAsString() + "updated";
         message.setMessageContent(newMesage);
         OperationContext oc = new OperationContext();
-        queue.updateMessage(message1, 100, EnumSet.of(MessageUpdateFields.CONTENT), null, oc);
+        this.queue.updateMessage(message1, 100, EnumSet.of(MessageUpdateFields.CONTENT), null, oc);
         assertEquals(oc.getLastResult().getStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
         String popreceipt3 = message1.getPopReceipt();
         Date NextVisibleTim3 = message1.getNextVisibleTime();
         assertTrue(popreceipt3 != popreceipt2);
         assertTrue(NextVisibleTim2.before(NextVisibleTim3));
 
-        assertTrue(queue.retrieveMessage() == null);
+        assertTrue(this.queue.retrieveMessage() == null);
 
-        queue.updateMessage(message1, 0, EnumSet.of(MessageUpdateFields.VISIBILITY), null, null);
+        this.queue.updateMessage(message1, 0, EnumSet.of(MessageUpdateFields.VISIBILITY), null, null);
 
-        CloudQueueMessage messageFromGet = queue.retrieveMessage();
+        CloudQueueMessage messageFromGet = this.queue.retrieveMessage();
         assertEquals(messageFromGet.getMessageContentAsString(), message1.getMessageContentAsString());
     }
 
     public void testUpdateMessageWithContentChange() throws  StorageException
             {
-
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
-        queue.addMessage(message1);
+        this.queue.addMessage(message1);
 
         CloudQueueMessage message2 = new CloudQueueMessage("messagetest2");
-        queue.addMessage(message2);
+        this.queue.addMessage(message2);
 
-        for (CloudQueueMessage message : queue.retrieveMessages(32)) {
+        for (CloudQueueMessage message : this.queue.retrieveMessages(32)) {
             OperationContext oc = new OperationContext();
             message.setMessageContent(message.getMessageContentAsString() + "updated");
-            queue.updateMessage(message, 100, EnumSet.of(MessageUpdateFields.CONTENT), null, oc);
+            this.queue.updateMessage(message, 100, EnumSet.of(MessageUpdateFields.CONTENT), null, oc);
             assertEquals(oc.getLastResult().getStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
         }
     }
@@ -1140,7 +1172,7 @@ public class CloudQueueTests extends TestCase {
     public void testUpdateMessageNullMessage() throws  StorageException
             {
         try {
-            queue.updateMessage(null, 0);
+            this.queue.updateMessage(null, 0);
             fail();
         }
         catch (final IllegalArgumentException e) {
@@ -1150,53 +1182,52 @@ public class CloudQueueTests extends TestCase {
     public void testUpdateMessageInvalidMessage() throws  StorageException
             {
         CloudQueueMessage message = new CloudQueueMessage("test");
-        queue.addMessage(message, 1, 0, null, null);
+        this.queue.addMessage(message, 1, 0, null, null);
 
         try {
-            queue.updateMessage(message, 0, EnumSet.of(MessageUpdateFields.CONTENT), null, null);
+            this.queue.updateMessage(message, 0, EnumSet.of(MessageUpdateFields.CONTENT), null, null);
             fail();
         }
         catch (final IllegalArgumentException e) {
         }
 
-        queue.delete();
+        this.queue.delete();
     }
 
-    public void testGetApproximateMessageCount() throws  StorageException
-            {
-        assertTrue(queue.getApproximateMessageCount() == 0);
-        queue.addMessage(new CloudQueueMessage("message1"));
-        queue.addMessage(new CloudQueueMessage("message2"));
-        assertTrue(queue.getApproximateMessageCount() == 0);
-        queue.downloadAttributes();
-        assertTrue(queue.getApproximateMessageCount() == 2);
-        queue.delete();
+    public void testGetApproximateMessageCount() throws StorageException {
+        assertTrue(this.queue.getApproximateMessageCount() == 0);
+        this.queue.addMessage(new CloudQueueMessage("message1"));
+        this.queue.addMessage(new CloudQueueMessage("message2"));
+        assertTrue(this.queue.getApproximateMessageCount() == 0);
+        this.queue.downloadAttributes();
+        assertTrue(this.queue.getApproximateMessageCount() == 2);
+        this.queue.delete();
     }
 
     public void testShouldEncodeMessage() throws  StorageException {
         String msgContent = UUID.randomUUID().toString();
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
-        queue.setShouldEncodeMessage(true);
-        queue.addMessage(message);
-        CloudQueueMessage msgFromRetrieve1 = queue.retrieveMessage();
+        this.queue.setShouldEncodeMessage(true);
+        this.queue.addMessage(message);
+        CloudQueueMessage msgFromRetrieve1 = this.queue.retrieveMessage();
         assertEquals(msgFromRetrieve1.getMessageContentAsString(), msgContent);
-        queue.deleteMessage(msgFromRetrieve1);
+        this.queue.deleteMessage(msgFromRetrieve1);
 
-        queue.setShouldEncodeMessage(false);
-        queue.addMessage(message);
-        CloudQueueMessage msgFromRetrieve2 = queue.retrieveMessage();
+        this.queue.setShouldEncodeMessage(false);
+        this.queue.addMessage(message);
+        CloudQueueMessage msgFromRetrieve2 = this.queue.retrieveMessage();
         assertEquals(msgFromRetrieve2.getMessageContentAsString(), msgContent);
-        queue.deleteMessage(msgFromRetrieve2);
+        this.queue.deleteMessage(msgFromRetrieve2);
 
-        queue.setShouldEncodeMessage(true);
+        this.queue.setShouldEncodeMessage(true);
     }
 
     public void testQueueDownloadAttributes() throws  StorageException, URISyntaxException {
         final CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
-        queue.addMessage(message1);
+        this.queue.addMessage(message1);
 
         final CloudQueueMessage message2 = new CloudQueueMessage("messagetest2");
-        queue.addMessage(message2);
+        this.queue.addMessage(message2);
 
         final HashMap<String, String> metadata = new HashMap<String, String>(5);
         int sum = 5;
@@ -1204,11 +1235,11 @@ public class CloudQueueTests extends TestCase {
             metadata.put("key" + i, "value" + i);
         }
 
-        queue.setMetadata(metadata);
-        queue.uploadMetadata();
+        this.queue.setMetadata(metadata);
+        this.queue.uploadMetadata();
 
         CloudQueueClient qClient = TestHelper.createCloudQueueClient();
-        final CloudQueue queue2 = qClient.getQueueReference(queue.getName());
+        final CloudQueue queue2 = qClient.getQueueReference(this.queue.getName());
         queue2.downloadAttributes();
 
         assertEquals(sum, queue2.getMetadata().size());
@@ -1232,12 +1263,11 @@ public class CloudQueueTests extends TestCase {
             metadata.put("key" + i, "value" + i);
         }
 
-        queue.setMetadata(metadata);
-        queue.uploadMetadata();
+        this.queue.setMetadata(metadata);
+        this.queue.uploadMetadata();
     }
 
     public void testSASClientParse() throws StorageException,  InvalidKeyException, URISyntaxException {
-
         // Add a policy, check setting and getting.
         SharedAccessQueuePolicy policy1 = new SharedAccessQueuePolicy();
         Calendar now = GregorianCalendar.getInstance();
@@ -1250,7 +1280,7 @@ public class CloudQueueTests extends TestCase {
                 SharedAccessQueuePermissions.PROCESSMESSAGES, SharedAccessQueuePermissions.ADD,
                 SharedAccessQueuePermissions.UPDATE));
 
-        String sasString = queue.generateSharedAccessSignature(policy1, null);
+        String sasString = this.queue.generateSharedAccessSignature(policy1, null);
 
         URI queueUri = new URI("http://myaccount.queue.core.windows.net/myqueue");
 

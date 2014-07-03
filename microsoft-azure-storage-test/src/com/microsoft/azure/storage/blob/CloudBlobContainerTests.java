@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,6 +34,7 @@ import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.ResultContinuation;
 import com.microsoft.azure.storage.ResultSegment;
 import com.microsoft.azure.storage.SendingRequestEvent;
+import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.core.SR;
@@ -42,23 +43,22 @@ import com.microsoft.azure.storage.core.SR;
  * Blob Container Tests
  */
 public class CloudBlobContainerTests extends TestCase {
-
     protected static CloudBlobClient client;
     protected CloudBlobContainer container;
 
     @Override
     public void setUp() throws Exception {
-        container = BlobTestHelper.getRandomContainerReference();
+        this.container = BlobTestHelper.getRandomContainerReference();
     }
 
     @Override
     public void tearDown() throws Exception {
-        container.deleteIfExists();
+        this.container.deleteIfExists();
     }
 
     /**
      * Validate container references
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      */
@@ -83,15 +83,16 @@ public class CloudBlobContainerTests extends TestCase {
     }
 
     /**
-     * Create and delete a container
+     * Create a container
      * 
      * @throws StorageException
      * @throws URISyntaxException
      */
     public void testCloudBlobContainerCreate() throws StorageException {
-        container.create();
+        this.container.create();
         try {
-            container.create();
+            this.container.create();
+            fail("Should not be able to create twice.");
         }
         catch (StorageException e) {
             assertEquals(e.getErrorCode(), "ContainerAlreadyExists");
@@ -102,20 +103,19 @@ public class CloudBlobContainerTests extends TestCase {
 
     /**
      * Try to create a container after it is created
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      */
-    public void testCloudBlobContainerCreateIfNotExists() throws StorageException{
-        assertTrue(container.createIfNotExists());
-        assertTrue(container.exists());
-        assertFalse(container.createIfNotExists());
+   public void testCloudBlobContainerCreateIfNotExists() throws StorageException {
+        assertTrue(this.container.createIfNotExists());
+        assertTrue(this.container.exists());
+        assertFalse(this.container.createIfNotExists());
     }
 
     /**
      * Try to delete a non-existing container
      * 
-     * @throws URISyntaxException
      * @throws StorageException
      */
     public void testCloudBlobContainerDeleteIfExists() throws  StorageException {
@@ -126,26 +126,57 @@ public class CloudBlobContainerTests extends TestCase {
         assertFalse(container.deleteIfExists());
     }
 
+    public void testCloudBlobContainerDeleteIfExistsErrorCode() throws StorageException {
+        try {
+            container.delete();
+            fail("Container should not already exist.");
+        }
+        catch (StorageException e) {
+            assertEquals(StorageErrorCodeStrings.CONTAINER_NOT_FOUND, e.getErrorCode());
+        }
+
+        OperationContext ctx = new OperationContext();
+        ctx.getSendingRequestEventHandler().addListener(new StorageEvent<SendingRequestEvent>() {
+
+            @Override
+            public void eventOccurred(SendingRequestEvent eventArg) {
+                if (((HttpURLConnection) eventArg.getConnectionObject()).getRequestMethod().equals("DELETE")) {
+                    try {
+                        container.delete();
+                        assertFalse(container.exists());
+                    }
+                    catch (StorageException e) {
+                        fail("Delete should succeed.");
+                    }
+                }
+            }
+        });
+
+        container.create();
+
+        // Container deletes succeed before garbage collection occurs.
+        assertTrue(container.deleteIfExists(null, null, ctx));
+    }
+
     /**
      * Check a container's existence
      * 
-     * @throws URISyntaxException
      * @throws StorageException
      */
-    public void testCloudBlobContainerExists() throws  StorageException {
-        assertFalse(container.exists());
+    public void testCloudBlobContainerExists() throws StorageException {
+        assertFalse(this.container.exists());
 
-        container.create();
-        assertTrue(container.exists());
-        assertNotNull(container.getProperties().getEtag());
+        this.container.create();
+        assertTrue(this.container.exists());
+        assertNotNull(this.container.getProperties().getEtag());
 
-        container.delete();
-        assertFalse(container.exists());
+        this.container.delete();
+        assertFalse(this.container.exists());
     }
 
     /**
      * Set and delete container permissions
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      * @throws InterruptedException
@@ -153,9 +184,9 @@ public class CloudBlobContainerTests extends TestCase {
     public void testCloudBlobContainerSetPermissions() throws  StorageException,
             InterruptedException, URISyntaxException {
         CloudBlobClient client = BlobTestHelper.createCloudBlobClient();
-        container.create();
+        this.container.create();
 
-        BlobContainerPermissions permissions = container.downloadPermissions();
+        BlobContainerPermissions permissions = this.container.downloadPermissions();
         assertTrue(BlobContainerPublicAccessType.OFF.equals(permissions.getPublicAccess()));
         assertEquals(0, permissions.getSharedAccessPolicies().size());
 
@@ -173,15 +204,15 @@ public class CloudBlobContainerTests extends TestCase {
         policy.setSharedAccessExpiryTime(expiry);
         permissions.getSharedAccessPolicies().put("key1", policy);
 
-        container.uploadPermissions(permissions);
+        this.container.uploadPermissions(permissions);
         Thread.sleep(30000);
         // Check if permissions were set
-        CloudBlobContainer container2 = client.getContainerReference(container.getName());
+        CloudBlobContainer container2 = client.getContainerReference(this.container.getName());
         assertPermissionsEqual(permissions, container2.downloadPermissions());
 
         // Clear permissions
         permissions.getSharedAccessPolicies().clear();
-        container.uploadPermissions(permissions);
+        this.container.uploadPermissions(permissions);
         Thread.sleep(30000);
 
         // Check if permissions were cleared
@@ -248,30 +279,31 @@ public class CloudBlobContainerTests extends TestCase {
         assertEquals("d", policy.permissionsToString());
     }
 
-    public void testCloudBlobContainerUploadMetadata() throws StorageException, URISyntaxException{
-        container.create();
+    public void testCloudBlobContainerUploadMetadata() throws StorageException, URISyntaxException {
+        this.container.create();
 
-        CloudBlobContainer container2 = container.getServiceClient().getContainerReference(container.getName());
+        CloudBlobContainer container2 = this.container.getServiceClient().getContainerReference(
+                this.container.getName());
         container2.downloadAttributes();
         Assert.assertEquals(0, container2.getMetadata().size());
 
-        container.getMetadata().put("key1", "value1");
-        container.uploadMetadata();
+        this.container.getMetadata().put("key1", "value1");
+        this.container.uploadMetadata();
 
         container2.downloadAttributes();
         Assert.assertEquals(1, container2.getMetadata().size());
         Assert.assertEquals("value1", container2.getMetadata().get("key1"));
 
-        Iterable<CloudBlobContainer> containers = container.getServiceClient().listContainers(container.getName(),
-                ContainerListingDetails.METADATA, null, null);
+        Iterable<CloudBlobContainer> containers = this.container.getServiceClient().listContainers(
+                this.container.getName(), ContainerListingDetails.METADATA, null, null);
 
         for (CloudBlobContainer container3 : containers) {
             Assert.assertEquals(1, container3.getMetadata().size());
             Assert.assertEquals("value1", container3.getMetadata().get("key1"));
         }
 
-        container.getMetadata().clear();
-        container.uploadMetadata();
+        this.container.getMetadata().clear();
+        this.container.uploadMetadata();
 
         container2.downloadAttributes();
         Assert.assertEquals(0, container2.getMetadata().size());
@@ -279,18 +311,18 @@ public class CloudBlobContainerTests extends TestCase {
 
     public void testCloudBlobContainerInvalidMetadata() throws StorageException{
         // test client-side fails correctly
-        testMetadataFailures(container, null, "value1", true);
-        testMetadataFailures(container, "", "value1", true);
-        testMetadataFailures(container, " ", "value1", true);
-        testMetadataFailures(container, "\n \t", "value1", true);
+        testMetadataFailures(this.container, null, "value1", true);
+        testMetadataFailures(this.container, "", "value1", true);
+        testMetadataFailures(this.container, " ", "value1", true);
+        testMetadataFailures(this.container, "\n \t", "value1", true);
 
-        testMetadataFailures(container, "key1", null, false);
-        testMetadataFailures(container, "key1", "", false);
-        testMetadataFailures(container, "key1", " ", false);
-        testMetadataFailures(container, "key1", "\n \t", false);
+        testMetadataFailures(this.container, "key1", null, false);
+        testMetadataFailures(this.container, "key1", "", false);
+        testMetadataFailures(this.container, "key1", " ", false);
+        testMetadataFailures(this.container, "key1", "\n \t", false);
 
         // test client can get empty metadata
-        container.create();
+        this.container.create();
 
         OperationContext opContext = new OperationContext();
         opContext.getSendingRequestEventHandler().addListener(new StorageEvent<SendingRequestEvent>() {
@@ -301,11 +333,11 @@ public class CloudBlobContainerTests extends TestCase {
                 request.setRequestProperty(Constants.HeaderConstants.PREFIX_FOR_STORAGE_METADATA + "key1", "");
             }
         });
-        container.uploadMetadata(null, null, opContext);
+        this.container.uploadMetadata(null, null, opContext);
 
-        container.downloadAttributes();
-        assertEquals(1, container.getMetadata().size());
-        assertEquals("", container.getMetadata().get("key1"));
+        this.container.downloadAttributes();
+        assertEquals(1, this.container.getMetadata().size());
+        assertEquals("", this.container.getMetadata().get("key1"));
     }
 
     private static void testMetadataFailures(CloudBlobContainer container, String key, String value, boolean badKey) {
@@ -328,22 +360,22 @@ public class CloudBlobContainerTests extends TestCase {
 
     /**
      * List the blobs in a container
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      * @throws IOException
      * @throws InterruptedException
      */
-    public void testCloudBlobContainerListBlobs() throws  StorageException, IOException,
-            URISyntaxException {
-        container.create();
+    public void testCloudBlobContainerListBlobs() throws StorageException, IOException, URISyntaxException {
+        this.container.create();
         int numBlobs = 200;
-        List<String> blobNames = BlobTestHelper.uploadNewBlobs(container, BlobType.BLOCK_BLOB, numBlobs, 128, null);
+        List<String> blobNames = BlobTestHelper
+                .uploadNewBlobs(this.container, BlobType.BLOCK_BLOB, numBlobs, 128, null);
 
         assertEquals(numBlobs, blobNames.size());
 
         int count = 0;
-        for (ListBlobItem blob : container.listBlobs()) {
+        for (ListBlobItem blob : this.container.listBlobs()) {
             assertEquals(CloudBlockBlob.class, blob.getClass());
             count++;
         }
@@ -352,7 +384,7 @@ public class CloudBlobContainerTests extends TestCase {
         ResultContinuation token = null;
 
         do {
-            ResultSegment<ListBlobItem> result = container.listBlobsSegmented("bb", false,
+            ResultSegment<ListBlobItem> result = this.container.listBlobsSegmented("bb", false,
                     EnumSet.noneOf(BlobListingDetails.class), 150, token, null, null);
             for (ListBlobItem blob : result.getResults()) {
                 assertEquals(CloudBlockBlob.class, blob.getClass());
@@ -366,28 +398,28 @@ public class CloudBlobContainerTests extends TestCase {
 
     /**
      * List the blobs in a container
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      * @throws IOException
      * @throws InterruptedException
      */
-    public void testCloudBlobContainerListBlobsOptions() throws  StorageException, IOException,
-            InterruptedException, URISyntaxException {
-        container.create();
+    public void testCloudBlobContainerListBlobsOptions() throws StorageException, IOException, InterruptedException,
+            URISyntaxException {
+        this.container.create();
         final int length = 128;
 
         // regular blob
-        CloudBlockBlob originalBlob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(container, BlobType.BLOCK_BLOB,
-                "originalBlob", length, null);
+        CloudBlockBlob originalBlob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(this.container,
+                BlobType.BLOCK_BLOB, "originalBlob", length, null);
 
         // leased blob
-        CloudBlockBlob leasedBlob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(container, BlobType.BLOCK_BLOB,
+        CloudBlockBlob leasedBlob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB,
                 "originalBlobLeased", length, null);
         leasedBlob.acquireLease(null, null);
 
         // copy of regular blob
-        CloudBlockBlob copyBlob = container.getBlockBlobReference(BlobTestHelper
+        CloudBlockBlob copyBlob = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("originalBlobCopy"));
         copyBlob.startCopyFromBlob(originalBlob);
         BlobTestHelper.waitForCopy(copyBlob);
@@ -396,14 +428,14 @@ public class CloudBlobContainerTests extends TestCase {
         CloudBlockBlob blobSnapshot = (CloudBlockBlob) originalBlob.createSnapshot();
 
         // snapshot of the copy of the regular blob
-        CloudBlockBlob copySnapshot = container.getBlockBlobReference(BlobTestHelper
+        CloudBlockBlob copySnapshot = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("originalBlobSnapshotCopy"));
         copySnapshot.startCopyFromBlob(copyBlob);
         BlobTestHelper.waitForCopy(copySnapshot);
 
         int count = 0;
-        for (ListBlobItem item : container.listBlobs("originalBlob", true, EnumSet.allOf(BlobListingDetails.class),
-                null, null)) {
+        for (ListBlobItem item : this.container.listBlobs("originalBlob", true,
+                EnumSet.allOf(BlobListingDetails.class), null, null)) {
             CloudBlockBlob blob = (CloudBlockBlob) item;
             if (blob.getName().equals(originalBlob.getName()) && !blob.isSnapshot()) {
                 assertCreatedAndListedBlobsEquivalent(originalBlob, blob, length);
@@ -437,16 +469,16 @@ public class CloudBlobContainerTests extends TestCase {
         BlobContainerPermissions expectedPermissions;
         BlobContainerPermissions testPermissions;
 
-        container.create();
+        this.container.create();
 
         // Test new permissions.
         expectedPermissions = new BlobContainerPermissions();
-        testPermissions = container.downloadPermissions();
+        testPermissions = this.container.downloadPermissions();
         assertPermissionsEqual(expectedPermissions, testPermissions);
 
         // Test setting empty permissions.
-        container.uploadPermissions(expectedPermissions);
-        testPermissions = container.downloadPermissions();
+        this.container.uploadPermissions(expectedPermissions);
+        testPermissions = this.container.downloadPermissions();
         assertPermissionsEqual(expectedPermissions, testPermissions);
 
         // Add a policy, check setting and getting.
@@ -460,10 +492,10 @@ public class CloudBlobContainerTests extends TestCase {
                 SharedAccessBlobPermissions.LIST, SharedAccessBlobPermissions.DELETE));
         expectedPermissions.getSharedAccessPolicies().put(UUID.randomUUID().toString(), policy1);
 
-        container.uploadPermissions(expectedPermissions);
+        this.container.uploadPermissions(expectedPermissions);
         Thread.sleep(30000);
 
-        testPermissions = container.downloadPermissions();
+        testPermissions = this.container.downloadPermissions();
         assertPermissionsEqual(expectedPermissions, testPermissions);
     }
 
@@ -488,7 +520,7 @@ public class CloudBlobContainerTests extends TestCase {
 
     /**
      * Checks that a given created blob is listed correctly
-     * 
+     *
      * @param createdBlob
      * @param listedBlob
      * @param length

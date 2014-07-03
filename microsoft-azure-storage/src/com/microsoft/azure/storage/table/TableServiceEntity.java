@@ -56,13 +56,8 @@ import com.microsoft.azure.storage.core.SR;
  * serialization and deserialization. Note that the names "PartitionKey", "RowKey", "Timestamp", and "Etag" are reserved
  * and will be ignored if set with the {@link StoreAs} annotation in a subclass.
  * <p>
-<<<<<<< HEAD
- * The following table shows the supported property data types in Windows Azure storage and the corresponding language types
- * when deserialized.
-=======
  * The following table shows the supported property data types in Microsoft Azure storage and the corresponding Java
  * types when deserialized.
->>>>>>> 8d7b0f4... remove windows
  * <TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0">
  * <TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
  * <th>Storage Type</th>

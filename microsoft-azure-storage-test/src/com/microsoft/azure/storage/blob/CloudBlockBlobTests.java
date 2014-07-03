@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.RetryNoRetry;
 import com.microsoft.azure.storage.SendingRequestEvent;
+import com.microsoft.azure.storage.StorageCredentialsAnonymous;
 import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
@@ -54,41 +56,58 @@ public class CloudBlockBlobTests extends TestCase {
     protected CloudBlobContainer container;
 
     @Override
-    public void setUp() throws Exception {
-        container = BlobTestHelper.getRandomContainerReference();
-        container.create();
+    public void setUp() throws URISyntaxException, StorageException {
+        this.container = BlobTestHelper.getRandomContainerReference();
+        this.container.create();
     }
 
     @Override
-    public void tearDown() throws Exception {
-        container.deleteIfExists();
+    public void tearDown() throws StorageException {
+        this.container.deleteIfExists();
+    }
+
+    public void testBlobUriOnlyConstructors() throws URISyntaxException, StorageException, InvalidKeyException {
+        URI blobURI = new URI(container.getUri().toString() + "/anonblob");
+        CloudBlockBlob blob = new CloudBlockBlob(blobURI);
+        assertEquals("anonblob", blob.getName());
+        assertNotNull(blob.getServiceClient());
+        assertEquals(StorageCredentialsAnonymous.class, blob.getServiceClient().getCredentials().getClass());
+
+        blob = container.getBlockBlobReference("anonblob");
+
+        String sas = blob.generateSharedAccessSignature(null, "dummyPolicy");
+        blobURI = new URI(container.getUri().toString() + "/anonblob?" + sas);
+        blob = new CloudBlockBlob(blobURI);
+        assertEquals("anonblob", blob.getName());
+        assertNotNull(blob.getServiceClient());
+        assertEquals(StorageCredentialsSharedAccessSignature.class, blob.getServiceClient().getCredentials().getClass());
     }
 
     public void testCopyBlockBlobSasToSasTest() throws InvalidKeyException, URISyntaxException, StorageException,
-            IOException, InterruptedException {
+    IOException, InterruptedException {
         this.doCloudBlockBlobCopy(true, true);
     }
 
     public void testCopyBlockBlobToSasTest() throws InvalidKeyException, URISyntaxException, StorageException,
-            IOException, InterruptedException {
+    IOException, InterruptedException {
         this.doCloudBlockBlobCopy(false, true);
     }
 
     public void testCopyBlockBlobSasTest() throws InvalidKeyException, URISyntaxException, StorageException,
-            IOException, InterruptedException {
+    IOException, InterruptedException {
         this.doCloudBlockBlobCopy(true, false);
     }
 
     public void testCopyBlockBlobTest() throws InvalidKeyException, URISyntaxException, StorageException, IOException,
-            InterruptedException {
+    InterruptedException {
         this.doCloudBlockBlobCopy(false, false);
     }
 
     public void testCopyBlockBlobWithMetadataOverride() throws URISyntaxException, StorageException, IOException,
-            InterruptedException {
+    InterruptedException {
         Calendar calendar = Calendar.getInstance(Utility.UTC_ZONE);
         String data = "String data";
-        CloudBlockBlob source = container.getBlockBlobReference("source");
+        CloudBlockBlob source = this.container.getBlockBlobReference("source");
 
         BlobTestHelper.setBlobProperties(source);
 
@@ -97,7 +116,7 @@ public class CloudBlockBlobTests extends TestCase {
         source.getMetadata().put("Test", "value");
         source.uploadMetadata();
 
-        CloudBlockBlob copy = container.getBlockBlobReference("copy");
+        CloudBlockBlob copy = this.container.getBlockBlobReference("copy");
         copy.getMetadata().put("Test2", "value2");
         String copyId = copy.startCopyFromBlob(BlobTestHelper.defiddler(source));
         BlobTestHelper.waitForCopy(copy);
@@ -131,8 +150,8 @@ public class CloudBlockBlobTests extends TestCase {
     }
 
     public void testCopyBlockBlobFromSnapshot() throws StorageException, IOException, URISyntaxException,
-            InterruptedException {
-        CloudBlockBlob source = container.getBlockBlobReference("source");
+    InterruptedException {
+        CloudBlockBlob source = this.container.getBlockBlobReference("source");
         String data = "String data";
 
         BlobTestHelper.setBlobProperties(source);
@@ -158,7 +177,7 @@ public class CloudBlockBlobTests extends TestCase {
         snapshot.downloadAttributes();
         assertFalse(source.getMetadata().get("Test").equals(snapshot.getMetadata().get("Test")));
 
-        CloudBlockBlob copy = container.getBlockBlobReference("copy");
+        CloudBlockBlob copy = this.container.getBlockBlobReference("copy");
         String copyId = copy.startCopyFromBlob(BlobTestHelper.defiddler(snapshot));
         BlobTestHelper.waitForCopy(copy);
 
@@ -186,7 +205,7 @@ public class CloudBlockBlobTests extends TestCase {
 
     /**
      * Start copying a blob and then abort
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      * @throws IOException
@@ -195,9 +214,9 @@ public class CloudBlockBlobTests extends TestCase {
 
     public void testCopyFromBlobAbortTest() throws StorageException, URISyntaxException, IOException {
         final int length = 128;
-        CloudBlob originalBlob = BlobTestHelper.uploadNewBlob(container, BlobType.BLOCK_BLOB, "originalBlob", length,
-                null);
-        CloudBlob copyBlob = container.getBlockBlobReference(originalBlob.getName() + "copyed");
+        CloudBlob originalBlob = BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB, "originalBlob",
+                length, null);
+        CloudBlob copyBlob = this.container.getBlockBlobReference(originalBlob.getName() + "copyed");
         copyBlob.startCopyFromBlob(originalBlob);
 
         try {
@@ -210,9 +229,45 @@ public class CloudBlockBlobTests extends TestCase {
         }
     }
 
+    public void deleteBlobIfExists() throws URISyntaxException, StorageException, IOException {
+        final CloudBlockBlob blob1 = container.getBlockBlobReference(BlobTestHelper
+                .generateRandomBlobNameWithPrefix("testBlob"));
+
+        assertFalse(blob1.exists());
+        assertFalse(blob1.deleteIfExists());
+
+        blob1.uploadText("test1");
+        assertTrue(blob1.exists());
+
+        assertTrue(blob1.deleteIfExists());
+        assertFalse(blob1.deleteIfExists());
+
+        // check if second condition works in delete if exists
+        OperationContext ctx = new OperationContext();
+        ctx.getSendingRequestEventHandler().addListener(new StorageEvent<SendingRequestEvent>() {
+
+            @Override
+            public void eventOccurred(SendingRequestEvent eventArg) {
+                if (((HttpURLConnection) eventArg.getConnectionObject()).getRequestMethod().equals("DELETE")) {
+                    try {
+                        blob1.delete();
+                        assertFalse(blob1.exists());
+                    }
+                    catch (StorageException e) {
+                        fail("Delete should succeed.");
+                    }
+                }
+            }
+        });
+
+        // The second delete of a blob will return a 404
+        blob1.uploadText("test1");
+        assertFalse(blob1.deleteIfExists(DeleteSnapshotsOption.NONE, null, null, ctx));
+    }
+
     /**
      * Create a snapshot
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      * @throws IOException
@@ -221,11 +276,12 @@ public class CloudBlockBlobTests extends TestCase {
 
     public void testBlobSnapshotValidationTest() throws StorageException, URISyntaxException, IOException{
         final int length = 1024;
-        CloudBlockBlob blockBlobRef = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(container, BlobType.BLOCK_BLOB,
-                "originalBlob", length, null);
+        CloudBlockBlob blockBlobRef = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(this.container,
+                BlobType.BLOCK_BLOB, "originalBlob", length, null);
         final CloudBlob blobSnapshot = blockBlobRef.createSnapshot();
 
-        for (ListBlobItem blob : container.listBlobs(null, true, EnumSet.allOf(BlobListingDetails.class), null, null)) {
+        for (ListBlobItem blob : this.container.listBlobs(null, true, EnumSet.allOf(BlobListingDetails.class), null,
+                null)) {
             final ByteArrayOutputStream outStream = new ByteArrayOutputStream(length);
             ((CloudBlob) blob).download(outStream);
         }
@@ -239,7 +295,7 @@ public class CloudBlockBlobTests extends TestCase {
         // Read operation should work fine.
         blobSnapshot.downloadAttributes();
 
-        final CloudBlockBlob blobSnapshotUsingRootUri = container.getBlockBlobReference(blockBlobRef.getName(),
+        final CloudBlockBlob blobSnapshotUsingRootUri = this.container.getBlockBlobReference(blockBlobRef.getName(),
                 blobSnapshot.getSnapshotID());
         outStream = new ByteArrayOutputStream(length);
 
@@ -290,7 +346,7 @@ public class CloudBlockBlobTests extends TestCase {
 
     /**
      * Create a blob and try to download a range of its contents
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      * @throws IOException
@@ -302,13 +358,13 @@ public class CloudBlockBlobTests extends TestCase {
         final int length = 5 * blockLength;
 
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
-        final CloudBlockBlob blockBlobRef = container.getBlockBlobReference(blockBlobName);
+        final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
 
         ArrayList<BlockEntry> blockList = new ArrayList<BlockEntry>();
         for (int i = 1; i <= 5; i++) {
             String blockID = String.format("%08d", i);
             blockBlobRef
-                    .uploadBlock(blockID, BlobTestHelper.getRandomDataStream(length), blockLength, null, null, null);
+            .uploadBlock(blockID, BlobTestHelper.getRandomDataStream(length), blockLength, null, null, null);
             blockList.add(new BlockEntry(blockID, BlockSearchMode.LATEST));
         }
 
@@ -335,7 +391,7 @@ public class CloudBlockBlobTests extends TestCase {
         Map<String, BlockEntry> extraBlocks = BlobTestHelper.getBlockEntryList(2);
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("blob1");
 
-        CloudBlockBlob blob = container.getBlockBlobReference(blobName);
+        CloudBlockBlob blob = this.container.getBlockBlobReference(blobName);
         for (BlockEntry block : blocks.values()) {
             blob.uploadBlock(block.getId(), new ByteArrayInputStream(buffer), length);
         }
@@ -345,7 +401,7 @@ public class CloudBlockBlobTests extends TestCase {
             blob.uploadBlock(block.getId(), new ByteArrayInputStream(buffer), length);
         }
 
-        CloudBlockBlob blob2 = container.getBlockBlobReference(blobName);
+        CloudBlockBlob blob2 = this.container.getBlockBlobReference(blobName);
         blob2.downloadAttributes();
         assertEquals(1024 * blocks.size(), blob2.getProperties().getLength());
 
@@ -371,7 +427,7 @@ public class CloudBlockBlobTests extends TestCase {
     public void testBlockBlobDownloadRangeTest() throws URISyntaxException, StorageException, IOException {
         byte[] buffer = BlobTestHelper.getRandomBuffer(2 * 1024);
 
-        CloudBlockBlob blob = container.getBlockBlobReference("blob1");
+        CloudBlockBlob blob = this.container.getBlockBlobReference("blob1");
         ByteArrayInputStream wholeBlob = new ByteArrayInputStream(buffer);
         blob.upload(wholeBlob, -1);
 
@@ -388,7 +444,7 @@ public class CloudBlockBlobTests extends TestCase {
         BlobTestHelper.assertStreamsAreEqualAtIndex(new ByteArrayInputStream(blobStream.toByteArray()), wholeBlob, 0,
                 0, 1024, 2 * 1024);
 
-        CloudBlockBlob blob2 = container.getBlockBlobReference("blob1");
+        CloudBlockBlob blob2 = this.container.getBlockBlobReference("blob1");
         try {
             blob.downloadRange(1024, new Long(0), blobStream, null, null, null);
         }
@@ -406,7 +462,7 @@ public class CloudBlockBlobTests extends TestCase {
 
     public void testBlobUploadFromStreamTest() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
-        final CloudBlockBlob blockBlobRef = container.getBlockBlobReference(blockBlobName);
+        final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
 
         int length = 2 * 1024;
         ByteArrayInputStream srcStream = BlobTestHelper.getRandomDataStream(length);
@@ -425,10 +481,10 @@ public class CloudBlockBlobTests extends TestCase {
 
     public void testBlobUploadFromStreamRequestOptionsTest() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName1 = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
-        final CloudBlockBlob blockBlobRef1 = container.getBlockBlobReference(blockBlobName1);
+        final CloudBlockBlob blockBlobRef1 = this.container.getBlockBlobReference(blockBlobName1);
 
         final String blockBlobName2 = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
-        final CloudBlockBlob blockBlobRef2 = container.getBlockBlobReference(blockBlobName2);
+        final CloudBlockBlob blockBlobRef2 = this.container.getBlockBlobReference(blockBlobName2);
 
         final int length = 2 * com.microsoft.azure.storage.Constants.MB;
         ByteArrayInputStream srcStream = BlobTestHelper.getRandomDataStream(length);
@@ -456,9 +512,9 @@ public class CloudBlockBlobTests extends TestCase {
         BlobRequestOptions options = new BlobRequestOptions();
         options.setDisableContentMD5Validation(true);
 
-        // with explicit upload/download of properties 
+        // with explicit upload/download of properties
         String blockBlobName1 = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
-        CloudBlockBlob blockBlobRef1 = container.getBlockBlobReference(blockBlobName1);
+        CloudBlockBlob blockBlobRef1 = this.container.getBlockBlobReference(blockBlobName1);
 
         blockBlobRef1.upload(BlobTestHelper.getRandomDataStream(length), length);
 
@@ -475,9 +531,9 @@ public class CloudBlockBlobTests extends TestCase {
         Assert.assertEquals(props1.getLength(), props2.getLength());
         BlobTestHelper.assertAreEqual(props1, props2);
 
-        // by uploading/downloading the blob   
+        // by uploading/downloading the blob
         blockBlobName1 = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
-        blockBlobRef1 = container.getBlockBlobReference(blockBlobName1);
+        blockBlobRef1 = this.container.getBlockBlobReference(blockBlobName1);
 
         BlobTestHelper.setBlobProperties(blockBlobRef1);
         props1 = blockBlobRef1.getProperties();
@@ -492,7 +548,7 @@ public class CloudBlockBlobTests extends TestCase {
 
     public void testBlobUploadWithoutMD5Validation() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
-        final CloudBlockBlob blockBlobRef = container.getBlockBlobReference(blockBlobName);
+        final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
 
         final int length = 2 * 1024;
         ByteArrayInputStream srcStream = BlobTestHelper.getRandomDataStream(length);
@@ -520,7 +576,7 @@ public class CloudBlockBlobTests extends TestCase {
 
     public void testBlockBlobUploadContentMD5() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
-        CloudBlockBlob blockBlobRef = container.getBlockBlobReference(blockBlobName);
+        CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
 
         int length = 16 * 1024;
         ByteArrayInputStream srcStream = BlobTestHelper.getRandomDataStream(length);
@@ -568,7 +624,7 @@ public class CloudBlockBlobTests extends TestCase {
 
     public void testBlobEmptyHeaderSigningTest() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
-        final CloudBlockBlob blockBlobRef = container.getBlockBlobReference(blockBlobName);
+        final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
 
         final int length = 2 * 1024;
         ByteArrayInputStream srcStream = BlobTestHelper.getRandomDataStream(length);
@@ -588,7 +644,7 @@ public class CloudBlockBlobTests extends TestCase {
     }
 
     public void testCloudBlockBlobDownloadToByteArray() throws URISyntaxException, StorageException, IOException {
-        CloudBlockBlob blob = container.getBlockBlobReference("blob1");
+        CloudBlockBlob blob = this.container.getBlockBlobReference("blob1");
         BlobTestHelper.doDownloadTest(blob, 1 * 512, 2 * 512, 0);
         BlobTestHelper.doDownloadTest(blob, 1 * 512, 2 * 512, 1 * 512);
         BlobTestHelper.doDownloadTest(blob, 2 * 512, 4 * 512, 1 * 512);
@@ -597,7 +653,7 @@ public class CloudBlockBlobTests extends TestCase {
     }
 
     public void testCloudBlockBlobDownloadRangeToByteArray() throws URISyntaxException, StorageException, IOException {
-        CloudBlockBlob blob = container.getBlockBlobReference(BlobTestHelper
+        CloudBlockBlob blob = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("downloadrange"));
 
         BlobTestHelper.doDownloadRangeToByteArrayTest(blob, 8 * 1024 * 1024, 8 * 1024 * 1024, 1 * 1024 * 1024,
@@ -625,15 +681,15 @@ public class CloudBlockBlobTests extends TestCase {
     }
 
     public void testCloudBlockBlobDownloadRangeToByteArrayNegativeTest() throws URISyntaxException, StorageException,
-            IOException {
-        CloudBlockBlob blob = container.getBlockBlobReference(BlobTestHelper
+    IOException {
+        CloudBlockBlob blob = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("downloadrangenegative"));
         BlobTestHelper.doDownloadRangeToByteArrayNegativeTests(blob);
     }
 
     public void testCloudBlockBlobUploadFromStreamWithAccessCondition() throws URISyntaxException, StorageException,
             IOException {
-        CloudBlockBlob blob1 = container.getBlockBlobReference("blob1");
+        CloudBlockBlob blob1 = this.container.getBlockBlobReference("blob1");
         AccessCondition accessCondition = AccessCondition.generateIfNoneMatchCondition("\"*\"");
 
         final int length = 2 * 1024 * 1024;
@@ -642,7 +698,7 @@ public class CloudBlockBlobTests extends TestCase {
         blob1.upload(srcStream, length, accessCondition, null, null);
         blob1.downloadAttributes();
 
-        CloudBlockBlob blob2 = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(container, BlobType.BLOCK_BLOB,
+        CloudBlockBlob blob2 = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB,
                 "accesscond", length, null);
         blob2.downloadAttributes();
 
@@ -681,12 +737,12 @@ public class CloudBlockBlobTests extends TestCase {
      */
 
     public void testBlobNamePlusEncodingTest() throws StorageException, URISyntaxException, IOException,
-            InterruptedException {
+    InterruptedException {
         final int length = 1 * 1024;
 
-        final CloudBlockBlob originalBlob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(container,
+        final CloudBlockBlob originalBlob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(this.container,
                 BlobType.BLOCK_BLOB, "a+b.txt", length, null);
-        final CloudBlob copyBlob = container.getBlockBlobReference(originalBlob.getName() + "copyed");
+        final CloudBlob copyBlob = this.container.getBlockBlobReference(originalBlob.getName() + "copyed");
 
         copyBlob.startCopyFromBlob(originalBlob);
         BlobTestHelper.waitForCopy(copyBlob);
@@ -717,7 +773,7 @@ public class CloudBlockBlobTests extends TestCase {
         assertEquals(0, callList.size());
 
         //Put blob
-        CloudBlob blob = BlobTestHelper.uploadNewBlob(container, BlobType.BLOCK_BLOB, "bb", length,
+        CloudBlob blob = BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB, "bb", length,
                 sendingRequestEventContext);
 
         assertEquals(1, callList.size());
@@ -746,7 +802,7 @@ public class CloudBlockBlobTests extends TestCase {
         final int blobLength = 16 * 1024;
         final Random randGenerator = new Random();
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
-        final CloudBlockBlob blobRef = container.getBlockBlobReference(blobName);
+        final CloudBlockBlob blobRef = this.container.getBlockBlobReference(blobName);
 
         final byte[] buff = new byte[blobLength];
         randGenerator.nextBytes(buff);
@@ -779,11 +835,11 @@ public class CloudBlockBlobTests extends TestCase {
         byte[] buffer = BlobTestHelper.getRandomBuffer(8 * 512);
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
 
-        CloudBlockBlob blockBlob = container.getBlockBlobReference(blobName);
+        CloudBlockBlob blockBlob = this.container.getBlockBlobReference(blobName);
         BlobOutputStream str = blockBlob.openOutputStream();
         str.close();
 
-        CloudBlockBlob blockBlob2 = container.getBlockBlobReference(blobName);
+        CloudBlockBlob blockBlob2 = this.container.getBlockBlobReference(blobName);
         blockBlob2.downloadAttributes();
         assertEquals(0, blockBlob2.getProperties().getLength());
         assertEquals(BlobType.BLOCK_BLOB, blockBlob2.getProperties().getBlobType());
@@ -812,7 +868,7 @@ public class CloudBlockBlobTests extends TestCase {
 
     public void testUploadFromByteArray() throws Exception {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
-        final CloudBlockBlob blob = container.getBlockBlobReference(blobName);
+        final CloudBlockBlob blob = this.container.getBlockBlobReference(blobName);
 
         this.doUploadFromByteArrayTest(blob, 4 * 512, 0, 4 * 512);
         this.doUploadFromByteArrayTest(blob, 4 * 512, 0, 2 * 512);
@@ -841,13 +897,13 @@ public class CloudBlockBlobTests extends TestCase {
 
     public void testUploadDownloadFromFile() throws IOException, StorageException, URISyntaxException {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
-        final CloudBlockBlob blob = container.getBlockBlobReference(blobName);
+        final CloudBlockBlob blob = this.container.getBlockBlobReference(blobName);
 
-        this.doUploadDownloadFileTest(blob, 0);
-        this.doUploadDownloadFileTest(blob, 4096);
-        this.doUploadDownloadFileTest(blob, 4097);
+        //this.doUploadDownloadFileTest(blob, 0);
+        //this.doUploadDownloadFileTest(blob, 4096);
+        //this.doUploadDownloadFileTest(blob, 4097);
         this.doUploadDownloadFileTest(blob, 5 * 1024 * 1024);
-        this.doUploadDownloadFileTest(blob, 11 * 1024 * 1024);
+        //this.doUploadDownloadFileTest(blob, 11 * 1024 * 1024);
     }
 
     private void doUploadDownloadFileTest(CloudBlockBlob blob, int fileSize) throws IOException, StorageException {
@@ -888,7 +944,7 @@ public class CloudBlockBlobTests extends TestCase {
 
     public void testUploadDownloadFromText() throws URISyntaxException, StorageException, IOException {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
-        final CloudBlockBlob blob = container.getBlockBlobReference(blobName);
+        final CloudBlockBlob blob = this.container.getBlockBlobReference(blobName);
 
         this.doUploadDownloadStringTest(blob, 0);
         this.doUploadDownloadStringTest(blob, 8000);
@@ -896,7 +952,7 @@ public class CloudBlockBlobTests extends TestCase {
 
     public void testBlobMultiConditionHeaders() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
-        final CloudBlockBlob blockBlobRef = container.getBlockBlobReference(blockBlobName);
+        final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
 
         final int length = 2 * 1024;
         ByteArrayInputStream srcStream = BlobTestHelper.getRandomDataStream(length);
@@ -922,8 +978,8 @@ public class CloudBlockBlobTests extends TestCase {
     }
 
     public void testBlobConditionalAccess() throws StorageException, IOException, URISyntaxException {
-        CloudBlockBlob blob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(container, BlobType.BLOCK_BLOB, "test",
-                128, null);
+        CloudBlockBlob blob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB,
+                "test", 128, null);
         blob.downloadAttributes();
 
         String currentETag = blob.getProperties().getEtag();
@@ -1080,7 +1136,7 @@ public class CloudBlockBlobTests extends TestCase {
         assertEquals("Strings are not equal", stringToUse, newString);
     }
 
-    // Not a good test over all of Unicode, but good enough for our purposes 
+    // Not a good test over all of Unicode, but good enough for our purposes
     private String getRandomUNCString(int length) {
         return this.getRandomString(length, 0xD7FF);
     }
@@ -1100,10 +1156,10 @@ public class CloudBlockBlobTests extends TestCase {
     }
 
     private void doCloudBlockBlobCopy(boolean sourceIsSas, boolean destinationIsSas) throws URISyntaxException,
-            StorageException, IOException, InvalidKeyException, InterruptedException {
+    StorageException, IOException, InvalidKeyException, InterruptedException {
 
         // Create source on server.
-        CloudBlockBlob source = container.getBlockBlobReference("source");
+        CloudBlockBlob source = this.container.getBlockBlobReference("source");
 
         String data = "String data";
         source.uploadText(data, Constants.UTF8_CHARSET, null, null, null);
@@ -1112,7 +1168,7 @@ public class CloudBlockBlobTests extends TestCase {
         source.uploadMetadata();
 
         // Create destination on server.
-        CloudBlockBlob destination = container.getBlockBlobReference("destination");
+        CloudBlockBlob destination = this.container.getBlockBlobReference("destination");
         destination.commitBlockList(new ArrayList<BlockEntry>());
 
         CloudBlockBlob copySource = source;
@@ -1130,7 +1186,7 @@ public class CloudBlockBlobTests extends TestCase {
 
             BlobContainerPermissions perms = new BlobContainerPermissions();
             perms.getSharedAccessPolicies().put("read", policy);
-            container.uploadPermissions(perms);
+            this.container.uploadPermissions(perms);
             Thread.sleep(30000);
 
             String sasToken = source.generateSharedAccessSignature(policy, null);
@@ -1152,12 +1208,12 @@ public class CloudBlockBlobTests extends TestCase {
                 perms.setPublicAccess(BlobContainerPublicAccessType.BLOB);
             }
             perms.getSharedAccessPolicies().put("write", policy);
-            container.uploadPermissions(perms);
+            this.container.uploadPermissions(perms);
             Thread.sleep(30000);
 
             String sasToken = destination.generateSharedAccessSignature(policy, null);
 
-            // Get destination 
+            // Get destination
             StorageCredentialsSharedAccessSignature credentials = new StorageCredentialsSharedAccessSignature(sasToken);
             copyDestination = new CloudBlockBlob(credentials.transformUri(destination.getUri()));
         }

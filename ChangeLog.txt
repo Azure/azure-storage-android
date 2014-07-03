@@ -1,0 +1,7 @@
+2014.07.02 Version 0.2.0
+ * Added File Service support. The File Service and the associated SDK APIs are in preview. 
+ * Added CloudAnalyticsClient and related methods to simplify Storage Analytics logging and metrics use case scenarios.
+ * Fixed a bug where an empty file would be left over during the downloadToFile error case.
+ * Updated StorageErrorCodeStrings class. 
+ * Requests made using SAS credentials have the api-version query parameter appended to the URI.
+ * Fixed a null pointer exception that resulted when the first request was made with a blob created using the uri-only constructor (no sas creds appended). 
