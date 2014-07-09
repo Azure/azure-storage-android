@@ -9,9 +9,9 @@
 	the specific language governing permissions and limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.microsoft.azure.storage.test"
+    package="com.microsoft.azure.android.test"
     android:versionCode="0"
-    android:versionName="0.2.0" >
+    android:versionName="0.2.1" >
 
     <uses-sdk
         android:minSdkVersion="15"
@@ -21,7 +21,7 @@
     
     <instrumentation
         android:name="android.test.InstrumentationTestRunner"
-        android:targetPackage="com.microsoft.azure.storage.test" />
+        android:targetPackage="com.microsoft.azure.android.test" />
 
     <application
         android:icon="@drawable/ic_launcher"
