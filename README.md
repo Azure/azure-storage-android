@@ -44,7 +44,7 @@ First, add mavenCentral to your repositories by adding the following to your gra
 Then, add a dependency by adding the following to your gradle build file:
 
     dependencies {
-        compile 'com.microsoft.azure.android:azure-storage-android:0.2.1@aar'
+        compile 'com.microsoft.azure.android:azure-storage-android:0.3.0@aar'
     }
 
 ###Option 4: aar via Maven
@@ -55,7 +55,7 @@ To get the binaries of this library as distributed by Microsoft, ready for use w
 <dependency>
 	<groupId>com.microsoft.azure.android</groupId>
 	<artifactId>azure-storage-android</artifactId>
-	<version>0.2.1</version>
+	<version>0.3.0</version>
 	<type>aar</type>
 </dependency>
 ```

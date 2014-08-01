@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 
 import com.microsoft.azure.storage.AuthenticationScheme;
 import com.microsoft.azure.storage.LocationMode;
+import com.microsoft.azure.storage.NameValidator;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.RetryNoRetry;
 import com.microsoft.azure.storage.SendingRequestEvent;
@@ -60,6 +61,39 @@ public class CloudQueueTests extends TestCase {
         this.queue.deleteIfExists();
     }
 
+    /**
+     * Tests queue name validation.
+     */
+    public void testCloudQueueNameValidation()
+    {
+        NameValidator.validateQueueName("alpha");
+        NameValidator.validateQueueName("4lphanum3r1c");
+        NameValidator.validateQueueName("middle-dash");
+
+        invalidQueueTestHelper(null, "Null not allowed.", "Invalid queue name. The name may not be null, empty, or whitespace only.");
+        invalidQueueTestHelper("$root", "Alphanumeric or dashes only.", "Invalid queue name. Check MSDN for more information about valid naming.");
+        invalidQueueTestHelper("double--dash", "No double dash.", "Invalid queue name. Check MSDN for more information about valid naming.");
+        invalidQueueTestHelper("CapsLock", "Lowercase only.", "Invalid queue name. Check MSDN for more information about valid naming.");
+        invalidQueueTestHelper("illegal$char", "Alphanumeric or dashes only.", "Invalid queue name. Check MSDN for more information about valid naming.");
+        invalidQueueTestHelper("illegal!char", "Alphanumeric or dashes only.", "Invalid queue name. Check MSDN for more information about valid naming.");
+        invalidQueueTestHelper("white space", "Alphanumeric or dashes only.", "Invalid queue name. Check MSDN for more information about valid naming.");
+        invalidQueueTestHelper("2c", "Between 3 and 63 characters.", "Invalid queue name length. The name must be between 3 and 63 characters long.");
+        invalidQueueTestHelper(new String(new char[64]).replace("\0", "n"), "Between 3 and 63 characters.", "Invalid queue name length. The name must be between 3 and 63 characters long.");
+    }
+
+    private void invalidQueueTestHelper(String queueName, String failMessage, String exceptionMessage)
+    {
+        try
+        {
+            NameValidator.validateQueueName(queueName);
+            fail(failMessage);
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(exceptionMessage, e.getMessage());
+        }
+    }
+    
     /**
      * Get permissions from string
      */
@@ -640,14 +674,14 @@ public class CloudQueueTests extends TestCase {
         assertEquals(message.getMessageContentAsString(), msgContent);
         assertEquals(msgFromRetrieve1.getMessageContentAsString(), msgContent);
     }
-
-    public void testAddMessageUnicode() throws  StorageException {
+    
+    public void testAddMessageUnicode() throws StorageException {
         ArrayList<String> messages = new ArrayList<String>();
-        messages.add("Le dÃƒÆ’Ã‚Â©bat sur l'identitÃƒÆ’Ã‚Â© nationale, l'idÃƒÆ’Ã‚Â©e du prÃƒÆ’Ã‚Â©sident Nicolas Sarkozy de dÃƒÆ’Ã‚Â©choir des personnes d'origine ÃƒÆ’Ã‚Â©trangÃƒÆ’Ã‚Â¨re de la nationalitÃƒÆ’Ã‚Â© franÃƒÆ’Ã‚Â§aise ... certains cas et les rÃƒÆ’Ã‚Â©centes mesures prises contre les Roms ont choquÃƒÆ’Ã‚Â© les experts, qui rendront leurs conclusions le 27 aoÃƒÆ’Ã‚Â»t.");
-        messages.add("Ãƒï¿½Ã¢â‚¬â„¢Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã‹â€  Ãƒï¿½Ã‚Â»Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â³Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â½ Yahoo! Ãƒï¿½Ã‚Â´Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚ÂµÃƒâ€˜Ã¢â‚¬Å¡ Ãƒï¿½Ã‚Â´Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒâ€˜Ã†â€™Ãƒï¿½Ã‚Â¿ Ãƒï¿½Ã‚Âº Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â¼ Ãƒï¿½Ã‚Â¼Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¢â‚¬Â°Ãƒï¿½Ã‚Â½Ãƒâ€˜Ã¢â‚¬Â¹Ãƒï¿½Ã‚Â¼ Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â½Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒâ€˜Ã¢â€šÂ¬Ãƒâ€˜Ã†â€™Ãƒï¿½Ã‚Â¼Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â¼ Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â²Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â·Ãƒï¿½Ã‚Â¸, Ãƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â°Ãƒï¿½Ã‚Âº Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â»Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚ÂºÃƒâ€˜Ã¢â‚¬Å¡Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã¯Â¿Â½ Ãƒï¿½Ã‚Â¿Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¢â‚¬Â¡Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â°, Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¿Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â²Ãƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â° Ãƒï¿½Ã‚Â¼Ãƒï¿½Ã‚Â³Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â²Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â½Ãƒâ€˜Ã¢â‚¬Â¹Ãƒâ€˜Ã¢â‚¬Â¦ Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â±Ãƒâ€˜Ã¢â‚¬Â°Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â¹, Ãƒâ€˜Ã¢â‚¬Å¾Ãƒâ€˜Ã†â€™Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚ÂºÃƒâ€˜Ã¢â‚¬Â Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â¸ Ãƒï¿½Ã‚Â±Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â·Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â¿Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¸, Ãƒï¿½Ã‚Â² Ãƒâ€˜Ã¢â‚¬Â¡Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¸, Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â²Ãƒï¿½Ã‚Â¸Ãƒâ€˜Ã¢â€šÂ¬Ãƒâ€˜Ã†â€™Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â½Ãƒâ€˜Ã¢â‚¬Â¹Ãƒï¿½Ã‚Âµ Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â´Ãƒâ€˜Ã¯Â¿Â½Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â²Ãƒï¿½Ã‚Â° Ãƒï¿½Ã‚Â¸ Ãƒï¿½Ã‚Â±Ãƒï¿½Ã‚Â»Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â¸Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Â²Ãƒâ€˜Ã¢â‚¬Â°Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Âº Ãƒï¿½Ã‚Â²Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â¿Ãƒï¿½Ã‚Â»Ãƒâ€˜Ã¢â‚¬Â¹Ãƒï¿½Ã‚Â²Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã…Â½Ãƒâ€˜Ã¢â‚¬Â°Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚Â¹ Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚ÂµÃƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â»Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â¼Ãƒâ€˜Ã¢â‚¬Â¹, Ãƒï¿½Ã‚Â¸ Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â·Ãƒï¿½Ã‚Â±Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â¾Ãƒï¿½Ã‚Âµ, Ãƒï¿½Ã‚Â½Ãƒï¿½Ã‚Â°Ãƒï¿½Ã‚Â¿Ãƒâ€˜Ã¢â€šÂ¬Ãƒï¿½Ã‚Â¸Ãƒï¿½Ã‚Â¼Ãƒï¿½Ã‚ÂµÃƒâ€˜Ã¢â€šÂ¬, Ãƒâ€˜Ã¢â‚¬Å¾Ãƒï¿½Ã‚Â¾Ãƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¾ Ãƒï¿½Ã‚Â¸ Ãƒï¿½Ã‚Â¼Ãƒâ€˜Ã†â€™Ãƒï¿½Ã‚Â·Ãƒâ€˜Ã¢â‚¬Â¹Ãƒï¿½Ã‚ÂºÃƒï¿½Ã‚Â° Ãƒï¿½Ã‚Â² Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚ÂµÃƒâ€˜Ã¢â‚¬Å¡Ãƒï¿½Ã‚Â¸ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ï¿½ Ãƒï¿½Ã‚Â²Ãƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Âµ Ãƒï¿½Ã‚Â±Ãƒï¿½Ã‚ÂµÃƒâ€˜Ã¯Â¿Â½Ãƒï¿½Ã‚Â¿Ãƒï¿½Ã‚Â»Ãƒï¿½Ã‚Â°Ãƒâ€˜Ã¢â‚¬Å¡");
-        messages.add("ÃƒÂ¦Ã¯Â¿Â½Ã‚Â®ÃƒÂ¦Ã¢â‚¬â€œÃ‚Â°ÃƒÂ¥Ã¯Â¿Â½Ã…Â½ÃƒÂ§Ã‚Â¤Ã‚Â¾8ÃƒÂ¦Ã…â€œÃ‹â€ 12ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¥ÃƒÂ§Ã¢â‚¬ï¿½Ã‚Âµ 8ÃƒÂ¦Ã…â€œÃ‹â€ 11ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¥ÃƒÂ¦Ã¢â€žÂ¢Ã…Â¡ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¨Ã‹â€ Ã…Â¸ÃƒÂ¦Ã¢â‚¬ÂºÃ‚Â²ÃƒÂ¥Ã‚Â¢Ã†â€™ÃƒÂ¥Ã¢â‚¬Â Ã¢â‚¬Â¦ÃƒÂ¥Ã¢â‚¬Â Ã¯Â¿Â½ÃƒÂ¦Ã‚Â¬Ã‚Â¡ÃƒÂ¥Ã¢â‚¬Â¡Ã‚ÂºÃƒÂ§Ã…Â½Ã‚Â°ÃƒÂ¥Ã‚Â¼Ã‚ÂºÃƒÂ©Ã¢â€žÂ¢Ã¯Â¿Â½ÃƒÂ©Ã¢â‚¬ÂºÃ‚Â¨ÃƒÂ¥Ã‚Â¤Ã‚Â©ÃƒÂ¦Ã‚Â°Ã¢â‚¬ï¿½ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¤Ã‚Â½Ã‚Â¿ÃƒÂ§Ã¢â‚¬Â°Ã‚Â¹ÃƒÂ¥Ã‚Â¤Ã‚Â§ÃƒÂ¥Ã‚Â±Ã‚Â±ÃƒÂ¦Ã‚Â´Ã‚ÂªÃƒÂ¦Ã‚Â³Ã‚Â¥ÃƒÂ§Ã…Â¸Ã‚Â³ÃƒÂ¦Ã‚ÂµÃ¯Â¿Â½ÃƒÂ§Ã¯Â¿Â½Ã‚Â¾ÃƒÂ¦Ã†â€™Ã¢â‚¬Â¦ÃƒÂ©Ã¢â‚¬ÂºÃ‚ÂªÃƒÂ¤Ã‚Â¸Ã…Â ÃƒÂ¥Ã…Â Ã‚Â ÃƒÂ©Ã…â€œÃ…â€œÃƒÂ£Ã¢â€šÂ¬Ã¢â‚¬Å¡ÃƒÂ§Ã¢â€žÂ¢Ã‚Â½ÃƒÂ©Ã‚Â¾Ã¢â€žÂ¢ÃƒÂ¦Ã‚Â±Ã…Â¸ÃƒÂ¦Ã‚Â°Ã‚Â´ÃƒÂ¥Ã…â€œÃ‚Â¨ÃƒÂ¦Ã‚Â¢Ã‚Â¨ÃƒÂ¥Ã¯Â¿Â½Ã¯Â¿Â½ÃƒÂ¥Ã‚Â­Ã¯Â¿Â½ÃƒÂ¦Ã¯Â¿Â½Ã¢â‚¬ËœÃƒÂ§Ã…Â¡Ã¢â‚¬Å¾ÃƒÂ¤Ã‚ÂºÃ‚Â¤ÃƒÂ¦Ã‚Â±Ã¢â‚¬Â¡ÃƒÂ¥Ã…â€œÃ‚Â°ÃƒÂ¥Ã‚Â¸Ã‚Â¦ÃƒÂ¥Ã‚Â½Ã‚Â¢ÃƒÂ¦Ã‹â€ Ã¯Â¿Â½ÃƒÂ¤Ã‚Â¸Ã¢â€šÂ¬ÃƒÂ¤Ã‚Â¸Ã‚ÂªÃƒÂ¦Ã¢â‚¬â€œÃ‚Â°ÃƒÂ§Ã…Â¡Ã¢â‚¬Å¾ÃƒÂ¥Ã‚Â Ã‚Â°ÃƒÂ¥Ã‚Â¡Ã…Â¾ÃƒÂ¦Ã‚Â¹Ã¢â‚¬â€œÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¦Ã‚Â°Ã‚Â´ÃƒÂ¤Ã‚Â½Ã¯Â¿Â½ÃƒÂ¦Ã‚Â¯Ã¢â‚¬ï¿½ÃƒÂ¥Ã‚Â¹Ã‚Â³ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¶ÃƒÂ©Ã‚Â«Ã‹Å“ÃƒÂ¥Ã¢â‚¬Â¡Ã‚Âº3ÃƒÂ§Ã‚Â±Ã‚Â³ÃƒÂ£Ã¢â€šÂ¬Ã¢â‚¬Å¡ÃƒÂ§Ã¢â‚¬ï¿½Ã‹Å“ÃƒÂ¨Ã¢â‚¬Å¡Ã†â€™ÃƒÂ§Ã…â€œÃ¯Â¿Â½ÃƒÂ¥Ã¢â‚¬ÂºÃ‚Â½ÃƒÂ¥Ã…â€œÃ…Â¸ÃƒÂ¨Ã‚ÂµÃ¢â‚¬Å¾ÃƒÂ¦Ã‚ÂºÃ¯Â¿Â½ÃƒÂ¥Ã…Â½Ã¢â‚¬Â¦ÃƒÂ¥Ã¢â‚¬Â°Ã‚Â¯ÃƒÂ¥Ã…Â½Ã¢â‚¬Â¦ÃƒÂ©Ã¢â‚¬Â¢Ã‚Â¿ÃƒÂ¥Ã‚Â¼Ã‚Â ÃƒÂ¥Ã¢â‚¬ÂºÃ‚Â½ÃƒÂ¥Ã¯Â¿Â½Ã…Â½ÃƒÂ¥Ã‚Â½Ã¢â‚¬Å“ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¥22ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¶ÃƒÂ¨Ã‚Â®Ã‚Â¸ÃƒÂ¥Ã…â€œÃ‚Â¨ÃƒÂ¦Ã¢â‚¬â€œÃ‚Â°ÃƒÂ©Ã¢â‚¬â€�Ã‚Â»ÃƒÂ¥Ã¯Â¿Â½Ã¢â‚¬ËœÃƒÂ¥Ã‚Â¸Ã†â€™ÃƒÂ¤Ã‚Â¼Ã…Â¡ÃƒÂ¤Ã‚Â¸Ã…Â ÃƒÂ¤Ã‚Â»Ã¢â‚¬Â¹ÃƒÂ§Ã‚Â»Ã¯Â¿Â½ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¦Ã‹â€ Ã‚ÂªÃƒÂ¨Ã¢â‚¬Â¡Ã‚Â³12ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¥21ÃƒÂ¦Ã¢â‚¬â€�Ã‚Â¶50ÃƒÂ¥Ã‹â€ Ã¢â‚¬Â ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¨Ã‹â€ Ã…Â¸ÃƒÂ¦Ã¢â‚¬ÂºÃ‚Â²ÃƒÂ¥Ã‚Â Ã‚Â°ÃƒÂ¥Ã‚Â¡Ã…Â¾ÃƒÂ¦Ã‚Â¹Ã¢â‚¬â€œÃƒÂ¥Ã‚Â Ã‚Â°ÃƒÂ¥Ã‚Â¡Ã…Â¾ÃƒÂ¤Ã‚Â½Ã¢â‚¬Å“ÃƒÂ¥Ã‚Â·Ã‚Â²ÃƒÂ¦Ã‚Â¶Ã‹â€ ÃƒÂ©Ã¢â€žÂ¢Ã‚Â¤ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ¦Ã‚ÂºÃ†â€™ÃƒÂ¥Ã¯Â¿Â½Ã¯Â¿Â½ÃƒÂ©Ã¢â€žÂ¢Ã‚Â©ÃƒÂ¦Ã†â€™Ã¢â‚¬Â¦ÃƒÂ¥Ã‚Â·Ã‚Â²ÃƒÂ¦Ã‚Â¶Ã‹â€ ÃƒÂ©Ã¢â€žÂ¢Ã‚Â¤ÃƒÂ¯Ã‚Â¼Ã…â€™ÃƒÂ§Ã¢â‚¬ÂºÃ‚Â®ÃƒÂ¥Ã¢â‚¬Â°Ã¯Â¿Â½ÃƒÂ©Ã¢â‚¬â„¢Ã‹â€ ÃƒÂ¥Ã‚Â¯Ã‚Â¹ÃƒÂ¥Ã‚Â Ã‚Â°ÃƒÂ¥Ã‚Â¡Ã…Â¾ÃƒÂ¦Ã‚Â¹Ã¢â‚¬â€œÃƒÂ§Ã…Â¡Ã¢â‚¬Å¾ÃƒÂ¤Ã‚Â¸Ã‚Â»ÃƒÂ¨Ã‚Â¦Ã¯Â¿Â½ÃƒÂ¥Ã‚Â·Ã‚Â¥ÃƒÂ¤Ã‚Â½Ã…â€œÃƒÂ¦Ã‹Å“Ã‚Â¯ÃƒÂ§Ã¢â‚¬â€œÃ¯Â¿Â½ÃƒÂ©Ã¢â€šÂ¬Ã…Â¡ÃƒÂ¦Ã‚Â²Ã‚Â³ÃƒÂ©Ã¯Â¿Â½Ã¢â‚¬Å“ÃƒÂ£Ã¢â€šÂ¬Ã¢â‚¬Å¡");
-        messages.add("Ãƒâ€”Ã…â€œ Ãƒâ€”Ã¢â‚¬ÂºÃƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã…â€œÃƒâ€”Ã¯Â¿Â½\", Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã…â€œÃƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã…Â¸, Ãƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã‚Â©Ãƒâ€”Ã‚Â¨ Ãƒâ€”Ã‚Â§Ãƒâ€”Ã¢â‚¬Â¢ Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã‚Âª Ãƒâ€”Ã‚Â©Ãƒâ€”Ã…Â¾Ãƒâ€”Ã‚Â¡Ãƒâ€”Ã‚Â¨ Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã¯Â¿Â½Ãƒâ€”Ã‚Â© Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã…Â¾Ãƒâ€”Ã…Â¾Ãƒâ€”Ã‚Â©Ãƒâ€”Ã…â€œÃƒâ€”Ã¢â‚¬ï¿½, Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã‚Â Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã…Â¾Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã…Â¸ Ãƒâ€”Ã‚Â Ãƒâ€”Ã‚ÂªÃƒâ€”Ã‚Â Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¢â‚¬Â¢, Ãƒâ€”Ã…â€œÃƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã‚Âª Ãƒâ€”Ã‹Å“Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã‚Â§Ãƒâ€”Ã…â€œ. Ãƒâ€”Ã…â€œÃƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã‚Â¨Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬Â¢, Ãƒâ€”Ã¯Â¿Â½Ãƒâ€”Ã¢â‚¬ÂºÃƒâ€”Ã…Â¸ Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã‚Â©Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã‚Â Ãƒâ€”Ã¢â‚¬Â¢ Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã‚Â§ Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã‹Å“Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã‚ÂªÃƒâ€”Ã‚Â§Ãƒâ€”Ã‚Â©Ãƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã‚ÂªÃƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã‚Â©Ãƒâ€”Ã…â€œ Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã‚Â¦Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã‚Âª Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã…Â¾Ãƒâ€”Ã‚Â©Ãƒâ€”Ã‹Å“: \"Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã‚Â©Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬ï¿½ Ãƒâ€”Ã…â€œÃƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã‚ÂªÃƒâ€”Ã‚Â§Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ Ãƒâ€”Ã¢â‚¬Å“Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã…Â¸ Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã…â€œ Ãƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¯Â¿Â½Ãƒâ€”Ã…â€œÃƒâ€”Ã‹Å“Ãƒâ€”Ã‚Â¨Ãƒâ€”Ã‚Â Ãƒâ€”Ã‹Å“Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã¢â‚¬Â¢Ãƒâ€”Ã‚Âª. Ãƒâ€”Ã‚Â¢Ãƒâ€”Ã‚Â¡Ãƒâ€”Ã‚Â§Ãƒâ€”Ã‚Â Ãƒâ€”Ã¢â‚¬Â¢ Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã¢â‚¬ï¿½Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¢â‚¬ËœÃƒâ€”Ã‹Å“Ãƒâ€”Ã¢â€žÂ¢Ãƒâ€”Ã¯Â¿Â½ ");
-        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis MÃƒÆ’Ã‚Â¤rz um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprÃƒÆ’Ã‚Â¼nglich waren es hier 1,7 Prozent");
+        messages.add("Le débat sur l'identité nationale, l'idée du président Nicolas Sarkozy de déchoir des personnes d'origine étrangère de la nationalité française ... certains cas et les récentes mesures prises contre les Roms ont choqué les experts, qui rendront leurs conclusions le 27 août.");
+        messages.add("Ваш логин Yahoo! дает доступ к таким мощным инструментам связи, как электронная почта, отправка мгновенных сообщений, функции безопасности, в частности, антивирусные средства и блокировщик всплывающей рекламы, и избранное, например, фото и музыка в сети — все бесплат");
+        messages.add("据新华社8月12日电 8月11日晚，舟曲境内再次出现强降雨天气，使特大山洪泥石流灾情雪上加霜。白龙江水在梨坝子村的交汇地带形成一个新的堰塞湖，水位比平时高出3米。甘肃省国土资源厅副厅长张国华当日22时许在新闻发布会上介绍，截至12日21时50分，舟曲堰塞湖堰塞体已消除，溃坝险情已消除，目前针对堰塞湖的主要工作是疏通河道。");
+        messages.add("ל כולם\", הדהים יעלון, ויישר קו עם העדות שמסר ראש הממשלה, בנימין נתניהו, לוועדת טירקל. לדבריו, אכן השרים דנו רק בהיבטים התקשורתיים של עצירת המשט: \"בשביעייה לא התקיים דיון על האלטרנטיבות. עסקנו בהיבטים ");
+        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis März um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprünglich waren es hier 1,7 Prozent");
         messages.add("<?xml version=\"1.0\"?>\n<!DOCTYPE PARTS SYSTEM \"parts.dtd\">\n<?xml-stylesheet type=\"text/css\" href=\"xmlpartsstyle.css\"?>\n<PARTS>\n   <TITLE>Computer Parts</TITLE>\n   <PART>\n      <ITEM>Motherboard</ITEM>\n      <MANUFACTURER>ASUS</MANUFACTURER>\n      <MODEL>"
                 + "P3B-F</MODEL>\n      <COST> 123.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Video Card</ITEM>\n      <MANUFACTURER>ATI</MANUFACTURER>\n      <MODEL>All-in-Wonder Pro</MODEL>\n      <COST> 160.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Sound Card</ITEM>\n      <MANUFACTURER>"
                 + "Creative Labs</MANUFACTURER>\n      <MODEL>Sound Blaster Live</MODEL>\n      <COST> 80.00</COST>\n   </PART>\n   <PART>\n      <ITEM> inch Monitor</ITEM>\n      <MANUFACTURER>LG Electronics</MANUFACTURER>\n      <MODEL> 995E</MODEL>\n      <COST> 290.00</COST>\n   </PART>\n</PARTS>");
@@ -719,7 +753,7 @@ public class CloudQueueTests extends TestCase {
 
     public void testQueueUnicodeAndXmlMessageTest() throws  StorageException
             {
-        String msgContent = "ÃƒÂ¥Ã‚Â¥Ã‚Â½<?xml version= 1.0  encoding= utf-8  ?>";
+        String msgContent = "ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â¥Ãƒâ€šÃ‚Â½<?xml version= 1.0  encoding= utf-8  ?>";
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
         this.queue.addMessage(message);
         CloudQueueMessage msgFromRetrieve1 = this.queue.retrieveMessage();
