@@ -1,3 +1,8 @@
+2014.08.01 Version 0.3.0
+ * Added the NameValidator class which contains helpers that check to see if resource names are valid.
+ * Fixed a bug where the RequestUrl of a LogRecord was not correctly HTML4 decoded.
+ * Made FileRange class and ListFilesAndDirectories method in the CloudFileDirectory class public. 
+
 2014.07.02 Version 0.2.0
  * Added File Service support. The File Service and the associated SDK APIs are in preview. 
  * Added CloudAnalyticsClient and related methods to simplify Storage Analytics logging and metrics use case scenarios.

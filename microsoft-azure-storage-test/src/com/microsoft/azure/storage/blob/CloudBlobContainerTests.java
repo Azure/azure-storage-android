@@ -30,6 +30,7 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import com.microsoft.azure.storage.Constants;
+import com.microsoft.azure.storage.NameValidator;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.ResultContinuation;
 import com.microsoft.azure.storage.ResultSegment;
@@ -54,6 +55,42 @@ public class CloudBlobContainerTests extends TestCase {
     @Override
     public void tearDown() throws Exception {
         this.container.deleteIfExists();
+    }
+    
+    /**
+     * Test container name validation.
+     */
+    public void testCloudBlobContainerNameValidation()
+    {
+        NameValidator.validateContainerName("alpha");
+        NameValidator.validateContainerName("4lphanum3r1c");
+        NameValidator.validateContainerName("middle-dash");
+        NameValidator.validateContainerName("$root");
+        NameValidator.validateContainerName("$logs");
+
+        invalidContainertTestHelper(null, "Null containers invalid.", "Invalid container name. The name may not be null, empty, or whitespace only.");
+        invalidContainertTestHelper("$ROOT", "Root container case sensitive.", "Invalid container name. Check MSDN for more information about valid naming.");
+        invalidContainertTestHelper("double--dash", "Double dashes not allowed.", "Invalid container name. Check MSDN for more information about valid naming.");
+        invalidContainertTestHelper("-start-dash", "Start dashes not allowed.", "Invalid container name. Check MSDN for more information about valid naming.");
+        invalidContainertTestHelper("CapsLock", "Lowercase only.", "Invalid container name. Check MSDN for more information about valid naming.");
+        invalidContainertTestHelper("illegal$char", "Only alphanumeric and hyphen characters.", "Invalid container name. Check MSDN for more information about valid naming.");
+        invalidContainertTestHelper("illegal!char", "Only alphanumeric and hyphen characters.", "Invalid container name. Check MSDN for more information about valid naming.");
+        invalidContainertTestHelper("white space", "Only alphanumeric and hyphen characters.", "Invalid container name. Check MSDN for more information about valid naming.");
+        invalidContainertTestHelper("2c", "Root container case sensitive.", "Invalid container name length. The name must be between 3 and 63 characters long.");
+        invalidContainertTestHelper(new String(new char[64]).replace("\0", "n"), "Between 3 and 64 characters.", "Invalid container name length. The name must be between 3 and 63 characters long.");
+    }
+
+    private void invalidContainertTestHelper(String containerName, String failMessage, String exceptionMessage)
+    {
+        try
+        {
+            NameValidator.validateContainerName(containerName);
+            fail(failMessage);
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(exceptionMessage, e.getMessage());
+        }
     }
 
     /**
