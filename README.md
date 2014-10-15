@@ -55,7 +55,7 @@ To get the binaries of this library as distributed by Microsoft, ready for use w
 <dependency>
 	<groupId>com.microsoft.azure.android</groupId>
 	<artifactId>azure-storage-android</artifactId>
-	<version>0.3.0</version>
+	<version>0.3.1</version>
 	<type>aar</type>
 </dependency>
 ```

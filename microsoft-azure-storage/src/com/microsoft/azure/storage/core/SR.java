@@ -111,6 +111,7 @@ public class SR {
     public static final String MISSING_MANDATORY_PARAMETER_FOR_SAS = "Missing mandatory parameters for valid Shared Access Signature.";
     public static final String MISSING_MD5 = "ContentMD5 header is missing in the response.";
     public static final String MISSING_NULLARY_CONSTRUCTOR = "Class type must contain contain a nullary constructor.";
+    public static final String NETWORK_ON_MAIN_THREAD_EXCEPTION = "Network operations may not be performed on the main thread.";
     public static final String OPS_IN_BATCH_MUST_HAVE_SAME_PARTITION_KEY = "All entities in a given batch must have the same partition key.";
     public static final String PARAMETER_NOT_IN_RANGE = "The value of the parameter '%s' should be between %s and %s.";
     public static final String PARAMETER_SHOULD_BE_GREATER = "The value of the parameter '%s' should be greater than %s.";
