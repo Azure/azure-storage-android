@@ -1,3 +1,6 @@
+2014.10.10 Version 0.3.1
+ * Fixed a bug where a NullPointerException was thrown instead of a NetworkOnMainThreadException if code was executed on the main thread.
+
 2014.08.01 Version 0.3.0
  * Added the NameValidator class which contains helpers that check to see if resource names are valid.
  * Fixed a bug where the RequestUrl of a LogRecord was not correctly HTML4 decoded.

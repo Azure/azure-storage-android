@@ -14,7 +14,6 @@
  */
 package com.microsoft.azure.storage;
 
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.SocketException;
@@ -145,7 +144,7 @@ public class StorageException extends Exception {
             responseCode = request.getResponseCode();
             responseMessage = request.getResponseMessage();
         }
-        catch (final IOException e) {
+        catch (final Exception e) {
             // ignore errors
         }
 
@@ -171,6 +170,8 @@ public class StorageException extends Exception {
             return translatedException;
         }
 
+        // 3. If extended information is not available and the status code is unknown,
+        // create a storage exception with the cause and message provided
         return new StorageException(StorageErrorCode.SERVICE_INTERNAL_ERROR.toString(),
                 "The server encountered an unknown failure: ".concat(responseMessage),
                 HttpURLConnection.HTTP_INTERNAL_ERROR, null, cause);

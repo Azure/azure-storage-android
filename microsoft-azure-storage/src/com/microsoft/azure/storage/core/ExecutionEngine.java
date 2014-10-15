@@ -25,6 +25,8 @@ import java.util.Date;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeoutException;
 
+import android.os.NetworkOnMainThreadException;
+
 import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.OperationContext;
@@ -211,6 +213,14 @@ public final class ExecutionEngine {
                     translatedException = StorageException.translateException(task.getConnection(), e, opContext);
                     task.getResult().setException(translatedException);
                 }
+            }
+            catch (final NetworkOnMainThreadException e) {
+                // Non Retryable, just throw
+                translatedException = new StorageException("NetworkOnMainThreadException",
+                        SR.NETWORK_ON_MAIN_THREAD_EXCEPTION, -1, null, e);
+                task.getResult().setException(translatedException);
+                Logger.error(opContext, LogConstants.UNRETRYABLE_EXCEPTION, e.getClass().getName(), e.getMessage());
+                throw translatedException;
             }
             catch (final InvalidKeyException e) {
                 // Non Retryable, just throw
