@@ -57,6 +57,9 @@ final class TableDeserializer {
      * @param resolver
      *            An {@link EntityResolver} instance to project the entities into instances of type <code>R</code>. Set
      *            to <code>null</code> to return the entities as instances of the class type <code>T</code>.
+     * @param options
+     *            A {@link TableRequestOptions} object that specifies execution options such as retry policy and timeout
+     *            settings for the operation.
      * @param opContext
      *            An {@link OperationContext} object used to track the execution of the operation.
      * @return
@@ -157,8 +160,13 @@ final class TableDeserializer {
      * <code>JsonParser</code> using the specified class type and optionally projects the entity result with the
      * specified resolver into a {@link TableResult} object.
      * 
-     * @param parser
-     *            The <code>JsonParser</code> to read the data to parse from.
+     * @param inStream
+     *            The <code>InputStream</code> to read the data to parse from.
+     * @param format
+     *            The {@link TablePayloadFormat} to use for parsing.
+     * @param options
+     *            A {@link TableRequestOptions} object that specifies execution options such as retry policy and timeout
+     *            settings for the operation.
      * @param httpStatusCode
      *            The HTTP status code returned with the operation response.
      * @param clazzType
@@ -214,6 +222,9 @@ final class TableDeserializer {
      * @param resolver
      *            An {@link EntityResolver} instance to project the entity into an instance of type <code>R</code>. Set
      *            to <code>null</code> to return the entity as an instance of the class type <code>T</code>.
+     * @param options
+     *            A {@link TableRequestOptions} object that specifies execution options such as retry policy and timeout
+     *            settings for the operation.
      * @param opContext
      *            An {@link OperationContext} object used to track the execution of the operation.
      * @return
@@ -292,6 +303,7 @@ final class TableDeserializer {
             }
 
             final EntityProperty newProp = new EntityProperty(val, edmType);
+            newProp.setDateBackwardCompatibility(options.getDateBackwardCompatibility());
             properties.put(key, newProp);
 
             parser.nextToken();
@@ -315,6 +327,7 @@ final class TableDeserializer {
 
         tempProp = properties.remove(TableConstants.TIMESTAMP);
         if (tempProp != null) {
+            tempProp.setDateBackwardCompatibility(false);
             timestamp = tempProp.getValueAsDate();
 
             if (res.getEtag() == null) {
@@ -344,6 +357,7 @@ final class TableDeserializer {
                     // try to create a new entity property using the returned type
                     try {
                         final EntityProperty newProp = new EntityProperty(value, edmType);
+                        newProp.setDateBackwardCompatibility(options.getDateBackwardCompatibility());
                         properties.put(p.getKey(), newProp);
                     }
                     catch (IllegalArgumentException e) {
@@ -362,6 +376,7 @@ final class TableDeserializer {
                     if (propPair != null) {
                         final EntityProperty newProp = new EntityProperty(p.getValue().getValueAsString(),
                                 propPair.type);
+                        newProp.setDateBackwardCompatibility(options.getDateBackwardCompatibility());
                         properties.put(p.getKey(), newProp);
                     }
                 }
@@ -383,7 +398,7 @@ final class TableDeserializer {
             entity.setPartitionKey(partitionKey);
             entity.setRowKey(rowKey);
             entity.setTimestamp(timestamp);
-
+            
             entity.readEntity(res.getProperties(), opContext);
 
             res.setResult(entity);

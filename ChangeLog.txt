@@ -1,3 +1,11 @@
+2014.12.22 Version 0.4.0
+ * Deprecated getSubDirectoryReference() for blob directories and file directories. Use getDirectoryReference() instead. 
+ * Fixed a bug where maxResults was not verified to be positive for list operations.
+ * Deprecated AuthenticationScheme and its getter and setter. In the future only SharedKey will be used.
+ * Added support for EndpointSuffix which was previously not accepted in Account Strings.
+ * Fixed a bug where high precision Date values stored on Table Entites were forced to fit into milliseconds resulting in inaccuracies. Precision is limited to 1 millisecond by the Android Date class. If greater precision is required, the String should be used directly.
+ * Added TableRequestOptions.dateBackwardCompatibility, which supports reading Date values on Table Entities written using versions of this library prior to 0.4.0. See http://go.microsoft.com/fwlink/?LinkId=523753 for more details.
+
 2014.10.10 Version 0.3.1
  * Fixed a bug where a NullPointerException was thrown instead of a NetworkOnMainThreadException if code was executed on the main thread.
 

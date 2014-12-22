@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.microsoft.azure.android.sample"
     android:versionCode="0"
-    android:versionName="0.3.1" >
+    android:versionName="0.4.0" >
 
     <uses-sdk
         android:minSdkVersion="15"

@@ -30,6 +30,7 @@ import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.core.PathUtility;
+import com.microsoft.azure.storage.core.SR;
 
 /**
  * File Directory Tests
@@ -88,15 +89,15 @@ public class CloudFileDirectoryTests extends TestCase {
         try {
             CloudFileDirectory rootDirectory = share.getRootDirectoryReference();
             for (int i = 1; i < 3; i++) {
-                CloudFileDirectory topDirectory = rootDirectory.getSubDirectoryReference("TopDir" + i);
+                CloudFileDirectory topDirectory = rootDirectory.getDirectoryReference("TopDir" + i);
                 topDirectory.create();
 
                 for (int j = 1; j < 3; j++) {
-                    CloudFileDirectory midDirectory = topDirectory.getSubDirectoryReference("MidDir" + j);
+                    CloudFileDirectory midDirectory = topDirectory.getDirectoryReference("MidDir" + j);
                     midDirectory.create();
 
                     for (int k = 1; k < 3; k++) {
-                        CloudFileDirectory endDirectory = midDirectory.getSubDirectoryReference("EndDir" + k);
+                        CloudFileDirectory endDirectory = midDirectory.getDirectoryReference("EndDir" + k);
                         endDirectory.create();
 
                         CloudFile file1 = endDirectory.getFileReference("EndFile" + k);
@@ -123,7 +124,7 @@ public class CloudFileDirectoryTests extends TestCase {
      */
     public void testCloudFileDirectoryConstructor() throws URISyntaxException, StorageException {
         CloudFileShare share = FileTestHelper.getRandomShareReference();
-        CloudFileDirectory directory = share.getRootDirectoryReference().getSubDirectoryReference("directory1");
+        CloudFileDirectory directory = share.getRootDirectoryReference().getDirectoryReference("directory1");
         CloudFileDirectory directory2 = new CloudFileDirectory(directory.getStorageUri(), null);
         assertEquals(directory.getName(), directory2.getName());
         assertEquals(directory.getStorageUri(), directory2.getStorageUri());
@@ -138,7 +139,7 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryCreateAndDelete() throws URISyntaxException, StorageException {
-        CloudFileDirectory directory = this.share.getRootDirectoryReference().getSubDirectoryReference("directory1");
+        CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference("directory1");
         directory.create();
         assertTrue(directory.exists());
         directory.delete();
@@ -152,7 +153,7 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws URISyntaxException
      */
     public void testCloudFileDirectoryCreateIfNotExists() throws StorageException, URISyntaxException {
-        CloudFileDirectory directory = this.share.getRootDirectoryReference().getSubDirectoryReference("directory1");
+        CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference("directory1");
         assertTrue(directory.createIfNotExists());
         assertFalse(directory.createIfNotExists());
         directory.delete();
@@ -166,7 +167,7 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryDeleteIfExists() throws URISyntaxException, StorageException {
-        CloudFileDirectory directory = this.share.getRootDirectoryReference().getSubDirectoryReference("directory1");
+        CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference("directory1");
         assertFalse(directory.deleteIfExists());
         directory.create();
         assertTrue(directory.deleteIfExists());
@@ -181,7 +182,7 @@ public class CloudFileDirectoryTests extends TestCase {
      */
     public void testCloudFileDirectoryListFilesAndDirectories() throws StorageException, URISyntaxException {
         if (CloudFileDirectorySetup(this.share)) {
-            CloudFileDirectory topDir1 = this.share.getRootDirectoryReference().getSubDirectoryReference("TopDir1");
+            CloudFileDirectory topDir1 = this.share.getRootDirectoryReference().getDirectoryReference("TopDir1");
             Iterable<ListFileItem> list1 = topDir1.listFilesAndDirectories();
             assertTrue(list1.iterator().hasNext());
             ArrayList<ListFileItem> simpleList1 = new ArrayList<ListFileItem>();
@@ -231,6 +232,35 @@ public class CloudFileDirectoryTests extends TestCase {
     }
 
     /**
+     * Test listFilesAndDirectories for maxResults validation.
+     * 
+     * @throws StorageException
+     * @throws URISyntaxException
+     */
+    public void CloudFileDirectoryListFilesAndDirectoriesMaxResultsValidation()
+            throws StorageException, URISyntaxException {
+        if (CloudFileDirectorySetup(this.share)) {
+            CloudFileDirectory topDir =
+                    this.share.getRootDirectoryReference().getDirectoryReference("TopDir1");
+            
+            // Validation should cause each of these to fail
+            for (int i = 0; i >= -2; i--) {
+                try {
+                    topDir.listFilesAndDirectoriesSegmented(i, null, null, null);
+                    fail();
+                }
+                catch (IllegalArgumentException e) {
+                    assertTrue(String.format(SR.PARAMETER_SHOULD_BE_GREATER_OR_EQUAL, "maxResults", 1)
+                            .equals(e.getMessage()));
+                }
+            }
+            assertNotNull(topDir.listFilesAndDirectoriesSegmented());
+        } else {
+            fail();
+        }
+    }
+    
+    /**
      * Tests to make sure you can't delete a directory if it is nonempty.
      * 
      * @throws URISyntaxException
@@ -238,7 +268,7 @@ public class CloudFileDirectoryTests extends TestCase {
      */
     public void testCloudFileDirectoryWithFilesDelete() throws URISyntaxException, StorageException {
         if (CloudFileDirectorySetup(this.share)) {
-            CloudFileDirectory dir1 = this.share.getRootDirectoryReference().getSubDirectoryReference(
+            CloudFileDirectory dir1 = this.share.getRootDirectoryReference().getDirectoryReference(
                     "TopDir1/MidDir1/EndDir1");
             CloudFile file1 = dir1.getFileReference("EndFile1");
 
@@ -276,7 +306,7 @@ public class CloudFileDirectoryTests extends TestCase {
             share.create();
             if (CloudFileDirectorySetup(share))
             {
-                CloudFileDirectory dir1 = share.getRootDirectoryReference().getSubDirectoryReference("TopDir1/MidDir1/EndDir1");
+                CloudFileDirectory dir1 = share.getRootDirectoryReference().getDirectoryReference("TopDir1/MidDir1/EndDir1");
                 CloudFile file1 = dir1.getFileReference("EndFile1");
                 file1.delete();
                 dir1.FetchAttributes();
@@ -299,7 +329,7 @@ public class CloudFileDirectoryTests extends TestCase {
                 dir1.delete(AccessCondition.GenerateIfMatchCondition(etag), null);
 
                 // LastModifiedTime tests
-                CloudFileDirectory dir2 = share.getRootDirectoryReference().getSubDirectoryReference("TopDir1/MidDir1/EndDir2");
+                CloudFileDirectory dir2 = share.getRootDirectoryReference().getDirectoryReference("TopDir1/MidDir1/EndDir2");
                 CloudFile file2 = dir2.getFileReference("EndFile2");
                 file2.delete();
                 dir2.FetchAttributes();
@@ -342,7 +372,7 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryFileCreateWithoutDirectory() throws URISyntaxException, StorageException {
-        CloudFileDirectory dir = this.share.getRootDirectoryReference().getSubDirectoryReference("Dir1");
+        CloudFileDirectory dir = this.share.getRootDirectoryReference().getDirectoryReference("Dir1");
         CloudFile file = dir.getFileReference("file1");
 
         try {
@@ -370,8 +400,8 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryCreateDirectoryWithoutParent() throws URISyntaxException, StorageException {
-        CloudFileDirectory dir1 = this.share.getRootDirectoryReference().getSubDirectoryReference("Dir1");
-        CloudFileDirectory dir2 = this.share.getRootDirectoryReference().getSubDirectoryReference("Dir1/Dir2");
+        CloudFileDirectory dir1 = this.share.getRootDirectoryReference().getDirectoryReference("Dir1");
+        CloudFileDirectory dir2 = this.share.getRootDirectoryReference().getDirectoryReference("Dir1/Dir2");
         try {
             dir2.create();
             fail("Directory shouldn't be created when the parent directory wasn't created.");
@@ -393,7 +423,7 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws URISyntaxException
      */
     public void testCloudFileDirectoryGetParent() throws StorageException, URISyntaxException {
-        CloudFile file = this.share.getRootDirectoryReference().getSubDirectoryReference("Dir1")
+        CloudFile file = this.share.getRootDirectoryReference().getDirectoryReference("Dir1")
                 .getFileReference("File1");
         assertEquals("File1", file.getName());
 
@@ -426,8 +456,8 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryGetSubdirectoryAndTraverseBackToParent() throws URISyntaxException, StorageException {
-        CloudFileDirectory directory = this.share.getRootDirectoryReference().getSubDirectoryReference("TopDir1");
-        CloudFileDirectory subDirectory = directory.getSubDirectoryReference("MidDir1");
+        CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference("TopDir1");
+        CloudFileDirectory subDirectory = directory.getDirectoryReference("MidDir1");
         CloudFileDirectory parent = subDirectory.getParent();
         assertEquals(parent.getName(), directory.getName());
         assertEquals(parent.getUri(), directory.getUri());
@@ -440,7 +470,7 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryGetParentOnRoot() throws URISyntaxException, StorageException {
-        CloudFileDirectory root = this.share.getRootDirectoryReference().getSubDirectoryReference("TopDir1");
+        CloudFileDirectory root = this.share.getRootDirectoryReference().getDirectoryReference("TopDir1");
         CloudFileDirectory parent = root.getParent();
         assertNotNull(parent);
 
@@ -456,20 +486,20 @@ public class CloudFileDirectoryTests extends TestCase {
      */
     public void testCloudFileDirectoryHierarchicalTraversal() throws URISyntaxException, StorageException {
         ////Traverse hierarchically starting with length 1
-        CloudFileDirectory directory1 = this.share.getRootDirectoryReference().getSubDirectoryReference("Dir1");
-        CloudFileDirectory subdir1 = directory1.getSubDirectoryReference("Dir2");
+        CloudFileDirectory directory1 = this.share.getRootDirectoryReference().getDirectoryReference("Dir1");
+        CloudFileDirectory subdir1 = directory1.getDirectoryReference("Dir2");
         CloudFileDirectory parent1 = subdir1.getParent();
         assertEquals(parent1.getName(), directory1.getName());
 
-        CloudFileDirectory subdir2 = subdir1.getSubDirectoryReference("Dir3");
+        CloudFileDirectory subdir2 = subdir1.getDirectoryReference("Dir3");
         CloudFileDirectory parent2 = subdir2.getParent();
         assertEquals(parent2.getName(), subdir1.getName());
 
-        CloudFileDirectory subdir3 = subdir2.getSubDirectoryReference("Dir4");
+        CloudFileDirectory subdir3 = subdir2.getDirectoryReference("Dir4");
         CloudFileDirectory parent3 = subdir3.getParent();
         assertEquals(parent3.getName(), subdir2.getName());
 
-        CloudFileDirectory subdir4 = subdir3.getSubDirectoryReference("Dir5");
+        CloudFileDirectory subdir4 = subdir3.getDirectoryReference("Dir5");
         CloudFileDirectory parent4 = subdir4.getParent();
         assertEquals(parent4.getName(), subdir3.getName());
     }
@@ -481,8 +511,8 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryFileParentValidate() throws URISyntaxException, StorageException {
-        CloudFile file = this.share.getRootDirectoryReference().getSubDirectoryReference("TopDir1")
-                .getSubDirectoryReference("MidDir1").getSubDirectoryReference("EndDir1").getFileReference("EndFile1");
+        CloudFile file = this.share.getRootDirectoryReference().getDirectoryReference("TopDir1")
+                .getDirectoryReference("MidDir1").getDirectoryReference("EndDir1").getFileReference("EndFile1");
         CloudFileDirectory directory = file.getParent();
         assertEquals(directory.getName(), "EndDir1");
         assertEquals(directory.getUri().toString(), this.share.getUri() + "/TopDir1/MidDir1/EndDir1");
@@ -495,10 +525,9 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryGetEmptySubDirectory() throws URISyntaxException, StorageException {
-        CloudFileDirectory root = this.share.getRootDirectoryReference().getSubDirectoryReference("TopDir1");
-
+        CloudFileDirectory root = this.share.getRootDirectoryReference().getDirectoryReference("TopDir1");
         try {
-            root.getSubDirectoryReference("");
+            root.getDirectoryReference("");
             fail("Subdirectory references shouldn't work with empty strings.");
         }
         catch (IllegalArgumentException e) {
@@ -513,12 +542,12 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryAbsoluteUriAppended() throws URISyntaxException, StorageException {
-        CloudFileDirectory dir = this.share.getRootDirectoryReference().getSubDirectoryReference(
+        CloudFileDirectory dir = this.share.getRootDirectoryReference().getDirectoryReference(
                 this.share.getUri().toString());
         assertEquals(PathUtility.appendPathToUri(this.share.getStorageUri(), this.share.getUri().toString())
                 .getPrimaryUri(), dir.getUri());
         assertEquals(new URI(this.share.getUri() + "/" + this.share.getUri()), dir.getUri());
-        dir = this.share.getRootDirectoryReference().getSubDirectoryReference(this.share.getUri() + "/TopDir1");
+        dir = this.share.getRootDirectoryReference().getDirectoryReference(this.share.getUri() + "/TopDir1");
         assertEquals(
                 PathUtility.appendPathToUri(this.share.getStorageUri(), this.share.getUri().toString() + "/TopDir1")
                         .getPrimaryUri(), dir.getUri());
@@ -532,7 +561,7 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws IOException
      */
     public void testCloudFileDirectoryDeleteIfExistsErrorCode() throws URISyntaxException, StorageException, IOException {
-        final CloudFileDirectory directory = this.share.getRootDirectoryReference().getSubDirectoryReference(
+        final CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference(
                 "directory");
 
         try {
