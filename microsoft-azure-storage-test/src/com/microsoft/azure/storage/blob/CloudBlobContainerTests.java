@@ -105,7 +105,7 @@ public class CloudBlobContainerTests extends TestCase {
         CloudBlockBlob blockBlob = container.getBlockBlobReference("directory1/blob1");
         CloudPageBlob pageBlob = container.getPageBlobReference("directory2/blob2");
         CloudBlobDirectory directory = container.getDirectoryReference("directory3");
-        CloudBlobDirectory directory2 = directory.getSubDirectoryReference("directory4");
+        CloudBlobDirectory directory2 = directory.getDirectoryReference("directory4");
 
         assertEquals(container.getStorageUri().toString(), blockBlob.getContainer().getStorageUri().toString());
         assertEquals(container.getStorageUri().toString(), pageBlob.getContainer().getStorageUri().toString());
@@ -431,6 +431,32 @@ public class CloudBlobContainerTests extends TestCase {
         } while (token != null);
 
         assertTrue(blobNames.size() == 0);
+    }
+    
+    /**
+     * Try to list the blobs in a container to ensure maxResults validation is working.
+     * 
+     * @throws URISyntaxException
+     * @throws StorageException
+     * @throws IOException
+     */
+    public void testCloudBlobContainerListBlobsMaxResultsValidation()
+            throws StorageException, IOException, URISyntaxException {
+        this.container.create();
+
+        // Validation should cause each of these to fail.
+        for (int i = 0; i >= -2; i--) {
+            try {
+                this.container.listBlobsSegmented(
+                        "bb", false, EnumSet.noneOf(BlobListingDetails.class), i, null, null, null);
+                fail();
+            }
+            catch (IllegalArgumentException e) {
+                assertTrue(String.format(SR.PARAMETER_SHOULD_BE_GREATER_OR_EQUAL, "maxResults", 1)
+                        .equals(e.getMessage()));
+            }
+        }
+        assertNotNull(this.container.listBlobsSegmented("thereshouldntbeanyblobswiththisprefix"));
     }
 
     /**

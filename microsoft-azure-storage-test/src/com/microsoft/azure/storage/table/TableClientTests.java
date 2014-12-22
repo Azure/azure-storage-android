@@ -42,25 +42,26 @@ import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.StorageLocation;
 import com.microsoft.azure.storage.core.PathUtility;
+import com.microsoft.azure.storage.core.SR;
 import com.microsoft.azure.storage.table.TableTestHelper.Class1;
 import com.microsoft.azure.storage.table.TableTestHelper.Class2;
 
 /**
  * Table Client Tests
  */
+@SuppressWarnings("deprecation")
 public class TableClientTests extends TestCase {
-
     public void testListTablesSegmented() throws URISyntaxException, StorageException {
         TableRequestOptions options = new TableRequestOptions();
+        TablePayloadFormat[] formats =
+                {TablePayloadFormat.JsonFullMetadata,
+                TablePayloadFormat.Json,
+                TablePayloadFormat.JsonNoMetadata}; 
 
-        options.setTablePayloadFormat(TablePayloadFormat.JsonFullMetadata);
-        testListTablesSegmented(options);
-
-        options.setTablePayloadFormat(TablePayloadFormat.Json);
-        testListTablesSegmented(options);
-
-        options.setTablePayloadFormat(TablePayloadFormat.JsonNoMetadata);
-        testListTablesSegmented(options);
+        for (TablePayloadFormat format : formats) {
+            options.setTablePayloadFormat(format);
+            testListTablesSegmented(options);
+        }
     }
 
     private void testListTablesSegmented(TableRequestOptions options) throws URISyntaxException,
@@ -107,6 +108,24 @@ public class TableClientTests extends TestCase {
                 table.delete();
             }
         }
+    }
+    
+    public void testListTablesSegmentedMaxResultsValidation()
+            throws URISyntaxException, StorageException {
+        final CloudTableClient tClient = TableTestHelper.createCloudTableClient();
+
+        // Validation should cause each of these to fail.
+        for (int i = 0; i >= -2; i--) {
+            try {
+                tClient.listTablesSegmented(null, i, null, null, null);
+                fail();
+            }
+            catch (IllegalArgumentException e) {
+                assertTrue(String.format(SR.PARAMETER_SHOULD_BE_GREATER_OR_EQUAL, "maxResults", 1)
+                        .equals(e.getMessage()));
+            }
+        }
+        assertNotNull(tClient.listTablesSegmented("thereshouldntbeanytableswiththisprefix"));
     }
 
     public void testListTablesSegmentedNoPrefix() throws URISyntaxException, StorageException {

@@ -31,6 +31,7 @@ import com.microsoft.azure.storage.table.CloudTableClient;
 public class TestHelper {
 	private static CloudStorageAccount account;
 
+	@SuppressWarnings("deprecation")
 	private final static AuthenticationScheme defaultAuthenticationScheme = AuthenticationScheme.SHAREDKEYFULL;
 
 	public static String connectionString;
@@ -40,24 +41,28 @@ public class TestHelper {
 	public static StorageUri queueEndpoint;
 	public static StorageUri tableEndpoint;
 
+	@SuppressWarnings("deprecation")
 	public static CloudBlobClient createCloudBlobClient() throws StorageException {
 		CloudBlobClient client = getAccount().createCloudBlobClient();
 		client.setAuthenticationScheme(defaultAuthenticationScheme);
 		return client;
 	}
 	
-    public static CloudFileClient createCloudFileClient() throws StorageException {
+    @SuppressWarnings("deprecation")
+	public static CloudFileClient createCloudFileClient() throws StorageException {
         CloudFileClient client = getAccount().createCloudFileClient();
         client.setAuthenticationScheme(defaultAuthenticationScheme);
         return client;
     }
 
+	@SuppressWarnings("deprecation")
 	public static CloudQueueClient createCloudQueueClient() throws StorageException {
 		CloudQueueClient client = getAccount().createCloudQueueClient();
 		client.setAuthenticationScheme(defaultAuthenticationScheme);
 		return client;
 	}
 
+	@SuppressWarnings("deprecation")
 	public static CloudTableClient createCloudTableClient() throws StorageException {
 		CloudTableClient client = getAccount().createCloudTableClient();
 		client.setAuthenticationScheme(defaultAuthenticationScheme);

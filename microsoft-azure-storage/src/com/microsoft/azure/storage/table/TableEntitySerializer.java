@@ -141,8 +141,7 @@ final class TableEntitySerializer {
             generator.writeStringField(TableConstants.ROW_KEY, entity.getRowKey());
 
             // Timestamp
-            generator.writeStringField(TableConstants.TIMESTAMP, Utility.getTimeByZoneAndFormat(entity.getTimestamp(),
-                    Utility.UTC_ZONE, Utility.ISO8061_LONG_PATTERN));
+            generator.writeStringField(TableConstants.TIMESTAMP, Utility.getJavaISO8601Time(entity.getTimestamp()));
         }
 
         for (final Entry<String, EntityProperty> ent : properties.entrySet()) {
