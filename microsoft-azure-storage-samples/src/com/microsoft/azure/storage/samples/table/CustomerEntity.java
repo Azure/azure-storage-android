@@ -12,23 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.microsoft.azure.storage.table.gettingtstarted;
+package com.microsoft.azure.storage.samples.table;
+
+import java.util.UUID;
 
 import com.microsoft.azure.storage.table.TableServiceEntity;
 
 public class CustomerEntity extends TableServiceEntity {
-	
-	// Note: An entity's partition and row key uniquely identify the entity in the table. 
-	// Entities with the same partition key can be queried faster than those with different partition keys.
-	public CustomerEntity(String lastName, String firstName) {
+
+    // Note: An entity's partition and row key uniquely identify the entity in
+    // the table.
+    // Entities with the same partition key can be queried faster than those
+    // with different partition keys.
+    public CustomerEntity(String lastName, String firstName) {
         this.partitionKey = lastName;
         this.rowKey = firstName;
     }
 
-    public CustomerEntity() { }
+    public CustomerEntity() {
+    }
 
     public String Email;
     public String PhoneNumber;
+    public UUID Id;
 
     public String getEmail() {
         return this.Email;
@@ -44,5 +50,13 @@ public class CustomerEntity extends TableServiceEntity {
 
     public void setPhoneNumber(String phoneNumber) {
         this.PhoneNumber = phoneNumber;
+    }
+
+    public UUID getId() {
+        return this.Id;
+    }
+
+    public void setId(UUID id) {
+        this.Id = id;
     }
 }

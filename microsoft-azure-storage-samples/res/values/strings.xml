@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Azure Storage Samples</string>
+    <string name="blob_getting_started_button">Blob Getting Started Sample</string>
+    <string name="queue_getting_started_button">Queue Getting Started Sample</string>
+    <string name="table_getting_started_button">Table Getting Started Sample</string>
+    <string name="table_payload_format_button">Table Payload Format Sample</string>
+    <string name="action_settings">Settings</string>
+
+</resources>

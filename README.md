@@ -44,7 +44,7 @@ First, add mavenCentral to your repositories by adding the following to your gra
 Then, add a dependency by adding the following to your gradle build file:
 
     dependencies {
-        compile 'com.microsoft.azure.android:azure-storage-android:0.3.0@aar'
+        compile 'com.microsoft.azure.android:azure-storage-android:0.4.1@aar'
     }
 
 ###Option 4: aar via Maven
@@ -55,7 +55,7 @@ To get the binaries of this library as distributed by Microsoft, ready for use w
 <dependency>
 	<groupId>com.microsoft.azure.android</groupId>
 	<artifactId>azure-storage-android</artifactId>
-	<version>0.3.1</version>
+	<version>0.4.1</version>
 	<type>aar</type>
 </dependency>
 ```
@@ -77,63 +77,9 @@ Make sure the storage client library is added as a project dependency. If using 
 
 If using Maven or Gradle, Jackson-Core should be automatically added to the build path. Otherwise, please download the jar and add it to your build path. Also, please make sure that the jar will be added to your project's apk. To do this in Eclipse, right click your project, select "Build Path->Configure Build Path", navigate to the "Order and Export" tab and check the box next to the jackson-core jar.
 
-##Code Sample
+##Code Samples
 
-The following is a quick example on how to upload a file to azure blob and download it back. You may also download and view the samples in the microsoft-azure-storage-samples folder. For additional information on using the Android client library, the Java [general documentation](http://azure.microsoft.com/en-us/develop/java/) and Java How To guides for [blobs](http://azure.microsoft.com/en-us/documentation/articles/storage-java-how-to-use-blob-storage/), [queues](http://azure.microsoft.com/en-us/documentation/articles/storage-java-how-to-use-queue-storage/), [tables](http://azure.microsoft.com/en-us/documentation/articles/storage-java-how-to-use-table-storage/) may be helpful.
-
-```java
-import java.io.*;
-
-import com.microsoft.azure.storage.*;
-import com.microsoft.azure.storage.blob.*;
-
-public class BlobSample {
-	public static final String storageConnectionString =
-		"DefaultEndpointsProtocol=http;"
-		+ "AccountName=your_account_name;"
-		+ "AccountKey= your_account_key";
-
-	public static void main(String[] args) {
-		try {
-			CloudStorageAccount account = CloudStorageAccount.parse(storageConnectionString);
-            CloudBlobClient serviceClient = account.createCloudBlobClient();
-
-            // Container name must be lower case.
-            CloudBlobContainer container = serviceClient.getContainerReference("myimages");
-            container.createIfNotExists();
-
-            // Set anonymous read access on the container.
-            BlobContainerPermissions containerPermissions = new BlobContainerPermissions();
-            containerPermissions.setPublicAccess(BlobContainerPublicAccessType.CONTAINER);
-            container.uploadPermissions(containerPermissions);
-
-            // Upload an image file.
-            CloudBlockBlob blob = container.getBlockBlobReference("image1.jpg");
-            File sourceFile = new File("c:\\myimages\\image1.jpg");
-            blob.upload(new FileInputStream(sourceFile), sourceFile.length());
-
-            // Download the image file.
-            File destinationFile = new File(sourceFile.getParentFile(), "image1Download.tmp");
-            blob.downloadToFile(destinationFile.getAbsolutePath());
-        }
-        catch (FileNotFoundException fileNotFoundException) {
-            System.out.print("FileNotFoundException encountered: ");
-            System.out.println(fileNotFoundException.getMessage());
-            System.exit(-1);
-        }
-        catch (StorageException storageException) {
-            System.out.print("StorageException encountered: ");
-            System.out.println(storageException.getMessage());
-            System.exit(-1);
-        }
-        catch (Exception e) {
-            System.out.print("Exception encountered: ");
-            System.out.println(e.getMessage());
-            System.exit(-1);
-        }
-	}
-}
-```
+Runnable samples for blob, queue, and table may be found in the microsoft-azure-storage-samples directory. To run these samples, specify a connection string in the MainActivity class and add a dependency on the Android client library. For additional information on using the Android client library, the Java [general documentation](http://azure.microsoft.com/en-us/develop/java/) and Java How To guides for [blobs](http://azure.microsoft.com/en-us/documentation/articles/storage-java-how-to-use-blob-storage/), [queues](http://azure.microsoft.com/en-us/documentation/articles/storage-java-how-to-use-queue-storage/), [tables](http://azure.microsoft.com/en-us/documentation/articles/storage-java-how-to-use-table-storage/) may be helpful.
 
 #Need Help?
 

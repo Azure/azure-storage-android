@@ -393,7 +393,7 @@ public final class CloudQueue {
             @Override
             public void signRequest(HttpURLConnection connection, CloudQueueClient client, OperationContext context)
                     throws Exception {
-                StorageRequest.signBlobQueueAndFileRequest(connection, client, -1L, null);
+                StorageRequest.signBlobQueueAndFileRequest(connection, client, 0L, null);
             }
 
             @Override
@@ -597,7 +597,7 @@ public final class CloudQueue {
             @Override
             public void signRequest(HttpURLConnection connection, CloudQueueClient client, OperationContext context)
                     throws Exception {
-                StorageRequest.signBlobQueueAndFileRequest(connection, client, -1L, null);
+                StorageRequest.signBlobQueueAndFileRequest(connection, client, 0L, null);
             }
 
             @Override
@@ -742,7 +742,7 @@ public final class CloudQueue {
             @Override
             public void signRequest(HttpURLConnection connection, CloudQueueClient client, OperationContext context)
                     throws Exception {
-                StorageRequest.signBlobQueueAndFileRequest(connection, client, -1L, null);
+                StorageRequest.signBlobQueueAndFileRequest(connection, client, 0L, null);
             }
 
             @Override

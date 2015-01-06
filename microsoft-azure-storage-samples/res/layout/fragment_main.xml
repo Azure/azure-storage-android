@@ -1,0 +1,70 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scrollView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        tools:context="com.microsoft.azure.storage.samples.MainActivity$PlaceholderFragment" >
+
+        <Button
+            android:id="@+id/runBlobGettingStartedSampleButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:onClick="runBlobGettingStartedSample"
+            android:text="@string/blob_getting_started_button" />
+
+        <Button
+            android:id="@+id/runQueueGettingStartedSampleButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/runBlobGettingStartedSampleButton"
+            android:layout_marginTop="16dp"
+            android:onClick="runQueueGettingStartedSample"
+            android:text="@string/queue_getting_started_button" />
+
+        <Button
+            android:id="@+id/runTableGettingStartedSampleButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/runQueueGettingStartedSampleButton"
+            android:layout_marginTop="16dp"
+            android:onClick="runTableGettingStartedSample"
+            android:text="@string/table_getting_started_button" />
+
+        <Button
+            android:id="@+id/runTablePayloadFormatSampleButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/runTableGettingStartedSampleButton"
+            android:layout_marginTop="16dp"
+            android:onClick="runTablePayloadFormatSample"
+            android:text="@string/table_payload_format_button" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/runTablePayloadFormatSampleButton"
+            android:layout_marginTop="16dp"
+            android:ems="10" />
+    </RelativeLayout>
+
+</ScrollView>
