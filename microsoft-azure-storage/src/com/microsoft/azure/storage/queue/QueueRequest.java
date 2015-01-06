@@ -96,12 +96,7 @@ final class QueueRequest {
      */
     public static HttpURLConnection clearMessages(final URI uri, final QueueRequestOptions queueOptions,
             final OperationContext opContext) throws URISyntaxException, IOException, StorageException {
-
-        final HttpURLConnection request = BaseRequest.createURLConnection(uri, queueOptions, null, opContext);
-
-        request.setRequestMethod(Constants.HTTP_DELETE);
-
-        return request;
+        return BaseRequest.delete(uri, queueOptions, null, opContext);
     }
 
     /**
@@ -202,9 +197,7 @@ final class QueueRequest {
         final UriQueryBuilder builder = new UriQueryBuilder();
         builder.add(POP_RECEIPT, popReceipt);
 
-        final HttpURLConnection request = BaseRequest.createURLConnection(uri, queueOptions, builder, opContext);
-
-        request.setRequestMethod(Constants.HTTP_DELETE);
+        final HttpURLConnection request = BaseRequest.delete(uri, queueOptions, builder, opContext);
 
         return request;
     }

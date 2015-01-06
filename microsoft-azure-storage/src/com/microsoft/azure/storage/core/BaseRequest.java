@@ -235,6 +235,9 @@ public final class BaseRequest {
 
         final HttpURLConnection retConnection = createURLConnection(uri, options, builder, opContext);
         retConnection.setRequestMethod(Constants.HTTP_DELETE);
+        
+        // Note: by default sends Content-Length 0; we must explicitly add this to prevent auth mismatches
+        retConnection.setRequestProperty(Constants.HeaderConstants.CONTENT_LENGTH, "0");
 
         return retConnection;
     }

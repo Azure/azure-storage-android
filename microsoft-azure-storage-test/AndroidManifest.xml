@@ -11,11 +11,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.microsoft.azure.android.test"
     android:versionCode="0"
-    android:versionName="0.4.0" >
+    android:versionName="0.4.1" >
 
     <uses-sdk
         android:minSdkVersion="15"
-        android:targetSdkVersion="19" />
+        android:targetSdkVersion="21" />
     
     <uses-permission android:name="android.permission.INTERNET" />
     

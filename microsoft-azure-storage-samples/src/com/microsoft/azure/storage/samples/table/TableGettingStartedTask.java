@@ -12,82 +12,88 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.microsoft.azure.storage.table.gettingtstarted;
+package com.microsoft.azure.storage.samples.table;
 
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
+import java.util.UUID;
+
+import android.os.AsyncTask;
+import android.widget.TextView;
 
 import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.samples.MainActivity;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.table.CloudTable;
-import com.microsoft.azure.storage.table.CloudTableClient;
-import com.microsoft.azure.storage.table.TableBatchOperation;
-import com.microsoft.azure.storage.table.TableOperation;
-import com.microsoft.azure.storage.table.TableQuery;
+import com.microsoft.azure.storage.table.*;
 import com.microsoft.azure.storage.table.TableQuery.QueryComparisons;
-import com.microsoft.azure.storage.util.Utility;
 
 /**
  * This sample illustrates basic usage of the various Table Primitives provided
  * in the Storage Client Library including TableOperation, TableBatchOperation,
  * and TableQuery.
  */
-public class TableBasics {
+public class TableGettingStartedTask extends AsyncTask<String, Void, Void> {
+
     protected static CloudTableClient tableClient;
     protected static CloudTable table;
     protected final static String tableName = "tablebasics";
 
-    /**
-     * Executes the sample.
-     * 
-     * @param args
-     *            No input args are expected from users.
-     * @throws URISyntaxException
-     * @throws InvalidKeyException
-     */
-    public static void main(String[] args) throws InvalidKeyException, URISyntaxException {
-        Utility.printSampleStartInfo("TableBasics");
+    private TextView view;
+    private MainActivity act;
 
-        // Setup the cloud storage account.
-        CloudStorageAccount account = CloudStorageAccount.parse(Utility.storageConnectionString);
+    public TableGettingStartedTask(MainActivity act, TextView view) {
+        this.view = view;
+        this.act = act;
+    }
 
-        // Create a table service client.
-        tableClient = account.createCloudTableClient();
+    @Override
+    protected Void doInBackground(String... arg0) {
+
+        act.printSampleStartInfo("TableBasics");
 
         try {
+            // Setup the cloud storage account.
+            CloudStorageAccount account = CloudStorageAccount
+                    .parse(MainActivity.storageConnectionString);
+
+            // Create a table service client.
+            tableClient = account.createCloudTableClient();
+
             // Retrieve a reference to a table.
-            table = tableClient.getTableReference(tableName);
+            // Append a random UUID to the end of the table name so that this
+            // sample can be run more than once in quick succession.
+            table = tableClient.getTableReference(tableName
+                    + UUID.randomUUID().toString().replace("-", ""));
 
             // Create the table if it doesn't already exist.
             table.createIfNotExists();
 
             // Illustrates how to list the tables.
-            BasicListing();
+            this.BasicListing();
 
             // Illustrates how to form and execute a single insert operation.
-            BasicInsertEntity();
+            this.BasicInsertEntity();
 
             // Illustrates how to form and execute a batch operation.
-            BasicBatch();
+            this.BasicBatch();
 
             // Illustrates how to form and execute a query operation.
-            BasicQuery();
+            this.BasicQuery();
 
             // Illustrates how to form and execute an upsert operation.
-            BasicUpsert();
+            this.BasicUpsert();
 
             // Illustrates how to form and execute an entity delete operation.
-            BasicDeleteEntity();
+            this.BasicDeleteEntity();
 
             // Delete the table.
             table.deleteIfExists();
 
-        }
-        catch (Throwable t) {
-            Utility.printException(t);
+        } catch (Throwable t) {
+            act.printException(t);
         }
 
-        Utility.printSampleCompleteInfo("TableBasics");
+        act.printSampleCompleteInfo("TableBasics");
+
+        return null;
     }
 
     /**
@@ -95,10 +101,11 @@ public class TableBasics {
      * 
      * @throws StorageException
      */
-    public static void BasicInsertEntity() throws StorageException {
+    public void BasicInsertEntity() throws StorageException {
         // Note: the limitations on an insert operation are
         // - the serialized payload must be 1 MB or less
-        // - up to 252 properties in addition to the partition key, row key and timestamp. 255 properties in total
+        // - up to 252 properties in addition to the partition key, row key and
+        // timestamp. 255 properties in total
         // - the serialized payload of each property must be 64 KB or less
 
         // Create a new customer entity.
@@ -118,7 +125,7 @@ public class TableBasics {
      * 
      * @throws StorageException
      */
-    public static void BasicBatch() throws StorageException {
+    public void BasicBatch() throws StorageException {
         // Note: the limitations on a batch operation are
         // - up to 100 operations
         // - all operations must share the same PartitionKey
@@ -155,26 +162,35 @@ public class TableBasics {
      * 
      * @throws StorageException
      */
-    public static void BasicQuery() throws StorageException {
+    public void BasicQuery() throws StorageException {
         // Retrieve a single entity.
-        // Retrieve the entity with partition key of "Smith" and row key of "Jeff".
-        TableOperation retrieveSmithJeff = TableOperation.retrieve("Smith", "Jeff", CustomerEntity.class);
+        // Retrieve the entity with partition key of "Smith" and row key of
+        // "Jeff".
+        TableOperation retrieveSmithJeff = TableOperation.retrieve("Smith",
+                "Jeff", CustomerEntity.class);
 
-        // Submit the operation to the table service and get the specific entity.
+        // Submit the operation to the table service and get the specific
+        // entity.
         @SuppressWarnings("unused")
-        CustomerEntity specificEntity = table.execute(retrieveSmithJeff).getResultAsType();
+        CustomerEntity specificEntity = table.execute(retrieveSmithJeff)
+                .getResultAsType();
 
         // Retrieve all entities in a partition.
         // Create a filter condition where the partition key is "Smith".
-        String partitionFilter = TableQuery.generateFilterCondition("PartitionKey", QueryComparisons.EQUAL, "Smith");
+        String partitionFilter = TableQuery.generateFilterCondition(
+                "PartitionKey", QueryComparisons.EQUAL, "Smith");
 
         // Specify a partition query, using "Smith" as the partition key filter.
-        TableQuery<CustomerEntity> partitionQuery = TableQuery.from(CustomerEntity.class).where(partitionFilter);
+        TableQuery<CustomerEntity> partitionQuery = TableQuery.from(
+                CustomerEntity.class).where(partitionFilter);
 
         // Loop through the results, displaying information about the entity.
         for (CustomerEntity entity : table.execute(partitionQuery)) {
-            System.out.println(entity.getPartitionKey() + " " + entity.getRowKey() + "\t" + entity.getEmail() + "\t"
-                    + entity.getPhoneNumber());
+            act.outputText(
+                    view,
+                    entity.getPartitionKey() + " " + entity.getRowKey() + "\t"
+                            + entity.getEmail() + "\t"
+                            + entity.getPhoneNumber());
         }
     }
 
@@ -183,12 +199,16 @@ public class TableBasics {
      * 
      * @throws StorageException
      */
-    public static void BasicUpsert() throws StorageException {
-        // Retrieve the entity with partition key of "Smith" and row key of "Jeff".
-        TableOperation retrieveSmithJeff = TableOperation.retrieve("Smith", "Jeff", CustomerEntity.class);
+    public void BasicUpsert() throws StorageException {
+        // Retrieve the entity with partition key of "Smith" and row key of
+        // "Jeff".
+        TableOperation retrieveSmithJeff = TableOperation.retrieve("Smith",
+                "Jeff", CustomerEntity.class);
 
-        // Submit the operation to the table service and get the specific entity.
-        CustomerEntity specificEntity = table.execute(retrieveSmithJeff).getResultAsType();
+        // Submit the operation to the table service and get the specific
+        // entity.
+        CustomerEntity specificEntity = table.execute(retrieveSmithJeff)
+                .getResultAsType();
 
         // Specify a new phone number.
         specificEntity.setPhoneNumber("425-555-0105");
@@ -205,12 +225,16 @@ public class TableBasics {
      * 
      * @throws StorageException
      */
-    public static void BasicDeleteEntity() throws StorageException {
-        // Create an operation to retrieve the entity with partition key of "Smith" and row key of "Jeff".
-        TableOperation retrieveSmithJeff = TableOperation.retrieve("Smith", "Jeff", CustomerEntity.class);
+    public void BasicDeleteEntity() throws StorageException {
+        // Create an operation to retrieve the entity with partition key of
+        // "Smith" and row key of "Jeff".
+        TableOperation retrieveSmithJeff = TableOperation.retrieve("Smith",
+                "Jeff", CustomerEntity.class);
 
-        // Retrieve the entity with partition key of "Smith" and row key of "Jeff".
-        CustomerEntity entitySmithJeff = table.execute(retrieveSmithJeff).getResultAsType();
+        // Retrieve the entity with partition key of "Smith" and row key of
+        // "Jeff".
+        CustomerEntity entitySmithJeff = table.execute(retrieveSmithJeff)
+                .getResultAsType();
 
         // Create an operation to delete the entity.
         TableOperation deleteSmithJeff = TableOperation.delete(entitySmithJeff);
@@ -222,11 +246,12 @@ public class TableBasics {
     /**
      * Illustrates how to list the tables.
      */
-    public static void BasicListing() {
+    public void BasicListing() {
         // List the tables with a given prefix.
-        Iterable<String> listTables = tableClient.listTables(tableName, null, null);
+        Iterable<String> listTables = tableClient.listTables(tableName, null,
+                null);
         for (String s : listTables) {
-            System.out.println(s);
+            act.outputText(view, String.format("List of tables: %s", s));
         }
     }
 }
