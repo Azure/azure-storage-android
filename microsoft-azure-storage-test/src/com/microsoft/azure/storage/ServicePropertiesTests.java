@@ -770,14 +770,6 @@ public class ServicePropertiesTests extends TestCase {
 
     /**
      * Takes a CorsRule and tries to upload it. Then tries to download it and compares it to the initial CorsRule.
-     * 
-     * @param rule
-     * @param client
-     *            TODO
-     * @param props
-     *            TODO
-     * @throws StorageException
-     * @throws InterruptedException
      */
     private void testCorsRules(CorsRule rule, ServiceClient client, ServiceProperties props) throws StorageException,
             InterruptedException {
@@ -792,15 +784,6 @@ public class ServicePropertiesTests extends TestCase {
     /**
      * Takes a List of CorsRules and tries to upload them. Then tries to download them and compares the list to the
      * initial CorsRule List.
-     * 
-     * @param client
-     *            TODO
-     * @param props
-     *            TODO
-     * @param rule
-     * 
-     * @throws StorageException
-     * @throws InterruptedException
      */
     private void testCorsRules(List<CorsRule> corsRules, ServiceClient client, ServiceProperties props)
             throws StorageException, InterruptedException {
@@ -817,9 +800,6 @@ public class ServicePropertiesTests extends TestCase {
 
     /**
      * Checks two ServiceProperties for equality
-     * 
-     * @param propsA
-     * @param propsB
      */
     private static void assertServicePropertiesAreEqual(ServiceProperties propsA, ServiceProperties propsB) {
         if (propsA.getLogging() != null && propsB.getLogging() != null) {

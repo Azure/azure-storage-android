@@ -114,6 +114,8 @@ public final class ExecutionEngine {
                     Logger.info(opContext, LogConstants.UPLOADDONE);
                 }
 
+                Utility.logHttpRequest(request, opContext);
+
                 // 6. Process the request - Get response
                 RequestResult currResult = task.getResult();
                 currResult.setStartDate(new Date());
@@ -133,7 +135,10 @@ public final class ExecutionEngine {
                 ExecutionEngine.fireResponseReceivedEvent(opContext, request, task.getResult());
 
                 Logger.info(opContext, LogConstants.RESPONSE_RECEIVED, currResult.getStatusCode(),
-                        currResult.getServiceRequestID(), currResult.getContentMD5(), currResult.getEtag());
+                        currResult.getServiceRequestID(), currResult.getContentMD5(), currResult.getEtag(),
+                        currResult.getRequestDate());
+               
+                Utility.logHttpResponse(request, opContext);   
 
                 // 8. Pre-process response to check if there was an exception. Do Response parsing (headers etc).
                 Logger.info(opContext, LogConstants.PRE_PROCESS);
@@ -173,7 +178,7 @@ public final class ExecutionEngine {
                 else {
                     Logger.warn(opContext, LogConstants.UNEXPECTED_RESULT_OR_EXCEPTION);
                     // The task may have already parsed an exception.
-                    translatedException = task.materializeException(task.getConnection(), opContext);
+                    translatedException = task.materializeException(opContext);
                     task.getResult().setException(translatedException);
 
                     // throw on non retryable status codes: 501, 505, blob type mismatch
@@ -187,7 +192,7 @@ public final class ExecutionEngine {
             catch (final TimeoutException e) {
                 // Retryable
                 Logger.warn(opContext, LogConstants.RETRYABLE_EXCEPTION, e.getClass().getName(), e.getMessage());
-                translatedException = StorageException.translateException(task.getConnection(), e, opContext);
+                translatedException = StorageException.translateException(task, e, opContext);
                 task.getResult().setException(translatedException);
             }
             catch (final SocketTimeoutException e) {
@@ -210,7 +215,7 @@ public final class ExecutionEngine {
                 }
                 else {
                     Logger.warn(opContext, LogConstants.RETRYABLE_EXCEPTION, e.getClass().getName(), e.getMessage());
-                    translatedException = StorageException.translateException(task.getConnection(), e, opContext);
+                    translatedException = StorageException.translateException(task, e, opContext);
                     task.getResult().setException(translatedException);
                 }
             }
@@ -224,14 +229,14 @@ public final class ExecutionEngine {
             }
             catch (final InvalidKeyException e) {
                 // Non Retryable, just throw
-                translatedException = StorageException.translateException(task.getConnection(), e, opContext);
+                translatedException = StorageException.translateException(task, e, opContext);
                 task.getResult().setException(translatedException);
                 Logger.error(opContext, LogConstants.UNRETRYABLE_EXCEPTION, e.getClass().getName(), e.getMessage());
                 throw translatedException;
             }
             catch (final URISyntaxException e) {
                 // Non Retryable, just throw
-                translatedException = StorageException.translateException(task.getConnection(), e, opContext);
+                translatedException = StorageException.translateException(task, e, opContext);
                 task.getResult().setException(translatedException);
                 Logger.error(opContext, LogConstants.UNRETRYABLE_EXCEPTION, e.getClass().getName(), e.getMessage());
                 throw translatedException;
@@ -259,7 +264,7 @@ public final class ExecutionEngine {
             }
             catch (final Exception e) {
                 // Non Retryable, just throw
-                translatedException = StorageException.translateException(task.getConnection(), e, opContext);
+                translatedException = StorageException.translateException(task, e, opContext);
                 task.getResult().setException(translatedException);
                 Logger.error(opContext, LogConstants.UNRETRYABLE_EXCEPTION, e.getClass().getName(), e.getMessage());
                 throw translatedException;

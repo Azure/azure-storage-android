@@ -304,18 +304,18 @@ public abstract class ServiceClient {
             return putRequest;
         }
         catch (IllegalArgumentException e) {
-            // The request was not even made. There was an error while trying to write the service properties. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            // The request was not even made. There was an error while trying to write the message. Just throw.
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
         catch (IllegalStateException e) {
-            // The request was not even made. There was an error while trying to write the service properties. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            // The request was not even made. There was an error while trying to write the message. Just throw.
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
         catch (IOException e) {
-            // The request was not even made. There was an error while trying to write the service properties. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            // The request was not even made. There was an error while trying to write the message. Just throw.
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
     }

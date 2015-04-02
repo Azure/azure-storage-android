@@ -19,6 +19,7 @@ import junit.framework.TestSuite;
 
 import com.microsoft.azure.storage.table.TableBatchOperationTests;
 import com.microsoft.azure.storage.table.TableClientTests;
+import com.microsoft.azure.storage.table.TableDateTests;
 import com.microsoft.azure.storage.table.TableEscapingTests;
 import com.microsoft.azure.storage.table.TableODataTests;
 import com.microsoft.azure.storage.table.TableOperationTests;
@@ -31,6 +32,7 @@ public class TableTestSuite {
         TestSuite suite = new TestSuite("TableTestSuite");
         suite.addTestSuite(TableBatchOperationTests.class);
         suite.addTestSuite(TableClientTests.class);
+        suite.addTestSuite(TableDateTests.class);
         suite.addTestSuite(TableEscapingTests.class);
         suite.addTestSuite(TableODataTests.class);
         suite.addTestSuite(TableOperationTests.class);

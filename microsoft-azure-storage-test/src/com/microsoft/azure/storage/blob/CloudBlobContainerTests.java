@@ -22,13 +22,13 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
-
 import junit.framework.Assert;
 import junit.framework.TestCase;
-
+import android.annotation.SuppressLint;
 import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.NameValidator;
 import com.microsoft.azure.storage.OperationContext;
@@ -434,6 +434,34 @@ public class CloudBlobContainerTests extends TestCase {
     }
     
     /**
+     * List the blobs in a container with next(). This tests for the item in the changelog: "Fixed a bug for all 
+     * listing API's where next() would sometimes throw an exception if hasNext() had not been called even if 
+     * there were more elements to iterate on."
+     * 
+     * @throws URISyntaxException
+     * @throws StorageException
+     * @throws IOException
+     */
+    public void testCloudBlobContainerListBlobsNext() throws StorageException, IOException, URISyntaxException {
+        this.container.create();
+        
+        int numBlobs = 10;
+        List<String> blobNames = BlobTestHelper.uploadNewBlobs(this.container, BlobType.PAGE_BLOB, 10, 512, null);
+        assertEquals(numBlobs, blobNames.size());
+
+        // hasNext first
+        Iterator<ListBlobItem> iter = this.container.listBlobs().iterator();
+        iter.hasNext();
+        iter.next();
+        iter.next();
+        
+        // next without hasNext
+        iter = this.container.listBlobs().iterator();
+        iter.next();
+        iter.next();
+    }
+    
+    /**
      * Try to list the blobs in a container to ensure maxResults validation is working.
      * 
      * @throws URISyntaxException
@@ -590,7 +618,8 @@ public class CloudBlobContainerTests extends TestCase {
      * @throws StorageException
      * @throws URISyntaxException
      */
-    private static void assertCreatedAndListedBlobsEquivalent(CloudBlockBlob createdBlob, CloudBlockBlob listedBlob,
+    @SuppressLint("UseValueOf")
+	private static void assertCreatedAndListedBlobsEquivalent(CloudBlockBlob createdBlob, CloudBlockBlob listedBlob,
             int length) throws StorageException, URISyntaxException{
         assertEquals(createdBlob.getContainer().getName(), listedBlob.getContainer().getName());
         assertEquals(createdBlob.getMetadata(), listedBlob.getMetadata());

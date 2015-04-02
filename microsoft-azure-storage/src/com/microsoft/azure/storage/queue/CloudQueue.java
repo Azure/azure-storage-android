@@ -325,17 +325,17 @@ public final class CloudQueue {
         }
         catch (IllegalArgumentException e) {
             // The request was not even made. There was an error while trying to write the message. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
         catch (IllegalStateException e) {
             // The request was not even made. There was an error while trying to write the message. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
         catch (IOException e) {
             // The request was not even made. There was an error while trying to write the message. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
     }
@@ -1427,18 +1427,18 @@ public final class CloudQueue {
                         this.setLength((long) messageBytes.length);
                     }
                     catch (IllegalArgumentException e) {
-                        // There was an error while trying to write the message. Wrap it and throw.
-                        StorageException translatedException = StorageException.translateException(null, e, context);
+                        // The request was not even made. There was an error while trying to write the message. Just throw.
+                        StorageException translatedException = StorageException.translateClientException(e);
                         throw translatedException;
                     }
                     catch (IllegalStateException e) {
-                        // There was an error while trying to write the message. Wrap it and throw.
-                        StorageException translatedException = StorageException.translateException(null, e, context);
+                        // The request was not even made. There was an error while trying to write the message. Just throw.
+                        StorageException translatedException = StorageException.translateClientException(e);
                         throw translatedException;
                     }
                     catch (IOException e) {
-                        // There was an error while trying to write the message. Wrap it and throw.
-                        StorageException translatedException = StorageException.translateException(null, e, context);
+                        // The request was not even made. There was an error while trying to write the message. Just throw.
+                        StorageException translatedException = StorageException.translateClientException(e);
                         throw translatedException;
                     }
                 }
@@ -1647,18 +1647,18 @@ public final class CloudQueue {
             return putRequest;
         }
         catch (IllegalArgumentException e) {
-            // The request was not even made. There was an error while trying to write the permissions. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            // The request was not even made. There was an error while trying to write the message. Just throw.
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
         catch (IllegalStateException e) {
-            // The request was not even made. There was an error while trying to write the permissions. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            // The request was not even made. There was an error while trying to write the message. Just throw.
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
         catch (IOException e) {
-            // The request was not even made. There was an error while trying to write the permissions. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            // The request was not even made. There was an error while trying to write the message. Just throw.
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
     }

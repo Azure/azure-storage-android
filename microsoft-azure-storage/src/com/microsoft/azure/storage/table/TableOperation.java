@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.StorageExtendedErrorInformation;
 import com.microsoft.azure.storage.core.ExecutionEngine;
 import com.microsoft.azure.storage.core.SR;
 import com.microsoft.azure.storage.core.StorageRequest;
@@ -333,6 +334,10 @@ public class TableOperation {
                 return operation.parseResponse(null, this.getResult().getStatusCode(), null, opContext, options);
             }
 
+            @Override
+            public StorageExtendedErrorInformation parseErrorDetails() {
+                return TableStorageErrorDeserializer.parseErrorDetails(this);
+            }
         };
 
         return deleteRequest;
@@ -475,13 +480,17 @@ public class TableOperation {
                     return result;
                 }
 
+                @Override
+                public StorageExtendedErrorInformation parseErrorDetails() {
+                    return TableStorageErrorDeserializer.parseErrorDetails(this);
+                }
             };
 
             return putRequest;
         }
         catch (IOException e) {
             // The request was not even made. There was an error while trying to read the entity. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
 
@@ -571,13 +580,17 @@ public class TableOperation {
                     }
                 }
 
+                @Override
+                public StorageExtendedErrorInformation parseErrorDetails() {
+                    return TableStorageErrorDeserializer.parseErrorDetails(this);
+                }
             };
 
             return putRequest;
         }
         catch (IOException e) {
             // The request was not even made. There was an error while trying to read the entity. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
     }
@@ -666,13 +679,17 @@ public class TableOperation {
                     }
                 }
 
+                @Override
+                public StorageExtendedErrorInformation parseErrorDetails() {
+                    return TableStorageErrorDeserializer.parseErrorDetails(this);
+                }
             };
 
             return putRequest;
         }
         catch (IOException e) {
             // The request was not even made. There was an error while trying to read the entity. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
     }

@@ -147,7 +147,7 @@ public class Logger {
         }
     }
 
-    private static boolean shouldLog(OperationContext opContext, int logLevel) {
+    public static boolean shouldLog(OperationContext opContext, int logLevel) {
         if (opContext != null && opContext.getLogLevel() != null) {
             return opContext.getLogLevel() <= logLevel && Log.isLoggable(Constants.LOG_TAG, logLevel);
         }
