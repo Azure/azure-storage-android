@@ -35,6 +35,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TimeZone;
 import java.util.concurrent.TimeoutException;
 
@@ -45,6 +47,7 @@ import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.SAXException;
 import org.xmlpull.v1.XmlSerializer;
 
+import android.util.Log;
 import android.util.Xml;
 
 import com.microsoft.azure.storage.Constants;
@@ -59,6 +62,7 @@ import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageErrorCode;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.StorageExtendedErrorInformation;
 
 /**
  * RESERVED FOR INTERNAL USE. A class which provides utility methods.
@@ -919,6 +923,135 @@ public final class Utility {
             }
 
             return sb.toString();
+        }
+    }
+
+    /**
+     * Serializes the parsed StorageException. If an exception is encountered, returns empty string.
+     * 
+     * @param ex
+     *            The StorageException to serialize.
+     * @param opContext 
+     *            The operation context which provides the logger.
+     */
+    public static void logHttpError(StorageException ex, OperationContext opContext) {
+        if (Logger.shouldLog(opContext, Log.DEBUG)) {
+            try {
+                StringBuilder bld = new StringBuilder();
+                bld.append("Error response received. ");
+    
+                bld.append("HttpStatusCode= ");
+                bld.append(ex.getHttpStatusCode());
+                
+                bld.append(", HttpStatusMessage= ");
+                bld.append(ex.getMessage());
+    
+                bld.append(", ErrorCode= ");
+                bld.append(ex.getErrorCode());
+    
+                StorageExtendedErrorInformation extendedError = ex.getExtendedErrorInformation();
+                if (extendedError != null) {
+                    bld.append(", ExtendedErrorInformation= {ErrorMessage= ");
+                    bld.append(extendedError.getErrorMessage());
+    
+                    HashMap<String, String[]> details = extendedError.getAdditionalDetails();
+                    if (details != null) {
+                        bld.append(", AdditionalDetails= { ");
+                        for (Entry<String, String[]> detail : details.entrySet()) {
+                            bld.append(detail.getKey());
+                            bld.append("= ");
+    
+                            for (String value : detail.getValue()) {
+                                bld.append(value);
+                            }
+                            bld.append(",");
+                        }
+                        bld.setCharAt(bld.length() - 1, '}');
+                    }
+                    bld.append("}");
+                }
+    
+                Logger.debug(opContext, bld.toString());
+            } catch (Exception e) {
+                // Do nothing
+            }
+        }
+    }
+
+    /**
+     * Logs the HttpURLConnection request. If an exception is encountered, logs nothing.
+     * 
+     * @param conn
+     *            The HttpURLConnection to serialize.
+     * @param opContext 
+     *            The operation context which provides the logger.
+     */
+    public static void logHttpRequest(HttpURLConnection conn, OperationContext opContext) throws IOException {
+        if (Logger.shouldLog(opContext, Log.VERBOSE)) {
+            try {
+                StringBuilder bld = new StringBuilder();
+    
+                bld.append(conn.getRequestMethod());
+                bld.append(" ");
+                bld.append(conn.getURL());
+                bld.append("\n");
+    
+                // The Authorization header will not appear due to a security feature in HttpURLConnection
+                for (Map.Entry<String, List<String>> header : conn.getRequestProperties().entrySet()) {
+                    if (header.getKey() != null) {
+                        bld.append(header.getKey());
+                        bld.append(": ");
+                    }
+    
+                    for (int i = 0; i < header.getValue().size(); i++) {
+                        bld.append(header.getValue().get(i));
+                        if (i < header.getValue().size() - 1) {
+                            bld.append(",");
+                        }
+                    }
+                    bld.append('\n');
+                }
+    
+                Logger.verbose(opContext, bld.toString());
+            } catch (Exception e) {
+                // Do nothing
+            }
+        }
+    }
+
+    /**
+     * Logs the HttpURLConnection response. If an exception is encountered, logs nothing.
+     * 
+     * @param conn
+     *            The HttpURLConnection to serialize.
+     * @param opContext 
+     *            The operation context which provides the logger.
+     */
+    public static void logHttpResponse(HttpURLConnection conn, OperationContext opContext) throws IOException {
+        if (Logger.shouldLog(opContext, Log.VERBOSE)) {
+            try {
+                StringBuilder bld = new StringBuilder();
+    
+                // This map's null key will contain the response code and message
+                for (Map.Entry<String, List<String>> header : conn.getHeaderFields().entrySet()) {
+                    if (header.getKey() != null) {
+                        bld.append(header.getKey());
+                        bld.append(": ");
+                    }
+    
+                    for (int i = 0; i < header.getValue().size(); i++) {
+                        bld.append(header.getValue().get(i));
+                        if (i < header.getValue().size() - 1) {
+                            bld.append(",");
+                        }
+                    }
+                    bld.append('\n');
+                }
+    
+                Logger.verbose(opContext, bld.toString());
+            } catch (Exception e) {
+                // Do nothing
+            }
         }
     }
 

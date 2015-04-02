@@ -46,6 +46,7 @@ import com.microsoft.azure.storage.core.PathUtility;
 /**
  * Queue Tests
  */
+@SuppressWarnings("deprecation")
 public class CloudQueueTests extends TestCase {
 
     private CloudQueue queue;
@@ -677,11 +678,11 @@ public class CloudQueueTests extends TestCase {
     
     public void testAddMessageUnicode() throws StorageException {
         ArrayList<String> messages = new ArrayList<String>();
-        messages.add("Le débat sur l'identité nationale, l'idée du président Nicolas Sarkozy de déchoir des personnes d'origine étrangère de la nationalité française ... certains cas et les récentes mesures prises contre les Roms ont choqué les experts, qui rendront leurs conclusions le 27 août.");
-        messages.add("Ваш логин Yahoo! дает доступ к таким мощным инструментам связи, как электронная почта, отправка мгновенных сообщений, функции безопасности, в частности, антивирусные средства и блокировщик всплывающей рекламы, и избранное, например, фото и музыка в сети — все бесплат");
-        messages.add("据新华社8月12日电 8月11日晚，舟曲境内再次出现强降雨天气，使特大山洪泥石流灾情雪上加霜。白龙江水在梨坝子村的交汇地带形成一个新的堰塞湖，水位比平时高出3米。甘肃省国土资源厅副厅长张国华当日22时许在新闻发布会上介绍，截至12日21时50分，舟曲堰塞湖堰塞体已消除，溃坝险情已消除，目前针对堰塞湖的主要工作是疏通河道。");
-        messages.add("ל כולם\", הדהים יעלון, ויישר קו עם העדות שמסר ראש הממשלה, בנימין נתניהו, לוועדת טירקל. לדבריו, אכן השרים דנו רק בהיבטים התקשורתיים של עצירת המשט: \"בשביעייה לא התקיים דיון על האלטרנטיבות. עסקנו בהיבטים ");
-        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis März um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprünglich waren es hier 1,7 Prozent");
+        messages.add("Le dÃ©bat sur l'identitÃ© nationale, l'idÃ©e du prÃ©sident Nicolas Sarkozy de dÃ©choir des personnes d'origine Ã©trangÃ¨re de la nationalitÃ© franÃ§aise ... certains cas et les rÃ©centes mesures prises contre les Roms ont choquÃ© les experts, qui rendront leurs conclusions le 27 aoÃ»t.");
+        messages.add("Ð’Ð°Ñˆ Ð»Ð¾Ð³Ð¸Ð½ Yahoo! Ð´Ð°ÐµÑ‚ Ð´Ð¾Ñ�Ñ‚ÑƒÐ¿ Ðº Ñ‚Ð°ÐºÐ¸Ð¼ Ð¼Ð¾Ñ‰Ð½Ñ‹Ð¼ Ð¸Ð½Ñ�Ñ‚Ñ€ÑƒÐ¼ÐµÐ½Ñ‚Ð°Ð¼ Ñ�Ð²Ñ�Ð·Ð¸, ÐºÐ°Ðº Ñ�Ð»ÐµÐºÑ‚Ñ€Ð¾Ð½Ð½Ð°Ñ� Ð¿Ð¾Ñ‡Ñ‚Ð°, Ð¾Ñ‚Ð¿Ñ€Ð°Ð²ÐºÐ° Ð¼Ð³Ð½Ð¾Ð²ÐµÐ½Ð½Ñ‹Ñ… Ñ�Ð¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ð¹, Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸ Ð±ÐµÐ·Ð¾Ð¿Ð°Ñ�Ð½Ð¾Ñ�Ñ‚Ð¸, Ð² Ñ‡Ð°Ñ�Ñ‚Ð½Ð¾Ñ�Ñ‚Ð¸, Ð°Ð½Ñ‚Ð¸Ð²Ð¸Ñ€ÑƒÑ�Ð½Ñ‹Ðµ Ñ�Ñ€ÐµÐ´Ñ�Ñ‚Ð²Ð° Ð¸ Ð±Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²Ñ‰Ð¸Ðº Ð²Ñ�Ð¿Ð»Ñ‹Ð²Ð°ÑŽÑ‰ÐµÐ¹ Ñ€ÐµÐºÐ»Ð°Ð¼Ñ‹, Ð¸ Ð¸Ð·Ð±Ñ€Ð°Ð½Ð½Ð¾Ðµ, Ð½Ð°Ð¿Ñ€Ð¸Ð¼ÐµÑ€, Ñ„Ð¾Ñ‚Ð¾ Ð¸ Ð¼ÑƒÐ·Ñ‹ÐºÐ° Ð² Ñ�ÐµÑ‚Ð¸ â€” Ð²Ñ�Ðµ Ð±ÐµÑ�Ð¿Ð»Ð°Ñ‚");
+        messages.add("æ�®æ–°å�Žç¤¾8æœˆ12æ—¥ç”µ 8æœˆ11æ—¥æ™šï¼ŒèˆŸæ›²å¢ƒå†…å†�æ¬¡å‡ºçŽ°å¼ºé™�é›¨å¤©æ°”ï¼Œä½¿ç‰¹å¤§å±±æ´ªæ³¥çŸ³æµ�ç�¾æƒ…é›ªä¸ŠåŠ éœœã€‚ç™½é¾™æ±Ÿæ°´åœ¨æ¢¨å��å­�æ�‘çš„äº¤æ±‡åœ°å¸¦å½¢æˆ�ä¸€ä¸ªæ–°çš„å °å¡žæ¹–ï¼Œæ°´ä½�æ¯”å¹³æ—¶é«˜å‡º3ç±³ã€‚ç”˜è‚ƒçœ�å›½åœŸèµ„æº�åŽ…å‰¯åŽ…é•¿å¼ å›½å�Žå½“æ—¥22æ—¶è®¸åœ¨æ–°é—»å�‘å¸ƒä¼šä¸Šä»‹ç»�ï¼Œæˆªè‡³12æ—¥21æ—¶50åˆ†ï¼ŒèˆŸæ›²å °å¡žæ¹–å °å¡žä½“å·²æ¶ˆé™¤ï¼Œæºƒå��é™©æƒ…å·²æ¶ˆé™¤ï¼Œç›®å‰�é’ˆå¯¹å °å¡žæ¹–çš„ä¸»è¦�å·¥ä½œæ˜¯ç–�é€šæ²³é�“ã€‚");
+        messages.add("×œ ×›×•×œ×�\", ×”×“×”×™×� ×™×¢×œ×•×Ÿ, ×•×™×™×©×¨ ×§×• ×¢×� ×”×¢×“×•×ª ×©×ž×¡×¨ ×¨×�×© ×”×ž×ž×©×œ×”, ×‘× ×™×ž×™×Ÿ × ×ª× ×™×”×•, ×œ×•×•×¢×“×ª ×˜×™×¨×§×œ. ×œ×“×‘×¨×™×•, ×�×›×Ÿ ×”×©×¨×™×� ×“× ×• ×¨×§ ×‘×”×™×‘×˜×™×� ×”×ª×§×©×•×¨×ª×™×™×� ×©×œ ×¢×¦×™×¨×ª ×”×ž×©×˜: \"×‘×©×‘×™×¢×™×™×” ×œ×� ×”×ª×§×™×™×� ×“×™×•×Ÿ ×¢×œ ×”×�×œ×˜×¨× ×˜×™×‘×•×ª. ×¢×¡×§× ×• ×‘×”×™×‘×˜×™×� ");
+        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis MÃ¤rz um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprÃ¼nglich waren es hier 1,7 Prozent");
         messages.add("<?xml version=\"1.0\"?>\n<!DOCTYPE PARTS SYSTEM \"parts.dtd\">\n<?xml-stylesheet type=\"text/css\" href=\"xmlpartsstyle.css\"?>\n<PARTS>\n   <TITLE>Computer Parts</TITLE>\n   <PART>\n      <ITEM>Motherboard</ITEM>\n      <MANUFACTURER>ASUS</MANUFACTURER>\n      <MODEL>"
                 + "P3B-F</MODEL>\n      <COST> 123.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Video Card</ITEM>\n      <MANUFACTURER>ATI</MANUFACTURER>\n      <MODEL>All-in-Wonder Pro</MODEL>\n      <COST> 160.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Sound Card</ITEM>\n      <MANUFACTURER>"
                 + "Creative Labs</MANUFACTURER>\n      <MODEL>Sound Blaster Live</MODEL>\n      <COST> 80.00</COST>\n   </PART>\n   <PART>\n      <ITEM> inch Monitor</ITEM>\n      <MANUFACTURER>LG Electronics</MANUFACTURER>\n      <MODEL> 995E</MODEL>\n      <COST> 290.00</COST>\n   </PART>\n</PARTS>");
@@ -753,7 +754,7 @@ public class CloudQueueTests extends TestCase {
 
     public void testQueueUnicodeAndXmlMessageTest() throws  StorageException
             {
-        String msgContent = "ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â¥Ãƒâ€šÃ‚Â½<?xml version= 1.0  encoding= utf-8  ?>";
+        String msgContent = "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½<?xml version= 1.0  encoding= utf-8  ?>";
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
         this.queue.addMessage(message);
         CloudQueueMessage msgFromRetrieve1 = this.queue.retrieveMessage();

@@ -670,14 +670,17 @@ public class CloudPageBlobTests extends TestCase {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
         final CloudPageBlob blobRef = this.container.getPageBlobReference(blobName);
         blobRef.create(blobLengthToUse);
+        assertNull(blobRef.getProperties().getPageBlobSequenceNumber());
 
         // Upload one page (page 0)
         ByteArrayInputStream inputStream = new ByteArrayInputStream(buffer);
         blobRef.uploadPages(inputStream, 0, 512);
+        assertNotNull(blobRef.getProperties().getPageBlobSequenceNumber());
 
         // Upload pages 2-4
         inputStream = new ByteArrayInputStream(buffer, 512, 3 * 512);
         blobRef.uploadPages(inputStream, 2 * 512, 3 * 512);
+        assertNotNull(blobRef.getProperties().getPageBlobSequenceNumber());
 
         // Now, we expect the first 512 bytes of the blob to be the first 512 bytes of the random buffer (page 0)
         // the next 512 bytes should be 0 (page 1)
@@ -729,10 +732,12 @@ public class CloudPageBlobTests extends TestCase {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
         final CloudPageBlob blobRef = this.container.getPageBlobReference(blobName);
         blobRef.create(blobLengthToUse);
+        assertNull(blobRef.getProperties().getPageBlobSequenceNumber());
 
         // Upload one page (page 0)
         ByteArrayInputStream inputStream = new ByteArrayInputStream(buffer);
         blobRef.uploadPages(inputStream, 0, blobLengthToUse);
+        assertNotNull(blobRef.getProperties().getPageBlobSequenceNumber());
 
         try {
             blobRef.clearPages(0, 256);
@@ -751,6 +756,7 @@ public class CloudPageBlobTests extends TestCase {
         }
 
         blobRef.clearPages(3 * 512, 2 * 512);
+        assertNotNull(blobRef.getProperties().getPageBlobSequenceNumber());
 
         byte[] result = new byte[blobLengthToUse];
         blobRef.downloadToByteArray(result, 0);
@@ -776,21 +782,26 @@ public class CloudPageBlobTests extends TestCase {
 
         blob.create(1024);
         assertEquals(1024, blob.getProperties().getLength());
+        assertNull(blob.getProperties().getPageBlobSequenceNumber());
 
         blob2.downloadAttributes();
         assertEquals(1024, blob2.getProperties().getLength());
+        assertNull(blob.getProperties().getPageBlobSequenceNumber());
 
         blob2.getProperties().setContentType("text/plain");
         blob2.uploadProperties();
 
         blob.resize(2048);
         assertEquals(2048, blob.getProperties().getLength());
+        assertNotNull(blob.getProperties().getPageBlobSequenceNumber());
 
         blob.downloadAttributes();
         assertEquals("text/plain", blob.getProperties().getContentType());
+        assertNotNull(blob.getProperties().getPageBlobSequenceNumber());
 
         blob2.downloadAttributes();
         assertEquals(2048, blob2.getProperties().getLength());
+        assertNotNull(blob.getProperties().getPageBlobSequenceNumber());
     }
 
     public void testDownloadPages() throws StorageException, URISyntaxException, IOException {

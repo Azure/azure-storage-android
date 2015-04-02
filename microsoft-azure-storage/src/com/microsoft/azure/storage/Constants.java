@@ -235,6 +235,11 @@ public final class Constants {
         public static final String BEGIN_RANGE_HEADER_FORMAT = "bytes=%d-";
 
         /**
+         * The header that specifies blob sequence number.
+         */
+        public static final String BLOB_SEQUENCE_NUMBER = PREFIX_FOR_STORAGE_HEADER + "blob-sequence-number";
+        
+        /**
          * The CacheControl header.
          */
         public static final String CACHE_CONTROL = "Cache-Control";
@@ -369,7 +374,22 @@ public final class Constants {
          * The IfUnmodifiedSince header.
          */
         public static final String IF_UNMODIFIED_SINCE = "If-Unmodified-Since";
-
+        
+        /**
+         * The blob sequence number less than or equal condition header.
+         */
+        public static final String IF_SEQUENCE_NUMBER_LESS_THAN_OR_EQUAL = PREFIX_FOR_STORAGE_HEADER + "if-sequence-number-le";
+        
+        /**
+         * The blob sequence number less than condition header.
+         */
+        public static final String IF_SEQUENCE_NUMBER_LESS_THAN = PREFIX_FOR_STORAGE_HEADER + "if-sequence-number-lt";
+        
+        /**
+         * The blob sequence number equal condition header.
+         */
+        public static final String IF_SEQUENCE_NUMBER_EQUAL = PREFIX_FOR_STORAGE_HEADER + "if-sequence-number-eq";
+        
         /**
          * The header that specifies the lease action to perform
          */
@@ -515,7 +535,7 @@ public final class Constants {
         /**
          * Specifies the value to use for UserAgent header.
          */
-        public static final String USER_AGENT_VERSION = "0.4.1";
+        public static final String USER_AGENT_VERSION = "0.5.0";
 
         /**
          * The default type for content-type and accept

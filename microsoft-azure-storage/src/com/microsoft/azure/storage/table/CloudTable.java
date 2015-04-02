@@ -37,6 +37,7 @@ import com.microsoft.azure.storage.StorageCredentialsAccountAndKey;
 import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.StorageExtendedErrorInformation;
 import com.microsoft.azure.storage.StorageUri;
 import com.microsoft.azure.storage.core.ExecutionEngine;
 import com.microsoft.azure.storage.core.PathUtility;
@@ -996,23 +997,28 @@ public final class CloudTable {
 
                     return null;
                 }
+                
+                @Override
+                public StorageExtendedErrorInformation parseErrorDetails() {
+                    return TableStorageErrorDeserializer.parseErrorDetails(this);
+                }
             };
 
             return putRequest;
         }
         catch (IllegalArgumentException e) {
-            // The request was not even made. There was an error while trying to write the permissions. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            // The request was not even made. There was an error while trying to write the message. Just throw.
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
         catch (IllegalStateException e) {
-            // The request was not even made. There was an error while trying to write the permissions. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            // The request was not even made. There was an error while trying to write the message. Just throw.
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
         catch (IOException e) {
-            // The request was not even made. There was an error while trying to write the permissions. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            // The request was not even made. There was an error while trying to write the message. Just throw.
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
     }
@@ -1104,7 +1110,11 @@ public final class CloudTable {
 
                 return permissions;
             }
-
+            
+            @Override
+            public StorageExtendedErrorInformation parseErrorDetails() {
+                return TableStorageErrorDeserializer.parseErrorDetails(this);
+            }
         };
 
         return getRequest;

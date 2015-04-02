@@ -1688,17 +1688,17 @@ public final class CloudBlobContainer {
         }
         catch (IllegalArgumentException e) {
             // The request was not even made. There was an error while trying to write the permissions. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
         catch (IllegalStateException e) {
             // The request was not even made. There was an error while trying to write the permissions. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
         catch (IOException e) {
             // The request was not even made. There was an error while trying to write the permissions. Just throw.
-            StorageException translatedException = StorageException.translateException(null, e, null);
+            StorageException translatedException = StorageException.translateClientException(e);
             throw translatedException;
         }
     }
