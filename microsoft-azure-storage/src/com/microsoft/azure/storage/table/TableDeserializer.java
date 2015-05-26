@@ -415,10 +415,7 @@ final class TableDeserializer {
     private static EdmType evaluateEdmType(JsonToken token, String value) {
         EdmType edmType = null;
 
-        if (token == JsonToken.VALUE_NULL) {
-            edmType = EdmType.NULL;
-        }
-        else if (token == JsonToken.VALUE_FALSE || token == JsonToken.VALUE_TRUE) {
+        if (token == JsonToken.VALUE_FALSE || token == JsonToken.VALUE_TRUE) {
             edmType = EdmType.BOOLEAN;
         }
         else if (token == JsonToken.VALUE_NUMBER_FLOAT) {

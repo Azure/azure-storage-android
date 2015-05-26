@@ -175,7 +175,7 @@ public final class BaseRequest {
         }
 
         // Note: ReadTimeout must be explicitly set
-        retConnection.setReadTimeout(Utility.getRemainingTimeout(options.getOperationExpiryTimeInMs()));
+        retConnection.setReadTimeout(Utility.getRemainingTimeout(options.getOperationExpiryTimeInMs(), options.getTimeoutIntervalInMs()));
 
         // Note : by default sends Accept behavior as text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2
         retConnection.setRequestProperty(Constants.HeaderConstants.ACCEPT, Constants.HeaderConstants.XML_TYPE);

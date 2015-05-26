@@ -535,7 +535,7 @@ public final class Constants {
         /**
          * Specifies the value to use for UserAgent header.
          */
-        public static final String USER_AGENT_VERSION = "0.5.0";
+        public static final String USER_AGENT_VERSION = "0.5.1";
 
         /**
          * The default type for content-type and accept
@@ -774,6 +774,11 @@ public final class Constants {
      */
     public static final String COPY_STATUS_ELEMENT = "CopyStatus";
 
+    /**
+     * Default read timeout. 5 min * 60 seconds * 1000 ms
+     */
+    public static final int DEFAULT_READ_TIMEOUT = 5 * 60 * 1000;
+    
     /**
      * XML element for delimiters.
      */

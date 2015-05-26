@@ -76,6 +76,23 @@ public class TableOperationTests extends TestCase {
                     String.format(SR.ARGUMENT_NULL_OR_EMPTY, SR.QUERY_REQUIRES_VALID_CLASSTYPE_OR_RESOLVER));
         }
     }
+    
+	public void testEntityWithSingleQuote() throws StorageException {
+		TableRequestOptions options = new TableRequestOptions();
+		options.setTablePayloadFormat(TablePayloadFormat.Json);
+
+		EmptyClass ref = new EmptyClass();
+		ref.setPartitionKey("partition'key");
+		ref.setRowKey("row'key");
+
+		this.table.execute(TableOperation.insert(ref), options, null);
+		this.table.execute(TableOperation.merge(ref), options, null);
+		this.table.execute(TableOperation.insertOrReplace(ref), options, null);
+		this.table.execute(TableOperation.insertOrMerge(ref), options, null);
+		this.table.execute(TableOperation.replace(ref), options, null);
+		this.table.execute(TableOperation.retrieve(ref.getPartitionKey(), ref.getRowKey(), EmptyClass.class), options, null);
+		this.table.execute(TableOperation.delete(ref), options, null);
+	}
 
     public void testInsertEntityWithoutPartitionKeyRowKey() {
         TableRequestOptions options = new TableRequestOptions();
