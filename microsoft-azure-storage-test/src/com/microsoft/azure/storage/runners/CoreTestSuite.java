@@ -19,6 +19,7 @@ import junit.framework.TestSuite;
 
 import com.microsoft.azure.storage.EventFiringTests;
 import com.microsoft.azure.storage.GenericTests;
+import com.microsoft.azure.storage.MaximumExecutionTimeTests;
 import com.microsoft.azure.storage.SecondaryTests;
 import com.microsoft.azure.storage.ServicePropertiesTests;
 import com.microsoft.azure.storage.StorageAccountTests;
@@ -29,6 +30,7 @@ public class CoreTestSuite {
         TestSuite suite = new TestSuite("CoreTestSuite");
         suite.addTestSuite(EventFiringTests.class);
         suite.addTestSuite(GenericTests.class);
+        suite.addTestSuite(MaximumExecutionTimeTests.class);
         suite.addTestSuite(SecondaryTests.class);
         suite.addTestSuite(ServicePropertiesTests.class);
         suite.addTestSuite(StorageAccountTests.class);
