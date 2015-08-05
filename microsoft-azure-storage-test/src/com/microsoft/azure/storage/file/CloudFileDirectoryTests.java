@@ -20,6 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import com.microsoft.azure.storage.NameValidator;
@@ -64,12 +65,18 @@ public class CloudFileDirectoryTests extends TestCase {
         NameValidator.validateDirectoryName("CLOCK$");
         NameValidator.validateDirectoryName("endslash/");
 
-        invalidDirectoryTestHelper(null, "No null.", "Invalid directory name. The name may not be null, empty, or whitespace only.");
-        invalidDirectoryTestHelper("middle/slash", "Slashes only at the end.", "Invalid directory name. Check MSDN for more information about valid naming.");
-        invalidDirectoryTestHelper("illegal\"char", "Illegal character.", "Invalid directory name. Check MSDN for more information about valid naming.");
-        invalidDirectoryTestHelper("illegal:char?", "Illegal character.", "Invalid directory name. Check MSDN for more information about valid naming.");
-        invalidDirectoryTestHelper("", "Between 1 and 255 characters.", "Invalid directory name. The name may not be null, empty, or whitespace only.");
-        invalidDirectoryTestHelper(new String(new char[256]).replace("\0", "n"), "Between 1 and 255 characters.", "Invalid directory name length. The name must be between 1 and 255 characters long.");
+        invalidDirectoryTestHelper(null, "No null.",
+                "Invalid directory name. The name may not be null, empty, or whitespace only.");
+        invalidDirectoryTestHelper("middle/slash", "Slashes only at the end.",
+                "Invalid directory name. Check MSDN for more information about valid naming.");
+        invalidDirectoryTestHelper("illegal\"char", "Illegal character.",
+                "Invalid directory name. Check MSDN for more information about valid naming.");
+        invalidDirectoryTestHelper("illegal:char?", "Illegal character.",
+                "Invalid directory name. Check MSDN for more information about valid naming.");
+        invalidDirectoryTestHelper("", "Between 1 and 255 characters.",
+                "Invalid directory name. The name may not be null, empty, or whitespace only.");
+        invalidDirectoryTestHelper(new String(new char[256]).replace("\0", "n"), "Between 1 and 255 characters.",
+                "Invalid directory name length. The name must be between 1 and 255 characters long.");
     }
 
     private void invalidDirectoryTestHelper(String directoryName, String failMessage, String exceptionMessage)
@@ -85,7 +92,7 @@ public class CloudFileDirectoryTests extends TestCase {
         }
     }
 
-    private boolean CloudFileDirectorySetup(CloudFileShare share) throws URISyntaxException, StorageException {
+    private boolean doCloudFileDirectorySetup(CloudFileShare share) throws URISyntaxException, StorageException {
         try {
             CloudFileDirectory rootDirectory = share.getRootDirectoryReference();
             for (int i = 1; i < 3; i++) {
@@ -123,13 +130,14 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryConstructor() throws URISyntaxException, StorageException {
-        CloudFileShare share = FileTestHelper.getRandomShareReference();
-        CloudFileDirectory directory = share.getRootDirectoryReference().getDirectoryReference("directory1");
-        CloudFileDirectory directory2 = new CloudFileDirectory(directory.getStorageUri(), null);
+        CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference("directory1");
+        CloudFileDirectory directory2 = new CloudFileDirectory(directory.getStorageUri(), 
+                this.share.getServiceClient().getCredentials());
         assertEquals(directory.getName(), directory2.getName());
         assertEquals(directory.getStorageUri(), directory2.getStorageUri());
         assertEquals(directory.getShare().getStorageUri(), directory2.getShare().getStorageUri());
-        assertEquals(directory.getServiceClient().getStorageUri(), directory2.getServiceClient().getStorageUri());
+        assertEquals(FileTestHelper.ensureTrailingSlash(directory.getServiceClient().getStorageUri()),
+                FileTestHelper.ensureTrailingSlash(directory2.getServiceClient().getStorageUri()));
     }
 
     /**
@@ -181,7 +189,7 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws URISyntaxException
      */
     public void testCloudFileDirectoryListFilesAndDirectories() throws StorageException, URISyntaxException {
-        if (CloudFileDirectorySetup(this.share)) {
+        if (doCloudFileDirectorySetup(this.share)) {
             CloudFileDirectory topDir1 = this.share.getRootDirectoryReference().getDirectoryReference("TopDir1");
             Iterable<ListFileItem> list1 = topDir1.listFilesAndDirectories();
             assertTrue(list1.iterator().hasNext());
@@ -237,9 +245,9 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      * @throws URISyntaxException
      */
-    public void CloudFileDirectoryListFilesAndDirectoriesMaxResultsValidation()
+    public void testCloudFileDirectoryListFilesAndDirectoriesMaxResultsValidation()
             throws StorageException, URISyntaxException {
-        if (CloudFileDirectorySetup(this.share)) {
+        if (doCloudFileDirectorySetup(this.share)) {
             CloudFileDirectory topDir =
                     this.share.getRootDirectoryReference().getDirectoryReference("TopDir1");
             
@@ -267,7 +275,7 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryWithFilesDelete() throws URISyntaxException, StorageException {
-        if (CloudFileDirectorySetup(this.share)) {
+        if (doCloudFileDirectorySetup(this.share)) {
             CloudFileDirectory dir1 = this.share.getRootDirectoryReference().getDirectoryReference(
                     "TopDir1/MidDir1/EndDir1");
             CloudFile file1 = dir1.getFileReference("EndFile1");
@@ -286,6 +294,92 @@ public class CloudFileDirectoryTests extends TestCase {
             assertFalse(file1.exists());
             assertFalse(dir1.exists());
         }
+    }
+    
+    /**
+     * Check uploading/downloading directory metadata.
+     * 
+     * @throws StorageException
+     * @throws URISyntaxException
+     */
+    public void testCloudFileDirectoryUploadMetadata() throws StorageException, URISyntaxException {
+        CloudFileDirectory directory = this.share.getRootDirectoryReference();
+        directory.downloadAttributes();
+        Assert.assertEquals(0, directory.getMetadata().size());
+
+        directory.getMetadata().put("key1", "value1");
+        directory.uploadMetadata();
+        directory.getMetadata().clear();
+
+        directory.downloadAttributes();
+        Assert.assertEquals(1, directory.getMetadata().size());
+        Assert.assertEquals("value1", directory.getMetadata().get("key1"));
+
+        directory.getMetadata().clear();
+        directory.uploadMetadata();
+        directory.getMetadata().put("key2", "value2");
+
+        directory.downloadAttributes();
+        Assert.assertEquals(0, directory.getMetadata().size());
+    }
+    
+    /**
+     * Check if a directory reference with metadata will still have that metadata after being created.
+     * 
+     * @throws StorageException
+     * @throws URISyntaxException
+     */
+    public void testCreateDirectoryWithMetadata() throws StorageException, URISyntaxException {
+        String directoryName = "newDirectory1";
+        CloudFileDirectory directory = new CloudFileDirectory(
+                PathUtility.appendPathToUri(this.share.getStorageUri(), directoryName), directoryName, this.share);
+        Assert.assertEquals(0, directory.getMetadata().size());
+        
+        directory.getMetadata().put("key1", "value1");
+        directory.createIfNotExists();
+        directory.getMetadata().clear();
+        
+        directory.downloadAttributes();
+        Assert.assertEquals(1, directory.getMetadata().size());
+        Assert.assertEquals("value1", directory.getMetadata().get("key1"));
+    }
+    
+    /**
+     * Check uploading/downloading invalid directory metadata.
+     * @throws URISyntaxException 
+     * @throws StorageException 
+     */
+    public void testCloudFileDirectoryInvalidMetadata() throws StorageException, URISyntaxException {
+        CloudFileDirectory directory = this.share.getRootDirectoryReference();
+        
+        // test client-side fails correctly
+        testMetadataFailures(directory, null, "value1", true);
+        testMetadataFailures(directory, "", "value1", true);
+        testMetadataFailures(directory, " ", "value1", true);
+        testMetadataFailures(directory, "\n \t", "value1", true);
+
+        testMetadataFailures(directory, "key1", null, false);
+        testMetadataFailures(directory, "key1", "", false);
+        testMetadataFailures(directory, "key1", " ", false);
+        testMetadataFailures(directory, "key1", "\n \t", false);
+    }
+    
+    private static void testMetadataFailures(CloudFileDirectory directory, String key, String value, boolean badKey) {
+        directory.getMetadata().put(key, value);
+        try {
+            directory.uploadMetadata();
+            fail(SR.METADATA_KEY_INVALID);
+        }
+        catch (StorageException e) {
+            if (badKey) {
+                assertEquals(SR.METADATA_KEY_INVALID, e.getMessage());
+            }
+            else {
+                assertEquals(SR.METADATA_VALUE_INVALID, e.getMessage());
+            }
+        }
+
+        directory.getMetadata().remove(key);
     }
 
     /*
@@ -485,7 +579,7 @@ public class CloudFileDirectoryTests extends TestCase {
      * @throws StorageException
      */
     public void testCloudFileDirectoryHierarchicalTraversal() throws URISyntaxException, StorageException {
-        ////Traverse hierarchically starting with length 1
+        // Traverse hierarchically starting with length 1
         CloudFileDirectory directory1 = this.share.getRootDirectoryReference().getDirectoryReference("Dir1");
         CloudFileDirectory subdir1 = directory1.getDirectoryReference("Dir2");
         CloudFileDirectory parent1 = subdir1.getParent();

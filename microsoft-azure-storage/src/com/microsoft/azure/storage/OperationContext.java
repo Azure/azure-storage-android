@@ -197,7 +197,7 @@ public final class OperationContext {
      * manner.
      * 
      * @param requestResult
-     *            A {@Link RequestResult} to append.
+     *        A {@link RequestResult} to append.
      */
     public synchronized void appendRequestResult(RequestResult requestResult) {
         this.requestResults.add(requestResult);

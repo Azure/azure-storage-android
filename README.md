@@ -1,6 +1,8 @@
 #Microsoft Azure Storage SDK for Android
 
-This project provides a client library for Android that makes it easy to consume Microsoft Azure Storage services. For documentation please see the [AndroidDocs](http://dl.windowsazure.com/androiddocs).
+This project provides a client library for Android that makes it easy to consume Microsoft Azure Storage services. For documentation please see the [AndroidDocs](http://azure.github.io/azure-storage-android/).
+
+> If you are looking for the Azure Storage Java SDK, please visit [https://github.com/Azure/azure-storage-java](https://github.com/Azure/azure-storage-java).
 
 #Features
   * Blob
@@ -44,7 +46,7 @@ First, add mavenCentral to your repositories by adding the following to your gra
 Then, add a dependency by adding the following to your gradle build file:
 
     dependencies {
-        compile 'com.microsoft.azure.android:azure-storage-android:0.5.1@aar'
+        compile 'com.microsoft.azure.android:azure-storage-android:0.6.0@aar'
     }
 
 ###Option 4: aar via Maven
@@ -55,7 +57,7 @@ To get the binaries of this library as distributed by Microsoft, ready for use w
 <dependency>
 	<groupId>com.microsoft.azure.android</groupId>
 	<artifactId>azure-storage-android</artifactId>
-	<version>0.5.1</version>
+	<version>0.6.0</version>
 	<type>aar</type>
 </dependency>
 ```
@@ -94,4 +96,4 @@ If you encounter any bugs with the library please file an issue in the [Issues](
 #Learn More
 * [Azure Storage Service](http://azure.microsoft.com/en-us/documentation/services/storage/)
 * [Azure Storage Team Blog](http://blogs.msdn.com/b/windowsazurestorage/)
-* [AndroidDocs](http://dl.windowsazure.com/androiddocs)
+* [AndroidDocs](http://azure.github.io/azure-storage-android/)

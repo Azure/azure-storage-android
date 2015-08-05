@@ -19,12 +19,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import com.microsoft.azure.storage.DoesServiceRequest;
-import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.ResultContinuation;
 import com.microsoft.azure.storage.ResultContinuationType;
 import com.microsoft.azure.storage.ResultSegment;
-import com.microsoft.azure.storage.RetryExponentialRetry;
 import com.microsoft.azure.storage.ServiceClient;
 import com.microsoft.azure.storage.ServiceProperties;
 import com.microsoft.azure.storage.ServiceStats;
@@ -56,7 +54,7 @@ public final class CloudBlobClient extends ServiceClient {
     /**
      * Holds the default request option values associated with this Service Client.
      */
-    private BlobRequestOptions defaultRequestOptions;
+    private BlobRequestOptions defaultRequestOptions = new BlobRequestOptions();
 
     /**
      * Creates an instance of the <code>CloudBlobClient</code> class using the specified Blob service endpoint and
@@ -108,14 +106,7 @@ public final class CloudBlobClient extends ServiceClient {
      */
     public CloudBlobClient(final StorageUri storageUri, StorageCredentials credentials) {
         super(storageUri, credentials);
-        this.defaultRequestOptions = new BlobRequestOptions();
-        this.defaultRequestOptions.setLocationMode(LocationMode.PRIMARY_ONLY);
-        this.defaultRequestOptions.setRetryPolicyFactory(new RetryExponentialRetry());
-        this.defaultRequestOptions.setConcurrentRequestCount(BlobConstants.DEFAULT_CONCURRENT_REQUEST_COUNT);
-        this.defaultRequestOptions.setDisableContentMD5Validation(false);
-        this.defaultRequestOptions
-                .setSingleBlobPutThresholdInBytes(BlobConstants.DEFAULT_SINGLE_BLOB_PUT_THRESHOLD_IN_BYTES);
-        this.defaultRequestOptions.setUseTransactionalContentMD5(false);
+        BlobRequestOptions.applyDefaults(this.defaultRequestOptions, BlobType.UNSPECIFIED);
     }
 
     /**
@@ -137,6 +128,7 @@ public final class CloudBlobClient extends ServiceClient {
      * @see <a href="http://msdn.microsoft.com/library/azure/dd135715.aspx">Naming and Referencing Containers, Blobs,
      *      and Metadata</a>
      */
+    @SuppressWarnings("deprecation")
     public CloudBlobContainer getContainerReference(final String containerName) throws URISyntaxException,
             StorageException {
         return new CloudBlobContainer(containerName, this);
@@ -309,7 +301,7 @@ public final class CloudBlobClient extends ServiceClient {
         }
 
         opContext.initialize();
-        options = BlobRequestOptions.applyDefaults(options, BlobType.UNSPECIFIED, this);
+        options = BlobRequestOptions.populateAndApplyDefaults(options, BlobType.UNSPECIFIED, this);
 
         SegmentedStorageRequest segmentedRequest = new SegmentedStorageRequest();
 
@@ -357,7 +349,7 @@ public final class CloudBlobClient extends ServiceClient {
         }
 
         opContext.initialize();
-        options = BlobRequestOptions.applyDefaults(options, BlobType.UNSPECIFIED, this);
+        options = BlobRequestOptions.populateAndApplyDefaults(options, BlobType.UNSPECIFIED, this);
 
         Utility.assertContinuationType(continuationToken, ResultContinuationType.CONTAINER);
 
@@ -397,7 +389,7 @@ public final class CloudBlobClient extends ServiceClient {
             @Override
             public void signRequest(HttpURLConnection connection, CloudBlobClient client, OperationContext context)
                     throws Exception {
-                StorageRequest.signBlobQueueAndFileRequest(connection, client, -1L, null);
+                StorageRequest.signBlobQueueAndFileRequest(connection, client, -1L, context);
             }
 
             @Override
@@ -473,7 +465,7 @@ public final class CloudBlobClient extends ServiceClient {
         }
 
         opContext.initialize();
-        options = BlobRequestOptions.applyDefaults(options, BlobType.UNSPECIFIED, this);
+        options = BlobRequestOptions.populateAndApplyDefaults(options, BlobType.UNSPECIFIED, this);
 
         return ExecutionEngine.executeWithRetry(this, null, this.getServiceStatsImpl(options, false),
                 options.getRetryPolicyFactory(), opContext);
@@ -519,7 +511,7 @@ public final class CloudBlobClient extends ServiceClient {
         }
 
         opContext.initialize();
-        options = BlobRequestOptions.applyDefaults(options, BlobType.UNSPECIFIED, this);
+        options = BlobRequestOptions.populateAndApplyDefaults(options, BlobType.UNSPECIFIED, this);
 
         return ExecutionEngine.executeWithRetry(this, null, this.downloadServicePropertiesImpl(options, false),
                 options.getRetryPolicyFactory(), opContext);
@@ -566,7 +558,7 @@ public final class CloudBlobClient extends ServiceClient {
         }
 
         opContext.initialize();
-        options = BlobRequestOptions.applyDefaults(options, BlobType.UNSPECIFIED, this);
+        options = BlobRequestOptions.populateAndApplyDefaults(options, BlobType.UNSPECIFIED, this);
 
         Utility.assertNotNull("properties", properties);
 

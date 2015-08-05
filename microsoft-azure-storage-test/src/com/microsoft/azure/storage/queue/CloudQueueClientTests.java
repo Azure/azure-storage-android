@@ -109,7 +109,7 @@ public final class CloudQueueClientTests extends TestCase {
         metadata1.put("ExistingMetadata1", "ExistingMetadataValue1");
 
         for (int i = 0; i < 35; i++) {
-            CloudQueue q = new CloudQueue(prefix + UUID.randomUUID().toString().toLowerCase(), qClient);
+            CloudQueue q = qClient.getQueueReference(prefix + UUID.randomUUID().toString().toLowerCase());
             q.setMetadata(metadata1);
             q.create();
         }

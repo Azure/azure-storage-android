@@ -16,13 +16,16 @@ package com.microsoft.azure.storage.file;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Random;
 import java.util.UUID;
 
 import junit.framework.Assert;
 
+import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.StorageUri;
 import com.microsoft.azure.storage.TestHelper;
 
 /**
@@ -39,6 +42,17 @@ public class FileTestHelper extends TestHelper {
         String shareName = "file" + UUID.randomUUID().toString();
         return shareName.replace("-", "");
     }
+    
+    public static CloudFile uploadNewFile(CloudFileShare share, int length, OperationContext context)
+            throws StorageException, IOException, URISyntaxException {
+        String name = generateRandomFileName();
+
+        CloudFile file = null;
+
+        file = share.getRootDirectoryReference().getFileReference(name);
+        file.upload(getRandomDataStream(length), length, null, null, context);
+        return file;
+    }
 
     public static CloudFileShare getRandomShareReference() throws URISyntaxException, StorageException {
         String shareName = generateRandomShareName();
@@ -46,6 +60,31 @@ public class FileTestHelper extends TestHelper {
         CloudFileShare share = fileClient.getShareReference(shareName);
 
         return share;
+    }
+    
+    static StorageUri ensureTrailingSlash(StorageUri uri) throws URISyntaxException {
+        URI primary = uri.getPrimaryUri();
+        URI secondary = uri.getSecondaryUri();
+        
+        // Add a trailing slash to primary if it did not previously have one
+        if (primary != null) {
+            String primaryUri = primary.toString();
+            if (!primaryUri.isEmpty() && !primaryUri.substring(primaryUri.length() - 1).equals("/")) {
+                primaryUri += "/";
+                primary = new URI(primaryUri);
+            }
+        }
+
+        // Add a trailing slash to secondary if it did not previously have one
+        if (secondary != null) {
+            String secondaryUri = secondary.toString();
+            if (!secondaryUri.isEmpty() &&  !secondaryUri.substring(secondaryUri.length() - 1).equals("/")) {
+                secondaryUri += "/";
+                secondary = new URI(secondaryUri);
+            }
+        }
+        
+        return new StorageUri(primary, secondary);
     }
 
     protected static void doDownloadTest(CloudFile file, int fileSize, int bufferSize, int bufferOffset)
@@ -147,7 +186,7 @@ public class FileTestHelper extends TestHelper {
 
         }
 
-        // negative blob offset
+        // negative file offset
         try {
             file.downloadRangeToByteArray(-10, (long) 20, resultBuffer, 0);
             Assert.fail();
@@ -163,6 +202,32 @@ public class FileTestHelper extends TestHelper {
         }
         catch (IndexOutOfBoundsException ex) {
 
+        }
+    }
+    
+    public static CloudFile defiddler(CloudFile file) throws URISyntaxException, StorageException {
+        URI oldUri = file.getUri();
+        URI newUri = defiddler(oldUri);
+
+        if (newUri != oldUri) {
+            CloudFile newFile = new CloudFile(newUri, file.getServiceClient().getCredentials());
+            return newFile;
+        }
+        else {
+            return file;
+        }
+    }
+    
+    public static void waitForCopy(CloudFile file) throws StorageException, InterruptedException {
+        boolean copyInProgress = true;
+        while (copyInProgress) {
+            file.downloadAttributes();
+            copyInProgress = (file.getCopyState().getStatus() == CopyStatus.PENDING)
+                    || (file.getCopyState().getStatus() == CopyStatus.ABORTED);
+            // One second sleep if retry is needed
+            if (copyInProgress) {
+                Thread.sleep(1000);
+            }
         }
     }
 

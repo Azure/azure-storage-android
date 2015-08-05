@@ -83,52 +83,52 @@ public class TableTests extends TestCase {
     }
     
 	public void testIsUsePathStyleUri() throws InvalidKeyException, URISyntaxException, StorageException {
-		// normal account
-		StorageCredentials creds = new StorageCredentialsAccountAndKey("testAccountName",
-				"/g6UPBuy0ypCpAbYTL6/KA+dI/7gyoWvLFYmah3IviUP1jykOHHOlA==");
-		CloudStorageAccount account = new CloudStorageAccount(creds);
-		testIsUsePathStyleUri(creds, account.getTableEndpoint().toString(), false);
+        // normal account
+        StorageCredentials creds = new StorageCredentialsAccountAndKey("testAccountName",
+                "/g6UPBuy0ypCpAbYTL6/KA+dI/7gyoWvLFYmah3IviUP1jykOHHOlA==");
+        CloudStorageAccount account = new CloudStorageAccount(creds);
+        testIsUsePathStyleUri(creds, account.getTableEndpoint().toString(), false);
 
-		// normal account with path
-		creds = new StorageCredentialsAccountAndKey("testAccountName",
-				"/g6UPBuy0ypCpAbYTL6/KA+dI/7gyoWvLFYmah3IviUP1jykOHHOlA==");
-		account = new CloudStorageAccount(creds);
-		testIsUsePathStyleUri(creds, account.getTableEndpoint().toString() + "/mytable", false);
+        // normal account with path
+        creds = new StorageCredentialsAccountAndKey("testAccountName",
+                "/g6UPBuy0ypCpAbYTL6/KA+dI/7gyoWvLFYmah3IviUP1jykOHHOlA==");
+        account = new CloudStorageAccount(creds);
+        testIsUsePathStyleUri(creds, account.getTableEndpoint().toString() + "/mytable", false);
 
-		// custom endpoint
-		creds = new StorageCredentialsAccountAndKey("testAccountName",
-				"/g6UPBuy0ypCpAbYTL6/KA+dI/7gyoWvLFYmah3IviUP1jykOHHOlA==");
-		testIsUsePathStyleUri(creds, "http://www.contoso.com", false);
+        // custom endpoint
+        creds = new StorageCredentialsAccountAndKey("testAccountName",
+                "/g6UPBuy0ypCpAbYTL6/KA+dI/7gyoWvLFYmah3IviUP1jykOHHOlA==");
+        testIsUsePathStyleUri(creds, "http://www.contoso.com", false);
 
-		// dev store
-		account = CloudStorageAccount.getDevelopmentStorageAccount();
-		testIsUsePathStyleUri(account.getCredentials(), account.getTableEndpoint().toString(), true);
+        // dev store
+        account = CloudStorageAccount.getDevelopmentStorageAccount();
+        testIsUsePathStyleUri(account.getCredentials(), account.getTableEndpoint().toString(), true);
 
-		// dev store with proxy
-		account = CloudStorageAccount.getDevelopmentStorageAccount(new URI("http://ipv4.fiddler"));
-		testIsUsePathStyleUri(account.getCredentials(), account.getTableEndpoint().toString(), true);
+        // dev store with proxy
+        account = CloudStorageAccount.getDevelopmentStorageAccount(new URI("http://ipv4.fiddler"));
+        testIsUsePathStyleUri(account.getCredentials(), account.getTableEndpoint().toString(), true);
 
-		// custom endpoints ipv4 with path-style (internal test)
-		creds = new StorageCredentialsAccountAndKey("testAccountName",
-				"/g6UPBuy0ypCpAbYTL6/KA+dI/7gyoWvLFYmah3IviUP1jykOHHOlA==");
-		testIsUsePathStyleUri(creds, "http://93.184.216.119/testAccountName", true);
+        // custom endpoints ipv4 with path-style (internal test)
+        creds = new StorageCredentialsAccountAndKey("testAccountName",
+                "/g6UPBuy0ypCpAbYTL6/KA+dI/7gyoWvLFYmah3IviUP1jykOHHOlA==");
+        testIsUsePathStyleUri(creds, "http://93.184.216.119/testAccountName", true);
 	}
 
 	private static void testIsUsePathStyleUri(StorageCredentials creds, String tableEndpoint, boolean usePathStyleUris)
 			throws URISyntaxException, InvalidKeyException, StorageException {
-		CloudTableClient tableClient = new CloudTableClient(new URI(tableEndpoint), creds);
-		assertEquals(usePathStyleUris, tableClient.isUsePathStyleUris());
+        CloudTableClient tableClient = new CloudTableClient(new URI(tableEndpoint), creds);
+        assertEquals(usePathStyleUris, tableClient.isUsePathStyleUris());
 
-		CloudTable table = tableClient.getTableReference("mytable");
-		assertEquals(tableEndpoint + "/mytable", table.getUri().toString());
+        CloudTable table = tableClient.getTableReference("mytable");
+        assertEquals(tableEndpoint + "/mytable", table.getUri().toString());
 
-		String sasToken = table.generateSharedAccessSignature(null, "fakeIdentifier", null, null, null, null);
-		tableClient = new CloudTableClient(new URI(tableEndpoint),
-				new StorageCredentialsSharedAccessSignature(sasToken));
-		assertEquals(usePathStyleUris, tableClient.isUsePathStyleUris());
+        String sasToken = table.generateSharedAccessSignature(null, "fakeIdentifier", null, null, null, null);
+        tableClient = new CloudTableClient(new URI(tableEndpoint),
+                new StorageCredentialsSharedAccessSignature(sasToken));
+        assertEquals(usePathStyleUris, tableClient.isUsePathStyleUris());
 
-		table = new CloudTable(table.getUri(), tableClient);
-		assertEquals(tableEndpoint + "/mytable", table.getUri().toString());
+        table = new CloudTable(table.getUri(), tableClient.getCredentials());
+        assertEquals(tableEndpoint + "/mytable", table.getUri().toString());
 	}
 
 	/**
@@ -307,8 +307,7 @@ public class TableTests extends TestCase {
 		}
 	}
 
-	public void testTableGetSetPermissionTest() throws StorageException,  URISyntaxException,
-	InterruptedException {
+	public void testTableGetSetPermissionTest() throws StorageException,  URISyntaxException, InterruptedException {
 		CloudTableClient tClient = TableTestHelper.createCloudTableClient();
 		String tableName = TableTestHelper.generateRandomTableName();
 
@@ -353,84 +352,83 @@ public class TableTests extends TestCase {
 		}
 	}
 
-	public void testTableSas() throws StorageException,  URISyntaxException, InvalidKeyException,
-	InterruptedException {
+	public void testTableSas() throws StorageException, URISyntaxException, InvalidKeyException, InterruptedException {
 		CloudTableClient tClient = TableTestHelper.createCloudTableClient();
+        
+        // use capital letters to make sure SAS signature converts name to lower case correctly
+        String name = "CAPS" + TableTestHelper.generateRandomTableName();
+        CloudTable table = tClient.getTableReference(name);
+        table.create();
 
-		// use capital letters to make sure SAS signature converts name to lower case correctly
-		String name = "CAPS" + TableTestHelper.generateRandomTableName();
-		CloudTable table = tClient.getTableReference(name);
-		table.create();
+        TablePermissions expectedPermissions = new TablePermissions();
+        String identifier = UUID.randomUUID().toString();
+        // Add a policy, check setting and getting.
+        SharedAccessTablePolicy policy1 = new SharedAccessTablePolicy();
+        Calendar now = GregorianCalendar.getInstance();
+        now.add(Calendar.MINUTE, -10);
+        policy1.setSharedAccessStartTime(now.getTime());
+        now.add(Calendar.MINUTE, 30);
+        policy1.setSharedAccessExpiryTime(now.getTime());
 
-		TablePermissions expectedPermissions = new TablePermissions();
-		String identifier = UUID.randomUUID().toString();
-		// Add a policy, check setting and getting.
-		SharedAccessTablePolicy policy1 = new SharedAccessTablePolicy();
-		Calendar now = GregorianCalendar.getInstance();
-		now.add(Calendar.MINUTE, -10);
-		policy1.setSharedAccessStartTime(now.getTime());
-		now.add(Calendar.MINUTE, 30);
-		policy1.setSharedAccessExpiryTime(now.getTime());
+        policy1.setPermissions(EnumSet.of(SharedAccessTablePermissions.ADD, SharedAccessTablePermissions.QUERY,
+                SharedAccessTablePermissions.UPDATE, SharedAccessTablePermissions.DELETE));
+        expectedPermissions.getSharedAccessPolicies().put(identifier, policy1);
 
-		policy1.setPermissions(EnumSet.of(SharedAccessTablePermissions.ADD, SharedAccessTablePermissions.QUERY,
-				SharedAccessTablePermissions.UPDATE, SharedAccessTablePermissions.DELETE));
-		expectedPermissions.getSharedAccessPolicies().put(identifier, policy1);
+        table.uploadPermissions(expectedPermissions);
+        Thread.sleep(30000);
 
-		table.uploadPermissions(expectedPermissions);
-		Thread.sleep(30000);
+        // Insert 500 entities in Batches to query
+        for (int i = 0; i < 5; i++) {
+            TableBatchOperation batch = new TableBatchOperation();
 
-		// Insert 500 entities in Batches to query
-		for (int i = 0; i < 5; i++) {
-			TableBatchOperation batch = new TableBatchOperation();
+            for (int j = 0; j < 100; j++) {
+                Class1 ent = TableTestHelper.generateRandomEntity("javatables_batch_" + Integer.toString(i));
+                ent.setRowKey(String.format("%06d", j));
+                batch.insert(ent);
+            }
 
-			for (int j = 0; j < 100; j++) {
-				Class1 ent = TableTestHelper.generateRandomEntity("javatables_batch_" + Integer.toString(i));
-				ent.setRowKey(String.format("%06d", j));
-				batch.insert(ent);
-			}
+            table.execute(batch);
+        }
 
-			table.execute(batch);
-		}
+        String sasString = table.generateSharedAccessSignature(policy1, null, "javatables_batch_0", "0",
+                "javatables_batch_9", "9");
+        CloudTableClient tableClientFromPermission = new CloudTableClient(tClient.getEndpoint(),
+                new StorageCredentialsSharedAccessSignature(sasString));
 
-		String sasString = table.generateSharedAccessSignature(policy1, null, "javatables_batch_0", "0",
-				"javatables_batch_9", "9");
-		CloudTableClient tableClientFromPermission = new CloudTableClient(tClient.getEndpoint(),
-				new StorageCredentialsSharedAccessSignature(sasString));
+        CloudTable policySasTable = tableClientFromPermission.getTableReference(name);
+        policySasTable.exists();
 
-		CloudTable policySasTable = tableClientFromPermission.getTableReference(name);
-		policySasTable.exists();
+        // do not give the client and check that the new table's client has the correct perms
+        CloudTable tableFromUri = new CloudTable(PathUtility.addToQuery(table.getStorageUri(), table
+                .generateSharedAccessSignature((SharedAccessTablePolicy) null, identifier, "javatables_batch_0", "0",
+                        "javatables_batch_9", "9")));
+        assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), tableFromUri.getServiceClient()
+                .getCredentials().getClass().toString());
+        
+        // create credentials from sas
+        StorageCredentials creds = new StorageCredentialsSharedAccessSignature(
+                table.generateSharedAccessSignature((SharedAccessTablePolicy) null, identifier, "javatables_batch_0", "0",
+                        "javatables_batch_9", "9"));
+        CloudTableClient tableClient = new CloudTableClient(policySasTable.getServiceClient().getStorageUri(), creds);
 
-		// do not give the client and check that the new table's client has the correct perms
-		CloudTable tableFromUri = new CloudTable(PathUtility.addToQuery(table.getStorageUri(), table
-				.generateSharedAccessSignature((SharedAccessTablePolicy) null, identifier, "javatables_batch_0", "0",
-						"javatables_batch_9", "9")));
-		assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), tableFromUri.getServiceClient()
-				.getCredentials().getClass().toString());
+        // set some arbitrary settings to make sure they are passed on
+        tableClient.getDefaultRequestOptions().setLocationMode(LocationMode.PRIMARY_THEN_SECONDARY);
+        tableClient.getDefaultRequestOptions().setTimeoutIntervalInMs(1000);
+        tableClient.getDefaultRequestOptions().setTablePayloadFormat(TablePayloadFormat.JsonNoMetadata);
+        tableClient.getDefaultRequestOptions().setRetryPolicyFactory(new RetryNoRetry());
 
-		// pass in a client which will have different permissions and check the sas permissions are used
-		// and that the properties set in the old service client are passed to the new client
-		CloudTableClient tableClient = policySasTable.getServiceClient();
+        tableFromUri = tableClient.getTableReference(table.getName());
+        assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), tableFromUri.getServiceClient()
+                .getCredentials().getClass().toString());
 
-		// set some arbitrary settings to make sure they are passed on
-		tableClient.getDefaultRequestOptions().setLocationMode(LocationMode.PRIMARY_THEN_SECONDARY);
-		tableClient.getDefaultRequestOptions().setTimeoutIntervalInMs(1000);
-		tableClient.getDefaultRequestOptions().setTablePayloadFormat(TablePayloadFormat.JsonNoMetadata);
-		tableClient.getDefaultRequestOptions().setRetryPolicyFactory(new RetryNoRetry());
-
-		tableFromUri = new CloudTable(PathUtility.addToQuery(table.getStorageUri(), table
-				.generateSharedAccessSignature((SharedAccessTablePolicy) null, identifier, "javatables_batch_0", "0",
-						"javatables_batch_9", "9")), tableClient);
-		assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), tableFromUri.getServiceClient()
-				.getCredentials().getClass().toString());
-
-		assertEquals(tableClient.getDefaultRequestOptions().getLocationMode(), tableFromUri.getServiceClient()
-				.getDefaultRequestOptions().getLocationMode());
-		assertEquals(tableClient.getDefaultRequestOptions().getTimeoutIntervalInMs(), tableFromUri.getServiceClient()
-				.getDefaultRequestOptions().getTimeoutIntervalInMs());
-		assertEquals(tableClient.getDefaultRequestOptions().getTablePayloadFormat(), tableFromUri.getServiceClient()
-				.getDefaultRequestOptions().getTablePayloadFormat());
-		assertEquals(tableClient.getDefaultRequestOptions().getRetryPolicyFactory().getClass(), tableFromUri
-				.getServiceClient().getDefaultRequestOptions().getRetryPolicyFactory().getClass());
+        assertEquals(tableClient.getDefaultRequestOptions().getLocationMode(), tableFromUri.getServiceClient()
+                .getDefaultRequestOptions().getLocationMode());
+        assertEquals(tableClient.getDefaultRequestOptions().getTimeoutIntervalInMs(), tableFromUri.getServiceClient()
+                .getDefaultRequestOptions().getTimeoutIntervalInMs());
+        assertEquals(tableClient.getDefaultRequestOptions().getTablePayloadFormat(), tableFromUri.getServiceClient()
+                .getDefaultRequestOptions().getTablePayloadFormat());
+        assertEquals(tableClient.getDefaultRequestOptions().getRetryPolicyFactory().getClass(), tableFromUri
+                .getServiceClient().getDefaultRequestOptions().getRetryPolicyFactory().getClass());
 	}
 
 	private static void assertTablePermissionsEqual(TablePermissions expected, TablePermissions actual) {

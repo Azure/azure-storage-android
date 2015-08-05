@@ -21,6 +21,7 @@ import com.microsoft.azure.storage.file.CloudFileClientTests;
 import com.microsoft.azure.storage.file.CloudFileDirectoryTests;
 import com.microsoft.azure.storage.file.CloudFileShareTests;
 import com.microsoft.azure.storage.file.CloudFileTests;
+import com.microsoft.azure.storage.file.FileSasTests;
 
 public class FileTestSuite extends TestSuite {
     public static Test suite() {
@@ -29,6 +30,7 @@ public class FileTestSuite extends TestSuite {
         suite.addTestSuite(CloudFileShareTests.class);
         suite.addTestSuite(CloudFileDirectoryTests.class);
         suite.addTestSuite(CloudFileTests.class);
+        suite.addTestSuite(FileSasTests.class);
         return suite;
     }
 }

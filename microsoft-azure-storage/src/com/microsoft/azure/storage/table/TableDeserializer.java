@@ -242,6 +242,7 @@ final class TableDeserializer {
      * @throws JsonParseException
      *             if an error occurs while parsing the stream.
      */
+    @SuppressWarnings("deprecation")
     private static <T extends TableEntity, R> TableResult parseJsonEntity(final JsonParser parser,
             final Class<T> clazzType, HashMap<String, PropertyPair> classProperties, final EntityResolver<R> resolver,
             final TableRequestOptions options, final OperationContext opContext) throws JsonParseException,

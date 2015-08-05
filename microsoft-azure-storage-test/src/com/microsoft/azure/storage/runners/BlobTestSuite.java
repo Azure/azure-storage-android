@@ -17,6 +17,8 @@ package com.microsoft.azure.storage.runners;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import com.microsoft.azure.storage.blob.BlobOutputStreamTests;
+import com.microsoft.azure.storage.blob.CloudAppendBlobTests;
 import com.microsoft.azure.storage.blob.CloudBlobClientTests;
 import com.microsoft.azure.storage.blob.CloudBlobContainerTests;
 import com.microsoft.azure.storage.blob.CloudBlobDirectoryTests;
@@ -28,9 +30,11 @@ import com.microsoft.azure.storage.blob.SasTests;
 public class BlobTestSuite extends TestSuite {
     public static Test suite() {
         TestSuite suite = new TestSuite("BlobTestSuite");
+        suite.addTestSuite(BlobOutputStreamTests.class);
         suite.addTestSuite(CloudBlobClientTests.class);
         suite.addTestSuite(CloudBlobContainerTests.class);
         suite.addTestSuite(CloudBlobDirectoryTests.class);
+        suite.addTestSuite(CloudAppendBlobTests.class);
         suite.addTestSuite(CloudBlockBlobTests.class);
         suite.addTestSuite(CloudPageBlobTests.class);
         suite.addTestSuite(LeaseTests.class);

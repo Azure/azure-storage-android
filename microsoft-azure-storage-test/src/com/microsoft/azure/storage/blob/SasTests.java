@@ -32,10 +32,8 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import com.microsoft.azure.storage.Constants;
-import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.ResponseReceivedEvent;
-import com.microsoft.azure.storage.RetryNoRetry;
 import com.microsoft.azure.storage.SendingRequestEvent;
 import com.microsoft.azure.storage.StorageCredentials;
 import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
@@ -115,35 +113,16 @@ public class SasTests extends TestCase {
                 readListContainer.getStorageUri(), this.container.generateSharedAccessSignature(null, "readlist")));
         assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), containerFromUri.getServiceClient()
                 .getCredentials().getClass().toString());
+        
+        // create credentials from sas
+        StorageCredentials creds = new StorageCredentialsSharedAccessSignature(
+                this.container.generateSharedAccessSignature(null, "readlist"));
+        CloudBlobClient bClient = new CloudBlobClient(this.container.getServiceClient().getStorageUri(), creds);
 
-        // pass in a client which will have different permissions and check the sas permissions are used
-        // and that the properties set in the old service client are passed to the new client
-        CloudBlobClient bClient = this.container.getServiceClient();
-
-        // set some arbitrary settings to make sure they are passed on
-        bClient.getDefaultRequestOptions().setConcurrentRequestCount(5);
-        bClient.setDirectoryDelimiter("%");
-        bClient.getDefaultRequestOptions().setLocationMode(LocationMode.PRIMARY_THEN_SECONDARY);
-        bClient.getDefaultRequestOptions().setSingleBlobPutThresholdInBytes(5 * Constants.MB);
-        bClient.getDefaultRequestOptions().setTimeoutIntervalInMs(1000);
-        bClient.getDefaultRequestOptions().setRetryPolicyFactory(new RetryNoRetry());
-
-        containerFromUri = new CloudBlobContainer(PathUtility.addToQuery(readListContainer.getStorageUri(),
-                this.container.generateSharedAccessSignature(null, "readlist")), this.container.getServiceClient());
-        assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), containerFromUri.getServiceClient()
+        CloudBlobContainer containerFromClient = bClient.getContainerReference(this.container.getName());
+        assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), containerFromClient.getServiceClient()
                 .getCredentials().getClass().toString());
-
-        assertEquals(bClient.getDefaultRequestOptions().getConcurrentRequestCount(), containerFromUri
-                .getServiceClient().getDefaultRequestOptions().getConcurrentRequestCount());
-        assertEquals(bClient.getDirectoryDelimiter(), containerFromUri.getServiceClient().getDirectoryDelimiter());
-        assertEquals(bClient.getDefaultRequestOptions().getLocationMode(), containerFromUri.getServiceClient()
-                .getDefaultRequestOptions().getLocationMode());
-        assertEquals(bClient.getDefaultRequestOptions().getSingleBlobPutThresholdInBytes(), containerFromUri
-                .getServiceClient().getDefaultRequestOptions().getSingleBlobPutThresholdInBytes());
-        assertEquals(bClient.getDefaultRequestOptions().getTimeoutIntervalInMs(), containerFromUri.getServiceClient()
-                .getDefaultRequestOptions().getTimeoutIntervalInMs());
-        assertEquals(bClient.getDefaultRequestOptions().getRetryPolicyFactory().getClass(), containerFromUri
-                .getServiceClient().getDefaultRequestOptions().getRetryPolicyFactory().getClass());
+        assertEquals(bClient, containerFromClient.getServiceClient());
     }
 
     public void testContainerUpdateSAS() throws InvalidKeyException, StorageException, IOException, URISyntaxException,
@@ -287,38 +266,20 @@ public class SasTests extends TestCase {
 
         // do not give the client and check that the new blob's client has the correct perms
         CloudBlob blobFromUri = new CloudBlockBlob(PathUtility.addToQuery(this.blob.getStorageUri(),
-                this.blob.generateSharedAccessSignature(null, "readperm")), null);
+                this.blob.generateSharedAccessSignature(null, "readperm")));
         assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), blobFromUri.getServiceClient()
                 .getCredentials().getClass().toString());
 
-        // pass in a client which will have different permissions and check the sas permissions are used
-        // and that the properties set in the old service client are passed to the new client
-        CloudBlobClient bClient = sasBlob.getServiceClient();
+        // create credentials from sas
+        StorageCredentials creds = new StorageCredentialsSharedAccessSignature(
+                this.blob.generateSharedAccessSignature(null, "readperm"));
+        CloudBlobClient bClient = new CloudBlobClient(sasBlob.getServiceClient().getStorageUri(), creds);
 
-        // set some arbitrary settings to make sure they are passed on
-        bClient.getDefaultRequestOptions().setConcurrentRequestCount(5);
-        bClient.setDirectoryDelimiter("%");
-        bClient.getDefaultRequestOptions().setLocationMode(LocationMode.PRIMARY_THEN_SECONDARY);
-        bClient.getDefaultRequestOptions().setSingleBlobPutThresholdInBytes(5 * Constants.MB);
-        bClient.getDefaultRequestOptions().setTimeoutIntervalInMs(1000);
-        bClient.getDefaultRequestOptions().setRetryPolicyFactory(new RetryNoRetry());
-
-        blobFromUri = new CloudBlockBlob(PathUtility.addToQuery(this.blob.getStorageUri(),
-                this.blob.generateSharedAccessSignature(null, "readperm")), bClient);
-        assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), blobFromUri.getServiceClient()
+        CloudBlockBlob blobFromClient = bClient.getContainerReference(this.blob.getContainer().getName())
+                .getBlockBlobReference(this.blob.getName());
+        assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), blobFromClient.getServiceClient()
                 .getCredentials().getClass().toString());
-
-        assertEquals(bClient.getDefaultRequestOptions().getConcurrentRequestCount(), blobFromUri.getServiceClient()
-                .getDefaultRequestOptions().getConcurrentRequestCount());
-        assertEquals(bClient.getDirectoryDelimiter(), blobFromUri.getServiceClient().getDirectoryDelimiter());
-        assertEquals(bClient.getDefaultRequestOptions().getLocationMode(), blobFromUri.getServiceClient()
-                .getDefaultRequestOptions().getLocationMode());
-        assertEquals(bClient.getDefaultRequestOptions().getSingleBlobPutThresholdInBytes(), blobFromUri
-                .getServiceClient().getDefaultRequestOptions().getSingleBlobPutThresholdInBytes());
-        assertEquals(bClient.getDefaultRequestOptions().getTimeoutIntervalInMs(), blobFromUri.getServiceClient()
-                .getDefaultRequestOptions().getTimeoutIntervalInMs());
-        assertEquals(bClient.getDefaultRequestOptions().getRetryPolicyFactory().getClass(), blobFromUri
-                .getServiceClient().getDefaultRequestOptions().getRetryPolicyFactory().getClass());
+        assertEquals(bClient, blobFromClient.getServiceClient());
     }
 
     public void testBlobSaSWithSharedAccessBlobHeaders() throws InvalidKeyException, IllegalArgumentException,

@@ -36,7 +36,7 @@ import com.microsoft.azure.storage.TestHelper;
  */
 public class BlobTestHelper extends TestHelper {
 
-    protected static String generateRandomContainerName() {
+    public static String generateRandomContainerName() {
         String containerName = "container" + UUID.randomUUID().toString();
         return containerName.replace("-", "");
     }
@@ -49,7 +49,7 @@ public class BlobTestHelper extends TestHelper {
         return container;
     }
 
-    protected static String generateRandomBlobNameWithPrefix(String prefix) {
+    public static String generateRandomBlobNameWithPrefix(String prefix) {
         if (prefix == null) {
             prefix = "";
         }
@@ -73,6 +73,12 @@ public class BlobTestHelper extends TestHelper {
                     blob = uploadNewBlob(container, type, "pb", length, context);
                     blobs.add(blob.getName());
                     break;
+                    
+                case APPEND_BLOB:
+                    blob = uploadNewBlob(container, type, "ab", length, context);
+                    blobs.add(blob.getName());
+                    break;
+
 
                 default:
                     break;
@@ -97,6 +103,10 @@ public class BlobTestHelper extends TestHelper {
         }
         else if (type == BlobType.PAGE_BLOB) {
             blob = container.getPageBlobReference(name);
+            blob.upload(getRandomDataStream(length), length, null, null, context);
+        }
+        else if (type == BlobType.APPEND_BLOB) {
+            blob = container.getAppendBlobReference(name);
             blob.upload(getRandomDataStream(length), length, null, null, context);
         }
         return blob;
@@ -222,13 +232,27 @@ public class BlobTestHelper extends TestHelper {
 
         }
     }
+    
+    public static CloudAppendBlob defiddler(CloudAppendBlob blob) throws URISyntaxException, StorageException {
+        URI oldUri = blob.getUri();
+        URI newUri = defiddler(oldUri);
+
+        if (newUri != oldUri) {
+            CloudAppendBlob newBlob = new CloudAppendBlob(newUri, blob.getServiceClient().getCredentials());
+            newBlob.setSnapshotID(blob.snapshotID);
+            return newBlob;
+        }
+        else {
+            return blob;
+        }
+    }
 
     public static CloudBlockBlob defiddler(CloudBlockBlob blob) throws URISyntaxException, StorageException {
         URI oldUri = blob.getUri();
         URI newUri = defiddler(oldUri);
 
         if (newUri != oldUri) {
-            CloudBlockBlob newBlob = new CloudBlockBlob(newUri, blob.getServiceClient());
+            CloudBlockBlob newBlob = new CloudBlockBlob(newUri, blob.getServiceClient().getCredentials());
             newBlob.setSnapshotID(blob.snapshotID);
             return newBlob;
         }
@@ -242,7 +266,7 @@ public class BlobTestHelper extends TestHelper {
         URI newUri = defiddler(oldUri);
 
         if (newUri != oldUri) {
-            CloudPageBlob newBlob = new CloudPageBlob(newUri, blob.getServiceClient());
+            CloudPageBlob newBlob = new CloudPageBlob(newUri, blob.getServiceClient().getCredentials());
             newBlob.setSnapshotID(blob.snapshotID);
             return newBlob;
         }
@@ -254,9 +278,13 @@ public class BlobTestHelper extends TestHelper {
     public static void waitForCopy(CloudBlob blob) throws StorageException, InterruptedException {
         boolean copyInProgress = true;
         while (copyInProgress) {
-            Thread.sleep(1000);
             blob.downloadAttributes();
-            copyInProgress = (blob.getCopyState().getStatus() == CopyStatus.PENDING);
+            copyInProgress = (blob.getCopyState().getStatus() == CopyStatus.PENDING)
+                    || (blob.getCopyState().getStatus() == CopyStatus.ABORTED);
+            // One second sleep if retry is needed
+            if (copyInProgress) {
+                Thread.sleep(1000);
+            }
         }
     }
 

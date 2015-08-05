@@ -41,6 +41,22 @@ public class LeaseTests extends TestCase {
     public void tearDown() throws StorageException {
         this.container.deleteIfExists();
     }
+    
+    public void testContainerLeaseInvalidParams() throws StorageException, URISyntaxException {
+        try {
+            this.container.acquireLease(100, null);   
+        } catch(StorageException ex) {
+            assertEquals("The value of the parameter 'leaseTimeInSeconds' should be between 15 and 60.", 
+                    ex.getMessage());
+        }
+        
+        try {
+            this.container.breakLease(100);   
+        } catch(StorageException ex) {
+            assertEquals("The value of the parameter 'breakPeriodInSeconds' should be between 0 and 60.", 
+                    ex.getMessage());
+        }
+    }
 
     public void testContainerAcquireLease() throws StorageException, URISyntaxException {
         CloudBlobContainer leaseContainer1 = BlobTestHelper.getRandomContainerReference();
@@ -68,7 +84,6 @@ public class LeaseTests extends TestCase {
 
             leaseId2 = leaseContainer2.acquireLease(null /* infinite lease */, proposedLeaseId2);
             assertEquals(leaseId1, leaseId2);
-
         }
         finally {
             // cleanup
@@ -95,8 +110,7 @@ public class LeaseTests extends TestCase {
         assertTrue(operationContext1.getLastResult().getStatusCode() == HttpURLConnection.HTTP_OK);
 
         // infinite
-        proposedLeaseId = UUID.randomUUID().toString();
-        leaseId = this.container.acquireLease(null /* infinite lease */, proposedLeaseId);
+        leaseId = this.container.acquireLease();
         condition = new AccessCondition();
         condition.setLeaseID(leaseId);
         OperationContext operationContext2 = new OperationContext();
@@ -108,19 +122,18 @@ public class LeaseTests extends TestCase {
         String proposedLeaseId = UUID.randomUUID().toString();
         try {
             // 5 sec
-            String leaseId = this.container.acquireLease(15, proposedLeaseId);
+            this.container.acquireLease(15, proposedLeaseId);
             AccessCondition condition = new AccessCondition();
-            condition.setLeaseID(leaseId);
+            condition.setLeaseID(proposedLeaseId);
             OperationContext operationContext1 = new OperationContext();
             this.container.breakLease(0, condition, null/* BlobRequestOptions */, operationContext1);
             assertTrue(operationContext1.getLastResult().getStatusCode() == HttpURLConnection.HTTP_ACCEPTED);
             Thread.sleep(15 * 1000);
 
             // infinite
-            proposedLeaseId = UUID.randomUUID().toString();
-            leaseId = this.container.acquireLease(null /* infinite lease */, proposedLeaseId);
+            proposedLeaseId = this.container.acquireLease();
             condition = new AccessCondition();
-            condition.setLeaseID(leaseId);
+            condition.setLeaseID(proposedLeaseId);
             OperationContext operationContext2 = new OperationContext();
             this.container.breakLease(0, condition, null/* BlobRequestOptions */, operationContext2);
             assertTrue(operationContext2.getLastResult().getStatusCode() == HttpURLConnection.HTTP_ACCEPTED);
@@ -137,19 +150,18 @@ public class LeaseTests extends TestCase {
         String proposedLeaseId = UUID.randomUUID().toString();
         try {
             // 5 sec
-            String leaseId = this.container.acquireLease(15, proposedLeaseId);
+            this.container.acquireLease(15, proposedLeaseId);
             AccessCondition condition = new AccessCondition();
-            condition.setLeaseID(leaseId);
+            condition.setLeaseID(proposedLeaseId);
             OperationContext operationContext1 = new OperationContext();
             this.container.renewLease(condition, null/* BlobRequestOptions */, operationContext1);
             assertTrue(operationContext1.getLastResult().getStatusCode() == HttpURLConnection.HTTP_OK);
             this.container.releaseLease(condition);
 
             // infinite
-            proposedLeaseId = UUID.randomUUID().toString();
-            leaseId = this.container.acquireLease(null /* infinite lease */, proposedLeaseId);
+            proposedLeaseId = this.container.acquireLease();
             condition = new AccessCondition();
-            condition.setLeaseID(leaseId);
+            condition.setLeaseID(proposedLeaseId);
             OperationContext operationContext2 = new OperationContext();
             this.container.renewLease(condition, null/* BlobRequestOptions */, operationContext2);
             assertTrue(operationContext2.getLastResult().getStatusCode() == HttpURLConnection.HTTP_OK);
@@ -326,7 +338,7 @@ public class LeaseTests extends TestCase {
         final CloudBlob blobRef = BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB, "test", 128, null);
 
         // Get Lease
-        String leaseID = blobRef.acquireLease(null, null);
+        String leaseID = blobRef.acquireLease();
 
         OperationContext operationContext = new OperationContext();
         final AccessCondition leaseCondition = AccessCondition.generateLeaseCondition(leaseID);
