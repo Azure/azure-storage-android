@@ -127,7 +127,7 @@ public class TableQueryTests extends TestCase {
             testTableQueryWithSpecialChars('=', table);
             testTableQueryWithSpecialChars('_', table);
             testTableQueryWithSpecialChars(' ', table);
-            testTableQueryWithSpecialChars('ç•Œ', table);
+            testTableQueryWithSpecialChars('Œ', table);
         }
         finally {
             table.deleteIfExists();

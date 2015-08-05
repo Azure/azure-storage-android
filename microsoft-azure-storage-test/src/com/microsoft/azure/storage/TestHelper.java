@@ -18,6 +18,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 import junit.framework.Assert;
@@ -31,9 +33,6 @@ import com.microsoft.azure.storage.table.CloudTableClient;
 public class TestHelper {
 	private static CloudStorageAccount account;
 
-	@SuppressWarnings("deprecation")
-	private final static AuthenticationScheme defaultAuthenticationScheme = AuthenticationScheme.SHAREDKEYFULL;
-
 	public static String connectionString;
 	public static String accountName;
 	public static String accountKey;
@@ -41,37 +40,24 @@ public class TestHelper {
 	public static StorageUri queueEndpoint;
 	public static StorageUri tableEndpoint;
 
-	@SuppressWarnings("deprecation")
 	public static CloudBlobClient createCloudBlobClient() throws StorageException {
-		CloudBlobClient client = getAccount().createCloudBlobClient();
-		client.setAuthenticationScheme(defaultAuthenticationScheme);
-		return client;
+		return getAccount().createCloudBlobClient();
 	}
 	
-    @SuppressWarnings("deprecation")
 	public static CloudFileClient createCloudFileClient() throws StorageException {
-        CloudFileClient client = getAccount().createCloudFileClient();
-        client.setAuthenticationScheme(defaultAuthenticationScheme);
-        return client;
+		return getAccount().createCloudFileClient();
     }
 
-	@SuppressWarnings("deprecation")
 	public static CloudQueueClient createCloudQueueClient() throws StorageException {
-		CloudQueueClient client = getAccount().createCloudQueueClient();
-		client.setAuthenticationScheme(defaultAuthenticationScheme);
-		return client;
+		return getAccount().createCloudQueueClient();
 	}
 
-	@SuppressWarnings("deprecation")
 	public static CloudTableClient createCloudTableClient() throws StorageException {
-		CloudTableClient client = getAccount().createCloudTableClient();
-		client.setAuthenticationScheme(defaultAuthenticationScheme);
-		return client;
+		return getAccount().createCloudTableClient();
 	}
 
     public static CloudAnalyticsClient createCloudAnalyticsClient() throws StorageException {
-        CloudAnalyticsClient client = getAccount().createCloudAnalyticsClient();
-        return client;
+    	return getAccount().createCloudAnalyticsClient();
     }
 
 	public static void verifyServiceStats(ServiceStats stats) {
@@ -186,5 +172,26 @@ public class TestHelper {
         else {
             return uri;
         }
+    }
+    
+    public static void assertURIsEqual(URI expected, URI actual, boolean ignoreQueryOrder) {
+        if (expected == null) {
+        	Assert.assertEquals(null, actual);
+        }
+
+        Assert.assertEquals(expected.getScheme(), actual.getScheme());
+        Assert.assertEquals(expected.getAuthority(), actual.getAuthority());
+        Assert.assertEquals(expected.getPath(), actual.getPath());
+        Assert.assertEquals(expected.getFragment(), actual.getFragment());
+
+        ArrayList<String> expectedQueries = new ArrayList<String>(Arrays.asList(expected.getQuery().split("&")));
+        ArrayList<String> actualQueries = new ArrayList<String>(Arrays.asList(actual.getQuery().split("&")));
+
+        Assert.assertEquals(expectedQueries.size(), actualQueries.size());
+        for (String expectedQuery : expectedQueries) {
+        	Assert.assertTrue(expectedQuery, actualQueries.remove(expectedQuery));
+        }
+
+        Assert.assertTrue(actualQueries.isEmpty());
     }
 }

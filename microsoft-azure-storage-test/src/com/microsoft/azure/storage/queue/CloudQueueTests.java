@@ -30,7 +30,6 @@ import java.util.UUID;
 
 import junit.framework.TestCase;
 
-import com.microsoft.azure.storage.AuthenticationScheme;
 import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.NameValidator;
 import com.microsoft.azure.storage.OperationContext;
@@ -46,7 +45,6 @@ import com.microsoft.azure.storage.core.PathUtility;
 /**
  * Queue Tests
  */
-@SuppressWarnings("deprecation")
 public class CloudQueueTests extends TestCase {
 
     private CloudQueue queue;
@@ -215,16 +213,9 @@ public class CloudQueueTests extends TestCase {
         queueClient.getDefaultRequestOptions().setRetryPolicyFactory(new RetryNoRetry());
 
         queueFromUri = new CloudQueue(PathUtility.addToQuery(this.queue.getStorageUri(),
-                this.queue.generateSharedAccessSignature(null, "readperm")), queueClient);
+                this.queue.generateSharedAccessSignature(null, "readperm")));
         assertEquals(StorageCredentialsSharedAccessSignature.class.toString(), queueFromUri.getServiceClient()
                 .getCredentials().getClass().toString());
-
-        assertEquals(queueClient.getDefaultRequestOptions().getLocationMode(), queueFromUri.getServiceClient()
-                .getDefaultRequestOptions().getLocationMode());
-        assertEquals(queueClient.getDefaultRequestOptions().getTimeoutIntervalInMs(), queueFromUri.getServiceClient()
-                .getDefaultRequestOptions().getTimeoutIntervalInMs());
-        assertEquals(queueClient.getDefaultRequestOptions().getRetryPolicyFactory().getClass(), queueFromUri
-                .getServiceClient().getDefaultRequestOptions().getRetryPolicyFactory().getClass());
     }
 
     static void assertQueuePermissionsEqual(QueuePermissions expected, QueuePermissions actual) {
@@ -250,20 +241,16 @@ public class CloudQueueTests extends TestCase {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final String queueName = QueueTestHelper.generateRandomQueueName();
 
-        CloudQueue queue1 = new CloudQueue(queueName, qClient);
+        CloudQueue queue1 = qClient.getQueueReference(queueName);
         assertEquals(queueName, queue1.getName());
         assertTrue(queue1.getUri().toString().endsWith(queueName));
         assertEquals(qClient, queue1.getServiceClient());
 
         CloudQueue queue2 = new CloudQueue(new URI(QueueTestHelper.appendQueueName(qClient.getEndpoint(), queueName)),
-                qClient);
+                qClient.getCredentials());
 
         assertEquals(queueName, queue2.getName());
-        assertEquals(qClient, queue2.getServiceClient());
-
-        CloudQueue queue3 = new CloudQueue(queueName, qClient);
-        assertEquals(queueName, queue3.getName());
-        assertEquals(qClient, queue3.getServiceClient());
+        assertEquals(qClient.getCredentials(), queue2.getServiceClient().getCredentials());
     }
 
     public void testGetMetadata() throws StorageException {
@@ -283,8 +270,8 @@ public class CloudQueueTests extends TestCase {
     }
 
     public void testUploadMetadata() throws URISyntaxException, StorageException {
-        CloudQueue queueForGet = new CloudQueue(this.queue.getUri(), this.queue.getServiceClient());
-
+        CloudQueue queueForGet =  this.queue.getServiceClient().getQueueReference(this.queue.getName());
+        
         HashMap<String, String> metadata1 = new HashMap<String, String>();
         metadata1.put("ExistingMetadata1", "ExistingMetadataValue1");
         this.queue.setMetadata(metadata1);
@@ -298,7 +285,7 @@ public class CloudQueueTests extends TestCase {
     }
 
     public void testUploadMetadataNullInput() throws URISyntaxException, StorageException {
-        CloudQueue queueForGet = new CloudQueue(this.queue.getUri(), this.queue.getServiceClient());
+        CloudQueue queueForGet =  this.queue.getServiceClient().getQueueReference(this.queue.getName());
 
         HashMap<String, String> metadata1 = new HashMap<String, String>();
         String key = "ExistingMetadata1" + UUID.randomUUID().toString().replace("-", "");
@@ -319,7 +306,7 @@ public class CloudQueueTests extends TestCase {
     }
 
     public void testUploadMetadataClearExisting() throws URISyntaxException, StorageException {
-        CloudQueue queueForGet = new CloudQueue(this.queue.getUri(), this.queue.getServiceClient());
+        CloudQueue queueForGet =  this.queue.getServiceClient().getQueueReference(this.queue.getName());
 
         HashMap<String, String> metadata1 = new HashMap<String, String>();
         String key = "ExistingMetadata1" + UUID.randomUUID().toString().replace("-", "");
@@ -678,11 +665,11 @@ public class CloudQueueTests extends TestCase {
     
     public void testAddMessageUnicode() throws StorageException {
         ArrayList<String> messages = new ArrayList<String>();
-        messages.add("Le dÃ©bat sur l'identitÃ© nationale, l'idÃ©e du prÃ©sident Nicolas Sarkozy de dÃ©choir des personnes d'origine Ã©trangÃ¨re de la nationalitÃ© franÃ§aise ... certains cas et les rÃ©centes mesures prises contre les Roms ont choquÃ© les experts, qui rendront leurs conclusions le 27 aoÃ»t.");
-        messages.add("Ð’Ð°Ñˆ Ð»Ð¾Ð³Ð¸Ð½ Yahoo! Ð´Ð°ÐµÑ‚ Ð´Ð¾Ñ�Ñ‚ÑƒÐ¿ Ðº Ñ‚Ð°ÐºÐ¸Ð¼ Ð¼Ð¾Ñ‰Ð½Ñ‹Ð¼ Ð¸Ð½Ñ�Ñ‚Ñ€ÑƒÐ¼ÐµÐ½Ñ‚Ð°Ð¼ Ñ�Ð²Ñ�Ð·Ð¸, ÐºÐ°Ðº Ñ�Ð»ÐµÐºÑ‚Ñ€Ð¾Ð½Ð½Ð°Ñ� Ð¿Ð¾Ñ‡Ñ‚Ð°, Ð¾Ñ‚Ð¿Ñ€Ð°Ð²ÐºÐ° Ð¼Ð³Ð½Ð¾Ð²ÐµÐ½Ð½Ñ‹Ñ… Ñ�Ð¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ð¹, Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸ Ð±ÐµÐ·Ð¾Ð¿Ð°Ñ�Ð½Ð¾Ñ�Ñ‚Ð¸, Ð² Ñ‡Ð°Ñ�Ñ‚Ð½Ð¾Ñ�Ñ‚Ð¸, Ð°Ð½Ñ‚Ð¸Ð²Ð¸Ñ€ÑƒÑ�Ð½Ñ‹Ðµ Ñ�Ñ€ÐµÐ´Ñ�Ñ‚Ð²Ð° Ð¸ Ð±Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²Ñ‰Ð¸Ðº Ð²Ñ�Ð¿Ð»Ñ‹Ð²Ð°ÑŽÑ‰ÐµÐ¹ Ñ€ÐµÐºÐ»Ð°Ð¼Ñ‹, Ð¸ Ð¸Ð·Ð±Ñ€Ð°Ð½Ð½Ð¾Ðµ, Ð½Ð°Ð¿Ñ€Ð¸Ð¼ÐµÑ€, Ñ„Ð¾Ñ‚Ð¾ Ð¸ Ð¼ÑƒÐ·Ñ‹ÐºÐ° Ð² Ñ�ÐµÑ‚Ð¸ â€” Ð²Ñ�Ðµ Ð±ÐµÑ�Ð¿Ð»Ð°Ñ‚");
-        messages.add("æ�®æ–°å�Žç¤¾8æœˆ12æ—¥ç”µ 8æœˆ11æ—¥æ™šï¼ŒèˆŸæ›²å¢ƒå†…å†�æ¬¡å‡ºçŽ°å¼ºé™�é›¨å¤©æ°”ï¼Œä½¿ç‰¹å¤§å±±æ´ªæ³¥çŸ³æµ�ç�¾æƒ…é›ªä¸ŠåŠ éœœã€‚ç™½é¾™æ±Ÿæ°´åœ¨æ¢¨å��å­�æ�‘çš„äº¤æ±‡åœ°å¸¦å½¢æˆ�ä¸€ä¸ªæ–°çš„å °å¡žæ¹–ï¼Œæ°´ä½�æ¯”å¹³æ—¶é«˜å‡º3ç±³ã€‚ç”˜è‚ƒçœ�å›½åœŸèµ„æº�åŽ…å‰¯åŽ…é•¿å¼ å›½å�Žå½“æ—¥22æ—¶è®¸åœ¨æ–°é—»å�‘å¸ƒä¼šä¸Šä»‹ç»�ï¼Œæˆªè‡³12æ—¥21æ—¶50åˆ†ï¼ŒèˆŸæ›²å °å¡žæ¹–å °å¡žä½“å·²æ¶ˆé™¤ï¼Œæºƒå��é™©æƒ…å·²æ¶ˆé™¤ï¼Œç›®å‰�é’ˆå¯¹å °å¡žæ¹–çš„ä¸»è¦�å·¥ä½œæ˜¯ç–�é€šæ²³é�“ã€‚");
-        messages.add("×œ ×›×•×œ×�\", ×”×“×”×™×� ×™×¢×œ×•×Ÿ, ×•×™×™×©×¨ ×§×• ×¢×� ×”×¢×“×•×ª ×©×ž×¡×¨ ×¨×�×© ×”×ž×ž×©×œ×”, ×‘× ×™×ž×™×Ÿ × ×ª× ×™×”×•, ×œ×•×•×¢×“×ª ×˜×™×¨×§×œ. ×œ×“×‘×¨×™×•, ×�×›×Ÿ ×”×©×¨×™×� ×“× ×• ×¨×§ ×‘×”×™×‘×˜×™×� ×”×ª×§×©×•×¨×ª×™×™×� ×©×œ ×¢×¦×™×¨×ª ×”×ž×©×˜: \"×‘×©×‘×™×¢×™×™×” ×œ×� ×”×ª×§×™×™×� ×“×™×•×Ÿ ×¢×œ ×”×�×œ×˜×¨× ×˜×™×‘×•×ª. ×¢×¡×§× ×• ×‘×”×™×‘×˜×™×� ");
-        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis MÃ¤rz um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprÃ¼nglich waren es hier 1,7 Prozent");
+        messages.add("Le dÃƒÂ©bat sur l'identitÃƒÂ© nationale, l'idÃƒÂ©e du prÃƒÂ©sident Nicolas Sarkozy de dÃƒÂ©choir des personnes d'origine ÃƒÂ©trangÃƒÂ¨re de la nationalitÃƒÂ© franÃƒÂ§aise ... certains cas et les rÃƒÂ©centes mesures prises contre les Roms ont choquÃƒÂ© les experts, qui rendront leurs conclusions le 27 aoÃƒÂ»t.");
+        messages.add("Ã�â€™Ã�Â°Ã‘Ë† Ã�Â»Ã�Â¾Ã�Â³Ã�Â¸Ã�Â½ Yahoo! Ã�Â´Ã�Â°Ã�ÂµÃ‘â€š Ã�Â´Ã�Â¾Ã‘ï¿½Ã‘â€šÃ‘Æ’Ã�Â¿ Ã�Âº Ã‘â€šÃ�Â°Ã�ÂºÃ�Â¸Ã�Â¼ Ã�Â¼Ã�Â¾Ã‘â€°Ã�Â½Ã‘â€¹Ã�Â¼ Ã�Â¸Ã�Â½Ã‘ï¿½Ã‘â€šÃ‘â‚¬Ã‘Æ’Ã�Â¼Ã�ÂµÃ�Â½Ã‘â€šÃ�Â°Ã�Â¼ Ã‘ï¿½Ã�Â²Ã‘ï¿½Ã�Â·Ã�Â¸, Ã�ÂºÃ�Â°Ã�Âº Ã‘ï¿½Ã�Â»Ã�ÂµÃ�ÂºÃ‘â€šÃ‘â‚¬Ã�Â¾Ã�Â½Ã�Â½Ã�Â°Ã‘ï¿½ Ã�Â¿Ã�Â¾Ã‘â€¡Ã‘â€šÃ�Â°, Ã�Â¾Ã‘â€šÃ�Â¿Ã‘â‚¬Ã�Â°Ã�Â²Ã�ÂºÃ�Â° Ã�Â¼Ã�Â³Ã�Â½Ã�Â¾Ã�Â²Ã�ÂµÃ�Â½Ã�Â½Ã‘â€¹Ã‘â€¦ Ã‘ï¿½Ã�Â¾Ã�Â¾Ã�Â±Ã‘â€°Ã�ÂµÃ�Â½Ã�Â¸Ã�Â¹, Ã‘â€žÃ‘Æ’Ã�Â½Ã�ÂºÃ‘â€ Ã�Â¸Ã�Â¸ Ã�Â±Ã�ÂµÃ�Â·Ã�Â¾Ã�Â¿Ã�Â°Ã‘ï¿½Ã�Â½Ã�Â¾Ã‘ï¿½Ã‘â€šÃ�Â¸, Ã�Â² Ã‘â€¡Ã�Â°Ã‘ï¿½Ã‘â€šÃ�Â½Ã�Â¾Ã‘ï¿½Ã‘â€šÃ�Â¸, Ã�Â°Ã�Â½Ã‘â€šÃ�Â¸Ã�Â²Ã�Â¸Ã‘â‚¬Ã‘Æ’Ã‘ï¿½Ã�Â½Ã‘â€¹Ã�Âµ Ã‘ï¿½Ã‘â‚¬Ã�ÂµÃ�Â´Ã‘ï¿½Ã‘â€šÃ�Â²Ã�Â° Ã�Â¸ Ã�Â±Ã�Â»Ã�Â¾Ã�ÂºÃ�Â¸Ã‘â‚¬Ã�Â¾Ã�Â²Ã‘â€°Ã�Â¸Ã�Âº Ã�Â²Ã‘ï¿½Ã�Â¿Ã�Â»Ã‘â€¹Ã�Â²Ã�Â°Ã‘Å½Ã‘â€°Ã�ÂµÃ�Â¹ Ã‘â‚¬Ã�ÂµÃ�ÂºÃ�Â»Ã�Â°Ã�Â¼Ã‘â€¹, Ã�Â¸ Ã�Â¸Ã�Â·Ã�Â±Ã‘â‚¬Ã�Â°Ã�Â½Ã�Â½Ã�Â¾Ã�Âµ, Ã�Â½Ã�Â°Ã�Â¿Ã‘â‚¬Ã�Â¸Ã�Â¼Ã�ÂµÃ‘â‚¬, Ã‘â€žÃ�Â¾Ã‘â€šÃ�Â¾ Ã�Â¸ Ã�Â¼Ã‘Æ’Ã�Â·Ã‘â€¹Ã�ÂºÃ�Â° Ã�Â² Ã‘ï¿½Ã�ÂµÃ‘â€šÃ�Â¸ Ã¢â‚¬â€� Ã�Â²Ã‘ï¿½Ã�Âµ Ã�Â±Ã�ÂµÃ‘ï¿½Ã�Â¿Ã�Â»Ã�Â°Ã‘â€š");
+        messages.add("Ã¦ï¿½Â®Ã¦â€“Â°Ã¥ï¿½Å½Ã§Â¤Â¾8Ã¦Å“Ë†12Ã¦â€”Â¥Ã§â€�Âµ 8Ã¦Å“Ë†11Ã¦â€”Â¥Ã¦â„¢Å¡Ã¯Â¼Å’Ã¨Ë†Å¸Ã¦â€ºÂ²Ã¥Â¢Æ’Ã¥â€ â€¦Ã¥â€ ï¿½Ã¦Â¬Â¡Ã¥â€¡ÂºÃ§Å½Â°Ã¥Â¼ÂºÃ©â„¢ï¿½Ã©â€ºÂ¨Ã¥Â¤Â©Ã¦Â°â€�Ã¯Â¼Å’Ã¤Â½Â¿Ã§â€°Â¹Ã¥Â¤Â§Ã¥Â±Â±Ã¦Â´ÂªÃ¦Â³Â¥Ã§Å¸Â³Ã¦Âµï¿½Ã§ï¿½Â¾Ã¦Æ’â€¦Ã©â€ºÂªÃ¤Â¸Å Ã¥Å Â Ã©Å“Å“Ã£â‚¬â€šÃ§â„¢Â½Ã©Â¾â„¢Ã¦Â±Å¸Ã¦Â°Â´Ã¥Å“Â¨Ã¦Â¢Â¨Ã¥ï¿½ï¿½Ã¥Â­ï¿½Ã¦ï¿½â€˜Ã§Å¡â€žÃ¤ÂºÂ¤Ã¦Â±â€¡Ã¥Å“Â°Ã¥Â¸Â¦Ã¥Â½Â¢Ã¦Ë†ï¿½Ã¤Â¸â‚¬Ã¤Â¸ÂªÃ¦â€“Â°Ã§Å¡â€žÃ¥Â Â°Ã¥Â¡Å¾Ã¦Â¹â€“Ã¯Â¼Å’Ã¦Â°Â´Ã¤Â½ï¿½Ã¦Â¯â€�Ã¥Â¹Â³Ã¦â€”Â¶Ã©Â«ËœÃ¥â€¡Âº3Ã§Â±Â³Ã£â‚¬â€šÃ§â€�ËœÃ¨â€šÆ’Ã§Å“ï¿½Ã¥â€ºÂ½Ã¥Å“Å¸Ã¨Âµâ€žÃ¦Âºï¿½Ã¥Å½â€¦Ã¥â€°Â¯Ã¥Å½â€¦Ã©â€¢Â¿Ã¥Â¼Â Ã¥â€ºÂ½Ã¥ï¿½Å½Ã¥Â½â€œÃ¦â€”Â¥22Ã¦â€”Â¶Ã¨Â®Â¸Ã¥Å“Â¨Ã¦â€“Â°Ã©â€”Â»Ã¥ï¿½â€˜Ã¥Â¸Æ’Ã¤Â¼Å¡Ã¤Â¸Å Ã¤Â»â€¹Ã§Â»ï¿½Ã¯Â¼Å’Ã¦Ë†ÂªÃ¨â€¡Â³12Ã¦â€”Â¥21Ã¦â€”Â¶50Ã¥Ë†â€ Ã¯Â¼Å’Ã¨Ë†Å¸Ã¦â€ºÂ²Ã¥Â Â°Ã¥Â¡Å¾Ã¦Â¹â€“Ã¥Â Â°Ã¥Â¡Å¾Ã¤Â½â€œÃ¥Â·Â²Ã¦Â¶Ë†Ã©â„¢Â¤Ã¯Â¼Å’Ã¦ÂºÆ’Ã¥ï¿½ï¿½Ã©â„¢Â©Ã¦Æ’â€¦Ã¥Â·Â²Ã¦Â¶Ë†Ã©â„¢Â¤Ã¯Â¼Å’Ã§â€ºÂ®Ã¥â€°ï¿½Ã©â€™Ë†Ã¥Â¯Â¹Ã¥Â Â°Ã¥Â¡Å¾Ã¦Â¹â€“Ã§Å¡â€žÃ¤Â¸Â»Ã¨Â¦ï¿½Ã¥Â·Â¥Ã¤Â½Å“Ã¦ËœÂ¯Ã§â€“ï¿½Ã©â‚¬Å¡Ã¦Â²Â³Ã©ï¿½â€œÃ£â‚¬â€š");
+        messages.add("Ã—Å“ Ã—â€ºÃ—â€¢Ã—Å“Ã—ï¿½\", Ã—â€�Ã—â€œÃ—â€�Ã—â„¢Ã—ï¿½ Ã—â„¢Ã—Â¢Ã—Å“Ã—â€¢Ã—Å¸, Ã—â€¢Ã—â„¢Ã—â„¢Ã—Â©Ã—Â¨ Ã—Â§Ã—â€¢ Ã—Â¢Ã—ï¿½ Ã—â€�Ã—Â¢Ã—â€œÃ—â€¢Ã—Âª Ã—Â©Ã—Å¾Ã—Â¡Ã—Â¨ Ã—Â¨Ã—ï¿½Ã—Â© Ã—â€�Ã—Å¾Ã—Å¾Ã—Â©Ã—Å“Ã—â€�, Ã—â€˜Ã—Â Ã—â„¢Ã—Å¾Ã—â„¢Ã—Å¸ Ã—Â Ã—ÂªÃ—Â Ã—â„¢Ã—â€�Ã—â€¢, Ã—Å“Ã—â€¢Ã—â€¢Ã—Â¢Ã—â€œÃ—Âª Ã—ËœÃ—â„¢Ã—Â¨Ã—Â§Ã—Å“. Ã—Å“Ã—â€œÃ—â€˜Ã—Â¨Ã—â„¢Ã—â€¢, Ã—ï¿½Ã—â€ºÃ—Å¸ Ã—â€�Ã—Â©Ã—Â¨Ã—â„¢Ã—ï¿½ Ã—â€œÃ—Â Ã—â€¢ Ã—Â¨Ã—Â§ Ã—â€˜Ã—â€�Ã—â„¢Ã—â€˜Ã—ËœÃ—â„¢Ã—ï¿½ Ã—â€�Ã—ÂªÃ—Â§Ã—Â©Ã—â€¢Ã—Â¨Ã—ÂªÃ—â„¢Ã—â„¢Ã—ï¿½ Ã—Â©Ã—Å“ Ã—Â¢Ã—Â¦Ã—â„¢Ã—Â¨Ã—Âª Ã—â€�Ã—Å¾Ã—Â©Ã—Ëœ: \"Ã—â€˜Ã—Â©Ã—â€˜Ã—â„¢Ã—Â¢Ã—â„¢Ã—â„¢Ã—â€� Ã—Å“Ã—ï¿½ Ã—â€�Ã—ÂªÃ—Â§Ã—â„¢Ã—â„¢Ã—ï¿½ Ã—â€œÃ—â„¢Ã—â€¢Ã—Å¸ Ã—Â¢Ã—Å“ Ã—â€�Ã—ï¿½Ã—Å“Ã—ËœÃ—Â¨Ã—Â Ã—ËœÃ—â„¢Ã—â€˜Ã—â€¢Ã—Âª. Ã—Â¢Ã—Â¡Ã—Â§Ã—Â Ã—â€¢ Ã—â€˜Ã—â€�Ã—â„¢Ã—â€˜Ã—ËœÃ—â„¢Ã—ï¿½ ");
+        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis MÃƒÂ¤rz um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprÃƒÂ¼nglich waren es hier 1,7 Prozent");
         messages.add("<?xml version=\"1.0\"?>\n<!DOCTYPE PARTS SYSTEM \"parts.dtd\">\n<?xml-stylesheet type=\"text/css\" href=\"xmlpartsstyle.css\"?>\n<PARTS>\n   <TITLE>Computer Parts</TITLE>\n   <PART>\n      <ITEM>Motherboard</ITEM>\n      <MANUFACTURER>ASUS</MANUFACTURER>\n      <MODEL>"
                 + "P3B-F</MODEL>\n      <COST> 123.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Video Card</ITEM>\n      <MANUFACTURER>ATI</MANUFACTURER>\n      <MODEL>All-in-Wonder Pro</MODEL>\n      <COST> 160.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Sound Card</ITEM>\n      <MANUFACTURER>"
                 + "Creative Labs</MANUFACTURER>\n      <MODEL>Sound Blaster Live</MODEL>\n      <COST> 80.00</COST>\n   </PART>\n   <PART>\n      <ITEM> inch Monitor</ITEM>\n      <MANUFACTURER>LG Electronics</MANUFACTURER>\n      <MODEL> 995E</MODEL>\n      <COST> 290.00</COST>\n   </PART>\n</PARTS>");
@@ -754,7 +741,7 @@ public class CloudQueueTests extends TestCase {
 
     public void testQueueUnicodeAndXmlMessageTest() throws  StorageException
             {
-        String msgContent = "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½<?xml version= 1.0  encoding= utf-8  ?>";
+        String msgContent = "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½<?xml version= 1.0  encoding= utf-8  ?>";
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
         this.queue.addMessage(message);
         CloudQueueMessage msgFromRetrieve1 = this.queue.retrieveMessage();
@@ -1322,41 +1309,12 @@ public class CloudQueueTests extends TestCase {
         CloudQueueClient queueClient1 = new CloudQueueClient(new URI("http://myaccount.queue.core.windows.net/"),
                 new StorageCredentialsSharedAccessSignature(sasString));
 
-        CloudQueue queue1 = new CloudQueue(queueUri, queueClient1);
+        CloudQueue queue1 = new CloudQueue(queueUri, queueClient1.getCredentials());
         queue1.getName();
 
         CloudQueueClient queueClient2 = new CloudQueueClient(new URI("http://myaccount.queue.core.windows.net/"),
                 new StorageCredentialsSharedAccessSignature(sasString));
-        CloudQueue queue2 = new CloudQueue(queueUri, queueClient2);
+        CloudQueue queue2 = new CloudQueue(queueUri, queueClient2.getCredentials());
         queue2.getName();
-    }
-
-    public void testQueueSharedKeyLite() throws  StorageException, URISyntaxException {
-        CloudQueueClient qClient = TestHelper.createCloudQueueClient();
-        qClient.setAuthenticationScheme(AuthenticationScheme.SHAREDKEYLITE);
-        CloudQueue queue = qClient.getQueueReference(QueueTestHelper.generateRandomQueueName());
-
-        OperationContext createQueueContext = new OperationContext();
-        queue.create(null, createQueueContext);
-        assertEquals(createQueueContext.getLastResult().getStatusCode(), HttpURLConnection.HTTP_CREATED);
-
-        try {
-            HashMap<String, String> metadata1 = new HashMap<String, String>();
-            metadata1.put("ExistingMetadata1", "ExistingMetadataValue1");
-            queue.setMetadata(metadata1);
-            queue.create();
-            fail();
-        }
-        catch (StorageException e) {
-            assertTrue(e.getHttpStatusCode() == HttpURLConnection.HTTP_CONFLICT);
-
-        }
-
-        queue.downloadAttributes();
-        OperationContext createQueueContext2 = new OperationContext();
-        queue.create(null, createQueueContext2);
-        assertEquals(createQueueContext2.getLastResult().getStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
-
-        queue.delete();
     }
 }

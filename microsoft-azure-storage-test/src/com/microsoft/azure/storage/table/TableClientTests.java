@@ -28,7 +28,6 @@ import java.util.UUID;
 
 import junit.framework.TestCase;
 
-import com.microsoft.azure.storage.AuthenticationScheme;
 import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.RequestResult;
@@ -49,7 +48,6 @@ import com.microsoft.azure.storage.table.TableTestHelper.Class2;
 /**
  * Table Client Tests
  */
-@SuppressWarnings("deprecation")
 public class TableClientTests extends TestCase {
     public void testListTablesSegmented() throws URISyntaxException, StorageException {
         TableRequestOptions options = new TableRequestOptions();
@@ -558,29 +556,6 @@ public class TableClientTests extends TestCase {
                 assertEquals("ResourceNotFound", e.getExtendedErrorInformation().getErrorCode());
             }
 
-        }
-        finally {
-            // cleanup
-            table.deleteIfExists();
-        }
-    }
-
-    public void tableCreateAndAttemptCreateOnceExistsSharedKeyLite() throws StorageException, URISyntaxException {
-        final CloudTableClient tClient = TableTestHelper.createCloudTableClient();
-        tClient.setAuthenticationScheme(AuthenticationScheme.SHAREDKEYLITE);
-        CloudTable table = tClient.getTableReference(TableTestHelper.generateRandomTableName());
-        try {
-            table.create();
-            assertTrue(table.exists());
-
-            // Should fail as it already exists
-            try {
-                table.create();
-                fail();
-            }
-            catch (StorageException ex) {
-                assertEquals(ex.getErrorCode(), "TableAlreadyExists");
-            }
         }
         finally {
             // cleanup

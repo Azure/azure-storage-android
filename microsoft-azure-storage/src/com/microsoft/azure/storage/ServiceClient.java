@@ -47,12 +47,6 @@ public abstract class ServiceClient {
     private boolean usePathStyleUris;
 
     /**
-     * Holds the AuthenticationScheme associated with this Service Client.
-     */
-    @SuppressWarnings("deprecation")
-    protected AuthenticationScheme authenticationScheme = AuthenticationScheme.SHAREDKEYFULL;
-
-    /**
      * Creates an instance of the <code>ServiceClient</code> class using the specified service endpoint and account
      * credentials.
      * 
@@ -87,10 +81,10 @@ public abstract class ServiceClient {
             public void signRequest(HttpURLConnection connection, ServiceClient client, OperationContext context)
                     throws Exception {
                 if (signAsTable) {
-                    StorageRequest.signTableRequest(connection, client, -1, null);
+                    StorageRequest.signTableRequest(connection, client, -1, context);
                 }
                 else {
-                    StorageRequest.signBlobQueueAndFileRequest(connection, client, -1, null);
+                    StorageRequest.signBlobQueueAndFileRequest(connection, client, -1, context);
                 }
             }
 
@@ -136,10 +130,10 @@ public abstract class ServiceClient {
             public void signRequest(HttpURLConnection connection, ServiceClient client, OperationContext context)
                     throws Exception {
                 if (signAsTable) {
-                    StorageRequest.signTableRequest(connection, client, -1, null);
+                    StorageRequest.signTableRequest(connection, client, -1, context);
                 }
                 else {
-                    StorageRequest.signBlobQueueAndFileRequest(connection, client, -1, null);
+                    StorageRequest.signBlobQueueAndFileRequest(connection, client, -1, context);
                 }
             }
 
@@ -171,19 +165,6 @@ public abstract class ServiceClient {
      */
     public final StorageCredentials getCredentials() {
         return this.credentials;
-    }
-
-    /**
-     * Returns the AuthenticationScheme associated with this service client.
-     * 
-     * @return An {@link AuthenticationScheme} object which represents the authentication scheme associated with this
-     *         client.
-     *
-     * @deprecated as of 0.4.0. In the future only SharedKeyFull will be used.
-     */
-    @Deprecated
-    public final AuthenticationScheme getAuthenticationScheme() {
-        return this.authenticationScheme;
     }
 
     /**
@@ -233,20 +214,6 @@ public abstract class ServiceClient {
         this.storageUri = storageUri;
     }
 
-    /**
-     * Sets the Authentication Scheme to use with this service client.
-     * 
-     * @param scheme
-     *            An {@link AuthenticationScheme} object which represents the authentication scheme being assigned for
-     *            the service client.
-     *            
-     * @deprecated as of 0.4.0. In the future, only SharedKeyFull will be used.
-     */
-    @Deprecated
-    public final void setAuthenticationScheme(final AuthenticationScheme scheme) {
-        this.authenticationScheme = scheme;
-    }
-
     protected StorageRequest<ServiceClient, Void, Void> uploadServicePropertiesImpl(final ServiceProperties properties,
             final RequestOptions options, final OperationContext opContext, final boolean signAsTable)
             throws StorageException {
@@ -277,10 +244,10 @@ public abstract class ServiceClient {
                 public void signRequest(HttpURLConnection connection, ServiceClient client, OperationContext context)
                         throws Exception {
                     if (signAsTable) {
-                        StorageRequest.signTableRequest(connection, client, descriptor.getLength(), null);
+                        StorageRequest.signTableRequest(connection, client, descriptor.getLength(), context);
                     }
                     else {
-                        StorageRequest.signBlobQueueAndFileRequest(connection, client, descriptor.getLength(), null);
+                        StorageRequest.signBlobQueueAndFileRequest(connection, client, descriptor.getLength(), context);
                     }
                 }
 
