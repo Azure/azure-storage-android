@@ -234,7 +234,7 @@ public class CloudBlobContainerTests extends TestCase {
 
         permissions.setPublicAccess(BlobContainerPublicAccessType.CONTAINER);
         SharedAccessBlobPolicy policy = new SharedAccessBlobPolicy();
-        policy.setPermissions(EnumSet.of(SharedAccessBlobPermissions.LIST));
+        policy.setPermissions(EnumSet.of(SharedAccessBlobPermissions.LIST, SharedAccessBlobPermissions.CREATE));
         policy.setSharedAccessStartTime(start);
         policy.setSharedAccessExpiryTime(expiry);
         permissions.getSharedAccessPolicies().put("key1", policy);
@@ -263,6 +263,17 @@ public class CloudBlobContainerTests extends TestCase {
     public void testCloudBlobContainerPermissionsFromString() {
         SharedAccessBlobPolicy policy = new SharedAccessBlobPolicy();
 
+        policy.setPermissionsFromString("racwdl");
+        assertEquals(EnumSet.of(
+                SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.ADD, SharedAccessBlobPermissions.CREATE,
+                SharedAccessBlobPermissions.WRITE, SharedAccessBlobPermissions.DELETE, SharedAccessBlobPermissions.LIST),
+                policy.getPermissions());
+
+        policy.setPermissionsFromString("rawdl");
+        assertEquals(EnumSet.of(SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.ADD,
+                SharedAccessBlobPermissions.WRITE, SharedAccessBlobPermissions.DELETE, SharedAccessBlobPermissions.LIST),
+                policy.getPermissions());
+
         policy.setPermissionsFromString("rwdl");
         assertEquals(EnumSet.of(SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.WRITE,
                 SharedAccessBlobPermissions.DELETE, SharedAccessBlobPermissions.LIST), policy.getPermissions());
@@ -284,6 +295,15 @@ public class CloudBlobContainerTests extends TestCase {
      */
     public void testCloudBlobContainerPermissionsToString() {
         SharedAccessBlobPolicy policy = new SharedAccessBlobPolicy();
+
+        policy.setPermissions(EnumSet.of(
+                SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.ADD, SharedAccessBlobPermissions.CREATE,
+                SharedAccessBlobPermissions.WRITE, SharedAccessBlobPermissions.DELETE, SharedAccessBlobPermissions.LIST));
+        assertEquals("racwdl", policy.permissionsToString());
+
+        policy.setPermissions(EnumSet.of(SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.ADD,
+                SharedAccessBlobPermissions.WRITE, SharedAccessBlobPermissions.DELETE, SharedAccessBlobPermissions.LIST));
+        assertEquals("rawdl", policy.permissionsToString());
 
         policy.setPermissions(EnumSet.of(SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.WRITE,
                 SharedAccessBlobPermissions.DELETE, SharedAccessBlobPermissions.LIST));
@@ -418,6 +438,44 @@ public class CloudBlobContainerTests extends TestCase {
     }
     
     /**
+     * List the blobs in a container with a prefix
+     * 
+     * @throws URISyntaxException
+     * @throws StorageException
+     * @throws IOException
+     */
+    public void testCloudBlobContainerListBlobsPrefix() throws StorageException, IOException, URISyntaxException {
+        this.container.create();
+        int numBlobs = 2;
+        List<String> blobNames = BlobTestHelper
+                .uploadNewBlobs(this.container, BlobType.BLOCK_BLOB, numBlobs, 128, null);
+
+        BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB, "pref/blob1", 128, null);
+        blobNames.add("pref/blob1");
+        
+        BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB, "pref/blob2", 128, null);
+        blobNames.add("pref/blob2");
+
+        // Flat listing false
+        int count = 0;
+        for (ListBlobItem blob : this.container.listBlobs("pref")) {
+            assertEquals(CloudBlobDirectory.class, blob.getClass());
+            assertTrue(((CloudBlobDirectory)blob).getPrefix().startsWith("pref"));
+            count++;
+        }
+        assertEquals(1, count);
+        
+        // Flat listing true
+        count = 0;
+        for (ListBlobItem blob : this.container.listBlobs("pref", true)) {
+            assertEquals(CloudBlockBlob.class, blob.getClass());
+            assertTrue(((CloudBlockBlob)blob).getName().startsWith("pref/blob"));
+            count++;
+        }
+        assertEquals(2, count);
+    }
+    
+    /**
      * List the blobs in a container with next(). This tests for the item in the changelog: "Fixed a bug for all 
      * listing API's where next() would sometimes throw an exception if hasNext() had not been called even if 
      * there were more elements to iterate on."
@@ -540,7 +598,7 @@ public class CloudBlobContainerTests extends TestCase {
      * @throws URISyntaxException
      * @throws InterruptedException
      */
-    public void testCloudBlobContainerSharedKeyLite() throws StorageException,  InterruptedException {
+    public void testCloudBlobContainerSharedKey() throws StorageException, InterruptedException {
         BlobContainerPermissions expectedPermissions;
         BlobContainerPermissions testPermissions;
 
@@ -563,7 +621,7 @@ public class CloudBlobContainerTests extends TestCase {
         now.add(Calendar.MINUTE, 10);
         policy1.setSharedAccessExpiryTime(now.getTime());
 
-        policy1.setPermissions(EnumSet.of(SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.DELETE,
+        policy1.setPermissions(EnumSet.of(SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.CREATE,
                 SharedAccessBlobPermissions.LIST, SharedAccessBlobPermissions.DELETE));
         expectedPermissions.getSharedAccessPolicies().put(UUID.randomUUID().toString(), policy1);
 

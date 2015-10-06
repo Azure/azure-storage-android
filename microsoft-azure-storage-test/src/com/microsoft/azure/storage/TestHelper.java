@@ -18,12 +18,14 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
 import junit.framework.Assert;
 
+import com.microsoft.azure.storage.SharedAccessAccountPolicy;
 import com.microsoft.azure.storage.analytics.CloudAnalyticsClient;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.file.CloudFileClient;
@@ -55,6 +57,72 @@ public class TestHelper {
 	public static CloudTableClient createCloudTableClient() throws StorageException {
 		return getAccount().createCloudTableClient();
 	}
+
+    public static CloudBlobClient createCloudBlobClient(SharedAccessAccountPolicy policy, boolean useHttps)
+            throws StorageException, InvalidKeyException, URISyntaxException {
+        
+        CloudStorageAccount sasAccount = getAccount();
+        final String token = sasAccount.generateSharedAccessSignature(policy);
+        final StorageCredentials creds =
+                new StorageCredentialsSharedAccessSignature(token);
+        
+        final URI blobUri = new URI(useHttps ? "https" : "http", sasAccount.getBlobEndpoint().getAuthority(), 
+        		sasAccount.getBlobEndpoint().getPath(), sasAccount.getBlobEndpoint().getQuery(), null);
+
+        sasAccount = new CloudStorageAccount(creds, blobUri, sasAccount.getQueueEndpoint(), sasAccount.getTableEndpoint(), 
+        		sasAccount.getFileEndpoint());
+        return sasAccount.createCloudBlobClient();
+    }
+
+    public static CloudFileClient createCloudFileClient(SharedAccessAccountPolicy policy, boolean useHttps)
+            throws StorageException, InvalidKeyException, URISyntaxException {
+
+        CloudStorageAccount sasAccount = getAccount();
+        final String token = sasAccount.generateSharedAccessSignature(policy);
+        final StorageCredentials creds =
+                new StorageCredentialsSharedAccessSignature(token);
+        
+        final URI fileUri = new URI(useHttps ? "https" : "http", sasAccount.getFileEndpoint().getAuthority(), 
+        		sasAccount.getFileEndpoint().getPath(), sasAccount.getFileEndpoint().getQuery(), null);
+        
+        sasAccount = new CloudStorageAccount(
+                creds, sasAccount.getBlobEndpoint(), sasAccount.getQueueEndpoint(), sasAccount.getTableEndpoint(),
+                fileUri);
+        return sasAccount.createCloudFileClient();
+    }
+
+    public static CloudQueueClient createCloudQueueClient(SharedAccessAccountPolicy policy, boolean useHttps)
+            throws StorageException, InvalidKeyException, URISyntaxException {
+
+        CloudStorageAccount sasAccount = getAccount();
+        final String token = sasAccount.generateSharedAccessSignature(policy);
+        final StorageCredentials creds =
+                new StorageCredentialsSharedAccessSignature(token);
+        
+        final URI queueUri = new URI(useHttps ? "https" : "http", sasAccount.getQueueEndpoint().getAuthority(), 
+        		sasAccount.getQueueEndpoint().getPath(), sasAccount.getQueueEndpoint().getQuery(), null);
+        
+        sasAccount = new CloudStorageAccount(creds, sasAccount.getBlobEndpoint(), queueUri,
+                sasAccount.getTableEndpoint(), sasAccount.getFileEndpoint());
+        return sasAccount.createCloudQueueClient();
+    }
+
+    public static CloudTableClient createCloudTableClient(SharedAccessAccountPolicy policy, boolean useHttps)
+            throws StorageException, InvalidKeyException, URISyntaxException {
+
+        CloudStorageAccount sasAccount = getAccount();
+        final String token = sasAccount.generateSharedAccessSignature(policy);
+        final StorageCredentials creds =
+                new StorageCredentialsSharedAccessSignature(token);
+
+        final URI tableUri = new URI(useHttps ? "https" : "http", sasAccount.getTableEndpoint().getAuthority(), 
+        		sasAccount.getTableEndpoint().getPath(), sasAccount.getTableEndpoint().getQuery(), null);
+        
+        sasAccount = new CloudStorageAccount(creds, sasAccount.getBlobEndpoint(), sasAccount.getQueueEndpoint(), 
+        		tableUri, sasAccount.getFileEndpoint());
+        return sasAccount.createCloudTableClient();
+    }
+
 
     public static CloudAnalyticsClient createCloudAnalyticsClient() throws StorageException {
     	return getAccount().createCloudAnalyticsClient();

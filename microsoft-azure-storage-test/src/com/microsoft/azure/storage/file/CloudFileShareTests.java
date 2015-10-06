@@ -183,7 +183,7 @@ public class CloudFileShareTests extends TestCase {
         final Date expiry = cal.getTime();
 
         SharedAccessFilePolicy policy = new SharedAccessFilePolicy();
-        policy.setPermissions(EnumSet.of(SharedAccessFilePermissions.LIST));
+        policy.setPermissions(EnumSet.of(SharedAccessFilePermissions.LIST, SharedAccessFilePermissions.CREATE));
         policy.setSharedAccessStartTime(start);
         policy.setSharedAccessExpiryTime(expiry);
         permissions.getSharedAccessPolicies().put("key1", policy);
@@ -211,6 +211,11 @@ public class CloudFileShareTests extends TestCase {
     public void testCloudFileSharePermissionsFromString() {
         SharedAccessFilePolicy policy = new SharedAccessFilePolicy();
 
+        policy.setPermissionsFromString("rcwdl");
+        assertEquals(EnumSet.of(SharedAccessFilePermissions.READ, SharedAccessFilePermissions.CREATE,
+                SharedAccessFilePermissions.WRITE, SharedAccessFilePermissions.DELETE, SharedAccessFilePermissions.LIST),
+                policy.getPermissions());
+
         policy.setPermissionsFromString("rwdl");
         assertEquals(EnumSet.of(SharedAccessFilePermissions.READ, SharedAccessFilePermissions.WRITE,
                 SharedAccessFilePermissions.DELETE, SharedAccessFilePermissions.LIST), policy.getPermissions());
@@ -232,6 +237,10 @@ public class CloudFileShareTests extends TestCase {
      */
     public void testCloudFileSharePermissionsToString() {
         SharedAccessFilePolicy policy = new SharedAccessFilePolicy();
+
+        policy.setPermissions(EnumSet.of(SharedAccessFilePermissions.READ, SharedAccessFilePermissions.CREATE,
+                SharedAccessFilePermissions.WRITE, SharedAccessFilePermissions.DELETE, SharedAccessFilePermissions.LIST));
+        assertEquals("rcwdl", policy.permissionsToString());
 
         policy.setPermissions(EnumSet.of(SharedAccessFilePermissions.READ, SharedAccessFilePermissions.WRITE,
                 SharedAccessFilePermissions.DELETE, SharedAccessFilePermissions.LIST));

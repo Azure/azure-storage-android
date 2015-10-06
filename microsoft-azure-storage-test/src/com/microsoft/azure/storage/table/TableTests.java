@@ -396,7 +396,6 @@ public class TableTests extends TestCase {
                 new StorageCredentialsSharedAccessSignature(sasString));
 
         CloudTable policySasTable = tableClientFromPermission.getTableReference(name);
-        policySasTable.exists();
 
         // do not give the client and check that the new table's client has the correct perms
         CloudTable tableFromUri = new CloudTable(PathUtility.addToQuery(table.getStorageUri(), table

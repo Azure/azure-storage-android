@@ -19,21 +19,17 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.InvalidKeyException;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.RequestOptions;
-import com.microsoft.azure.storage.StorageCredentialsAccountAndKey;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.StorageKey;
 
 /**
  * RESERVED FOR INTERNAL USE. The Base Request class for the protocol layer.
  */
-@SuppressWarnings("deprecation")
 public final class BaseRequest {
 
     private static final String METADATA = "metadata";
@@ -173,7 +169,15 @@ public final class BaseRequest {
         
         final URL resourceUrl = builder.addToURI(uri).toURL();
 
-        final HttpURLConnection retConnection = (HttpURLConnection) resourceUrl.openConnection();
+        final HttpURLConnection retConnection;
+        
+        // Set up connection, optionally with proxy settings
+        if (opContext != null && opContext.getProxy() != null) {
+            retConnection = (HttpURLConnection) resourceUrl.openConnection(opContext.getProxy());
+        } 
+        else {
+            retConnection = (HttpURLConnection) resourceUrl.openConnection();
+        }
 
         /*
          * ReadTimeout must be explicitly set to avoid a bug in JDK 6. In certain cases, this bug causes an immediate 
@@ -440,72 +444,6 @@ public final class BaseRequest {
         retConnection.setRequestMethod(Constants.HTTP_PUT);
 
         return retConnection;
-    }
-
-    /**
-     * Signs the request appropriately to make it an authenticated request for Blob and Queue.
-     * 
-     * @param request
-     *            a HttpURLConnection for the operation.
-     * @param credentials
-     *            the credentials to use for signing.
-     * @param contentLength
-     *            the length of the content written to the output stream, -1 if unknown.
-     * @param opContext
-     *            an object used to track the execution of the operation
-     * @throws InvalidKeyException
-     *             if the credentials key is invalid.
-     * @throws StorageException
-     */
-    public static void signRequestForBlobAndQueue(final HttpURLConnection request,
-            final StorageCredentialsAccountAndKey credentials, final Long contentLength,
-            final OperationContext opContext) throws InvalidKeyException, StorageException {
-        request.setRequestProperty(Constants.HeaderConstants.DATE, Utility.getGMTTime());
-        final Canonicalizer canonicalizer = CanonicalizerFactory.getBlobQueueFullCanonicalizer(request);
-
-        final String stringToSign = canonicalizer.canonicalize(request, credentials.getAccountName(), contentLength);
-
-        final String computedBase64Signature = StorageKey.computeMacSha256(credentials.getCredentials().getKey(), 
-                stringToSign);
-
-        Logger.verbose(opContext, LogConstants.SIGNING, stringToSign);
-        
-        request.setRequestProperty(Constants.HeaderConstants.AUTHORIZATION,
-                String.format("%s %s:%s", "SharedKey", credentials.getAccountName(), computedBase64Signature));
-    }
-
-    /**
-     * 
-     * Signs the request appropriately to make it an authenticated request for Table.
-     * 
-     * @param request
-     *            a HttpURLConnection for the operation.
-     * @param credentials
-     *            the credentials to use for signing.
-     * @param contentLength
-     *            the length of the content written to the output stream, -1 if unknown.
-     * @param opContext
-     *            an object used to track the execution of the operation
-     * @throws InvalidKeyException
-     *             if the credentials key is invalid.
-     * @throws StorageException
-     */
-    public static void signRequestForTableSharedKey(final HttpURLConnection request,
-            final StorageCredentialsAccountAndKey credentials, final Long contentLength,
-            final OperationContext opContext) throws InvalidKeyException, StorageException {
-        request.setRequestProperty(Constants.HeaderConstants.DATE, Utility.getGMTTime());
-
-        final Canonicalizer canonicalizer = CanonicalizerFactory.getTableFullCanonicalizer(request);
-
-        final String stringToSign = canonicalizer.canonicalize(request, credentials.getAccountName(), contentLength);
-
-        final String computedBase64Signature = StorageKey.computeMacSha256(
-                credentials.getCredentials().getKey(), stringToSign);
-        
-        Logger.verbose(opContext, LogConstants.SIGNING, stringToSign);
-
-        request.setRequestProperty(Constants.HeaderConstants.AUTHORIZATION,
-                String.format("%s %s:%s", "SharedKey", credentials.getAccountName(), computedBase64Signature));
     }
 
     /**

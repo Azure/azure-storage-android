@@ -133,31 +133,44 @@ public class CloudAnalyticsClient {
         switch (service) {
             case BLOB:
                 if (location == StorageLocation.PRIMARY) {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_HOUR_PRIMARY_TRANSACTIONS_BLOB);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_HOUR_PRIMARY_TRANSACTIONS_BLOB);
                 }
                 else {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_HOUR_SECONDARY_TRANSACTIONS_BLOB);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_HOUR_SECONDARY_TRANSACTIONS_BLOB);
                 }
+                
+            case FILE:
+                if (location == StorageLocation.PRIMARY) {
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_HOUR_PRIMARY_TRANSACTIONS_FILE);
+                }
+                else {
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_HOUR_SECONDARY_TRANSACTIONS_FILE);
+                }
+                
             case QUEUE:
                 if (location == StorageLocation.PRIMARY) {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_HOUR_PRIMARY_TRANSACTIONS_QUEUE);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_HOUR_PRIMARY_TRANSACTIONS_QUEUE);
                 }
                 else {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_HOUR_SECONDARY_TRANSACTIONS_QUEUE);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_HOUR_SECONDARY_TRANSACTIONS_QUEUE);
                 }
+                
             case TABLE:
                 if (location == StorageLocation.PRIMARY) {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_HOUR_PRIMARY_TRANSACTIONS_TABLE);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_HOUR_PRIMARY_TRANSACTIONS_TABLE);
                 }
                 else {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_HOUR_SECONDARY_TRANSACTIONS_TABLE);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_HOUR_SECONDARY_TRANSACTIONS_TABLE);
                 }
+                
             default:
                 throw new IllegalArgumentException(SR.INVALID_STORAGE_SERVICE);
         }
@@ -199,30 +212,39 @@ public class CloudAnalyticsClient {
         switch (service) {
             case BLOB:
                 if (location == StorageLocation.PRIMARY) {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_MINUTE_PRIMARY_TRANSACTIONS_BLOB);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_MINUTE_PRIMARY_TRANSACTIONS_BLOB);
                 }
                 else {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_MINUTE_SECONDARY_TRANSACTIONS_BLOB);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_MINUTE_SECONDARY_TRANSACTIONS_BLOB);
+                }
+            case FILE:
+                if (location == StorageLocation.PRIMARY) {
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_MINUTE_PRIMARY_TRANSACTIONS_FILE);
+                }
+                else {
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_MINUTE_SECONDARY_TRANSACTIONS_FILE);
                 }
             case QUEUE:
                 if (location == StorageLocation.PRIMARY) {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_MINUTE_PRIMARY_TRANSACTIONS_QUEUE);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_MINUTE_PRIMARY_TRANSACTIONS_QUEUE);
                 }
                 else {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_MINUTE_SECONDARY_TRANSACTIONS_QUEUE);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_MINUTE_SECONDARY_TRANSACTIONS_QUEUE);
                 }
             case TABLE:
                 if (location == StorageLocation.PRIMARY) {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_MINUTE_PRIMARY_TRANSACTIONS_TABLE);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_MINUTE_PRIMARY_TRANSACTIONS_TABLE);
                 }
                 else {
-                    return this.tableClient
-                            .getTableReference(Constants.AnalyticsConstants.METRICS_MINUTE_SECONDARY_TRANSACTIONS_TABLE);
+                    return this.tableClient.getTableReference(
+                            Constants.AnalyticsConstants.METRICS_MINUTE_SECONDARY_TRANSACTIONS_TABLE);
                 }
             default:
                 throw new IllegalArgumentException(SR.INVALID_STORAGE_SERVICE);
@@ -361,9 +383,9 @@ public class CloudAnalyticsClient {
      * Returns an enumerable collection of log records, retrieved lazily.
      * 
      * @param logBlobs
-     *            A {@link Iterable} of blobs to parse LogRecords from.
+     *            An {@link Iterable} of blobs to parse LogRecords from.
      * @return
-     *         An enumerable collection of objects that implement {@link ListBlobItem} and are retrieved lazily.
+     *         An enumerable collection of objects that implement {@link LogRecords} and are retrieved lazily.
      * @throws StorageException
      * @throws URISyntaxException
      */
@@ -376,10 +398,10 @@ public class CloudAnalyticsClient {
     /**
      * Returns an enumerable collection of log records, retrieved lazily.
      * 
-     * @param logBlob
-     *            A {ListBlobItem} to parse LogRecords from.
+     * @param logBlobs
+     *            An {@link Iterable} of blobs to parse LogRecords from.
      * @return
-     *         An enumerable collection of objects that implement {@link ListBlobItem} and are retrieved lazily.
+     *         An enumerable collection of objects that implement {@link LogRecords} and are retrieved lazily.
      * @throws StorageException
      * @throws URISyntaxException
      */

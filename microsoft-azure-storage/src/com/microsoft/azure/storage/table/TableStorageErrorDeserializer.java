@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.StorageExtendedErrorInformation;
+import com.microsoft.azure.storage.core.JsonUtilities;
 import com.microsoft.azure.storage.core.StorageRequest;
 
 /***
@@ -51,7 +52,62 @@ final class TableStorageErrorDeserializer {
         JsonFactory jsonFactory = new JsonFactory();
         JsonParser parser = jsonFactory.createParser(reader);
         try {
-            return parseJsonResponse(parser);
+            final StorageExtendedErrorInformation errorInfo = new StorageExtendedErrorInformation();
+
+            if (!parser.hasCurrentToken()) {
+                parser.nextToken();
+            }
+
+            JsonUtilities.assertIsStartObjectJsonToken(parser);
+
+            parser.nextToken();
+            JsonUtilities.assertIsFieldNameJsonToken(parser);
+            JsonUtilities.assertIsExpectedFieldName(parser, "odata.error");
+
+            // start getting extended error information
+            parser.nextToken();
+            JsonUtilities.assertIsStartObjectJsonToken(parser);
+
+            // get code
+            parser.nextValue();
+            JsonUtilities.assertIsExpectedFieldName(parser, TableConstants.ErrorConstants.ERROR_CODE);
+            errorInfo.setErrorCode(parser.getValueAsString());
+
+            // get message
+            parser.nextToken();
+            JsonUtilities.assertIsFieldNameJsonToken(parser);
+            JsonUtilities.assertIsExpectedFieldName(parser, TableConstants.ErrorConstants.ERROR_MESSAGE);
+
+            parser.nextToken();
+            JsonUtilities.assertIsStartObjectJsonToken(parser);
+
+            parser.nextValue();
+            JsonUtilities.assertIsExpectedFieldName(parser, "lang");
+
+            parser.nextValue();
+            JsonUtilities.assertIsExpectedFieldName(parser, "value");
+            errorInfo.setErrorMessage(parser.getValueAsString());
+
+            parser.nextToken();
+            JsonUtilities.assertIsEndObjectJsonToken(parser);
+
+            parser.nextToken();
+
+            // get innererror if it exists
+            if (parser.getCurrentToken() == JsonToken.FIELD_NAME) {
+                JsonUtilities.assertIsExpectedFieldName(parser, TableConstants.ErrorConstants.INNER_ERROR);
+                errorInfo.getAdditionalDetails().putAll(parseJsonErrorException(parser));
+                parser.nextToken();
+            }
+
+            // end code object
+            JsonUtilities.assertIsEndObjectJsonToken(parser);
+
+            // end odata.error object
+            parser.nextToken();
+            JsonUtilities.assertIsEndObjectJsonToken(parser);
+
+            return errorInfo;
         }
         finally {
             parser.close();
@@ -95,10 +151,10 @@ final class TableStorageErrorDeserializer {
         HashMap<String, String[]> additionalDetails = new HashMap<String, String[]>();
 
         parser.nextToken();
-        ODataUtilities.assertIsStartObjectJsonToken(parser);
+        JsonUtilities.assertIsStartObjectJsonToken(parser);
 
         parser.nextToken();
-        ODataUtilities.assertIsFieldNameJsonToken(parser);
+        JsonUtilities.assertIsFieldNameJsonToken(parser);
 
         while (parser.getCurrentToken() != JsonToken.END_OBJECT) {
             if (parser.getCurrentName().equals(TableConstants.ErrorConstants.ERROR_MESSAGE)) {
@@ -120,73 +176,5 @@ final class TableStorageErrorDeserializer {
         }
 
         return additionalDetails;
-    }
-
-    /**
-     * Parses the extended error information from the Json-formatted response.
-     * 
-     * @throws IOException
-     *             if an error occurs while accessing the stream with Json.
-     * @throws JsonParseException
-     *             if an error occurs while parsing the stream.
-     */
-    private static StorageExtendedErrorInformation parseJsonResponse(JsonParser parser) throws JsonParseException,
-            IOException {
-        final StorageExtendedErrorInformation errorInfo = new StorageExtendedErrorInformation();
-
-        if (!parser.hasCurrentToken()) {
-            parser.nextToken();
-        }
-
-        ODataUtilities.assertIsStartObjectJsonToken(parser);
-
-        parser.nextToken();
-        ODataUtilities.assertIsFieldNameJsonToken(parser);
-        ODataUtilities.assertIsExpectedFieldName(parser, "odata.error");
-
-        // start getting extended error information
-        parser.nextToken();
-        ODataUtilities.assertIsStartObjectJsonToken(parser);
-
-        // get code
-        parser.nextValue();
-        ODataUtilities.assertIsExpectedFieldName(parser, TableConstants.ErrorConstants.ERROR_CODE);
-        errorInfo.setErrorCode(parser.getValueAsString());
-
-        // get message
-        parser.nextToken();
-        ODataUtilities.assertIsFieldNameJsonToken(parser);
-        ODataUtilities.assertIsExpectedFieldName(parser, TableConstants.ErrorConstants.ERROR_MESSAGE);
-
-        parser.nextToken();
-        ODataUtilities.assertIsStartObjectJsonToken(parser);
-
-        parser.nextValue();
-        ODataUtilities.assertIsExpectedFieldName(parser, "lang");
-
-        parser.nextValue();
-        ODataUtilities.assertIsExpectedFieldName(parser, "value");
-        errorInfo.setErrorMessage(parser.getValueAsString());
-
-        parser.nextToken();
-        ODataUtilities.assertIsEndObjectJsonToken(parser);
-
-        parser.nextToken();
-
-        // get innererror if it exists
-        if (parser.getCurrentToken() == JsonToken.FIELD_NAME) {
-            ODataUtilities.assertIsExpectedFieldName(parser, TableConstants.ErrorConstants.INNER_ERROR);
-            errorInfo.getAdditionalDetails().putAll(parseJsonErrorException(parser));
-            parser.nextToken();
-        }
-
-        // end code object
-        ODataUtilities.assertIsEndObjectJsonToken(parser);
-
-        // end odata.error object
-        parser.nextToken();
-        ODataUtilities.assertIsEndObjectJsonToken(parser);
-
-        return errorInfo;
     }
 }

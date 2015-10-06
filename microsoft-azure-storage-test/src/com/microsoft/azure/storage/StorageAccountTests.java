@@ -39,7 +39,7 @@ public class StorageAccountTests extends TestCase {
     public static final String ACCOUNT_KEY = Base64.encode(UUID.randomUUID().toString().getBytes());
 
     public void testStorageCredentialsAnonymous() throws URISyntaxException, StorageException {
-        StorageCredentialsAnonymous cred = new StorageCredentialsAnonymous();
+        StorageCredentials cred = StorageCredentialsAnonymous.ANONYMOUS;
 
         assertNull(cred.getAccountName());
 
@@ -64,6 +64,23 @@ public class StorageAccountTests extends TestCase {
         dummyKey[0] = 3;
         base64EncodedDummyKey = Base64.encode(dummyKey);
         cred = new StorageCredentialsAccountAndKey(ACCOUNT_NAME, base64EncodedDummyKey);
+        assertEquals(base64EncodedDummyKey, cred.exportBase64EncodedKey());
+    }
+    
+    public void testStorageCredentialsSharedKeyUpdateKey() throws URISyntaxException, StorageException {
+        StorageCredentialsAccountAndKey cred = new StorageCredentialsAccountAndKey(ACCOUNT_NAME, ACCOUNT_KEY);
+        assertEquals(ACCOUNT_KEY, cred.exportBase64EncodedKey());
+        
+        // Validate update with byte array
+        byte[] dummyKey = { 0, 1, 2 };
+        cred.updateKey(dummyKey);
+        String base64EncodedDummyKey = Base64.encode(dummyKey);
+        assertEquals(base64EncodedDummyKey, cred.exportBase64EncodedKey());
+
+        // Validate update with string
+        dummyKey[0] = 3;
+        base64EncodedDummyKey = Base64.encode(dummyKey);
+        cred.updateKey(base64EncodedDummyKey);
         assertEquals(base64EncodedDummyKey, cred.exportBase64EncodedKey());
     }
 
@@ -120,7 +137,7 @@ public class StorageAccountTests extends TestCase {
             fail("Did not hit expected exception");
         }
         catch (IllegalArgumentException ex) {
-            assertEquals(SR.INVALID_KEY, ex.getMessage());
+            assertEquals(SR.STRING_NOT_VALID, ex.getMessage());
         }
 
         StorageCredentialsAccountAndKey credentials2 = new StorageCredentialsAccountAndKey(ACCOUNT_NAME, ACCOUNT_KEY);

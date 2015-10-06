@@ -31,6 +31,7 @@ import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.core.JsonUtilities;
 import com.microsoft.azure.storage.core.SR;
 
 /**
@@ -102,7 +103,7 @@ final class TableDeserializer {
                 parser.nextToken();
             }
 
-            ODataUtilities.assertIsStartObjectJsonToken(parser);
+            JsonUtilities.assertIsStartObjectJsonToken(parser);
 
             // move into data  
             parser.nextToken();
@@ -120,7 +121,7 @@ final class TableDeserializer {
                     // move to start of array
                     parser.nextToken();
 
-                    ODataUtilities.assertIsStartArrayJsonToken(parser);
+                    JsonUtilities.assertIsStartArrayJsonToken(parser);
 
                     // go to properties
                     parser.nextToken();
@@ -142,7 +143,7 @@ final class TableDeserializer {
                         parser.nextToken();
                     }
 
-                    ODataUtilities.assertIsEndArrayJsonToken(parser);
+                    JsonUtilities.assertIsEndArrayJsonToken(parser);
                 }
 
                 parser.nextToken();
@@ -242,7 +243,6 @@ final class TableDeserializer {
      * @throws JsonParseException
      *             if an error occurs while parsing the stream.
      */
-    @SuppressWarnings("deprecation")
     private static <T extends TableEntity, R> TableResult parseJsonEntity(final JsonParser parser,
             final Class<T> clazzType, HashMap<String, PropertyPair> classProperties, final EntityResolver<R> resolver,
             final TableRequestOptions options, final OperationContext opContext) throws JsonParseException,
@@ -255,7 +255,7 @@ final class TableDeserializer {
             parser.nextToken();
         }
 
-        ODataUtilities.assertIsStartObjectJsonToken(parser);
+        JsonUtilities.assertIsStartObjectJsonToken(parser);
 
         parser.nextToken();
 
@@ -435,8 +435,12 @@ final class TableDeserializer {
     private static JsonParser createJsonParserFromStream(final InputStream streamRef) throws JsonParseException,
             IOException {
         JsonParser parser = jsonFactory.createParser(streamRef);
-
-        // allows handling of infinity, -infinity, and NaN for Doubles
-        return parser.enable(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS);
+        
+        return parser
+                // allows handling of infinity, -infinity, and NaN for Doubles
+                .enable(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS)
+                // don't close the stream and allow it to be drained completely
+                // in ExecutionEngine to improve socket reuse
+                .disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
     }
 }

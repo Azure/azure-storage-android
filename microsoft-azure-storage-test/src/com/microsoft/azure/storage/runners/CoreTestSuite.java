@@ -17,6 +17,7 @@ package com.microsoft.azure.storage.runners;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import com.microsoft.azure.storage.AccountSasTests;
 import com.microsoft.azure.storage.EventFiringTests;
 import com.microsoft.azure.storage.GenericTests;
 import com.microsoft.azure.storage.MaximumExecutionTimeTests;
@@ -28,6 +29,7 @@ import com.microsoft.azure.storage.StorageUriTests;
 public class CoreTestSuite {
     public static Test suite() {
         TestSuite suite = new TestSuite("CoreTestSuite");
+        suite.addTestSuite(AccountSasTests.class);
         suite.addTestSuite(EventFiringTests.class);
         suite.addTestSuite(GenericTests.class);
         suite.addTestSuite(MaximumExecutionTimeTests.class);
