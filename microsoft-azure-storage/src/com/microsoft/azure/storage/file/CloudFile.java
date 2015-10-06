@@ -32,13 +32,23 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.concurrent.TimeoutException;
 
 import com.microsoft.azure.storage.AccessCondition;
+import com.microsoft.azure.storage.Constants;
+import com.microsoft.azure.storage.DoesServiceRequest;
+import com.microsoft.azure.storage.IPRange;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.SharedAccessProtocols;
+import com.microsoft.azure.storage.StorageCredentials;
+import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
+import com.microsoft.azure.storage.StorageErrorCode;
+import com.microsoft.azure.storage.StorageErrorCodeStrings;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.StorageLocation;
+import com.microsoft.azure.storage.StorageUri;
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
-import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.core.Base64;
 import com.microsoft.azure.storage.core.ExecutionEngine;
 import com.microsoft.azure.storage.core.Logger;
@@ -52,20 +62,12 @@ import com.microsoft.azure.storage.core.StorageRequest;
 import com.microsoft.azure.storage.core.StreamMd5AndLength;
 import com.microsoft.azure.storage.core.UriQueryBuilder;
 import com.microsoft.azure.storage.core.Utility;
-import com.microsoft.azure.storage.DoesServiceRequest;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.StorageCredentials;
-import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
-import com.microsoft.azure.storage.StorageErrorCode;
-import com.microsoft.azure.storage.StorageErrorCodeStrings;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.StorageLocation;
-import com.microsoft.azure.storage.StorageUri;
+import com.microsoft.azure.storage.core.WrappedByteArrayOutputStream;
 
 /**
  * Represents a Microsoft Azure File.
  */
-public class CloudFile implements ListFileItem {
+public final class CloudFile implements ListFileItem {
     /**
      * Holds the number of bytes to buffer when writing to a {@link FileOutputStream}.
      */
@@ -119,8 +121,10 @@ public class CloudFile implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
+     * @throws URISyntaxException
+     *             If the resource URI is invalid.
      */
-    public CloudFile(final URI fileAbsoluteUri) throws StorageException {
+    public CloudFile(final URI fileAbsoluteUri) throws StorageException, URISyntaxException {
         this(new StorageUri(fileAbsoluteUri));
     }
 
@@ -132,9 +136,11 @@ public class CloudFile implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
+     * @throws URISyntaxException
+     *             If the resource URI is invalid.
      */
-    public CloudFile(final StorageUri fileAbsoluteUri) throws StorageException {
-        this(fileAbsoluteUri, (StorageCredentials)null);
+    public CloudFile(final StorageUri fileAbsoluteUri) throws StorageException, URISyntaxException {
+        this(fileAbsoluteUri, null);
     }
     
     /**
@@ -168,95 +174,6 @@ public class CloudFile implements ListFileItem {
     public CloudFile(final StorageUri fileAbsoluteUri, final StorageCredentials credentials) throws StorageException {    
         this.parseQueryAndVerify(fileAbsoluteUri, credentials);
     }
-    
-    /**
-     * Creates an instance of the <code>CloudFile</code> class using the specified absolute URI and storage service
-     * client.
-     * 
-     * @param fileAbsoluteUri
-     *            A <code>java.net.URI</code> object that represents the absolute URI to the file.
-     * @param client
-     *            A {@link CloudFileClient} object that specifies the endpoint for the file service.
-     * 
-     * @throws StorageException
-     *             If a storage service error occurred.
-     * @throws URISyntaxException
-     * @deprecated as of 3.0.0. Please use {@link CloudFile#CloudFile(URI, StorageCredentials)}
-     */
-    @Deprecated
-    public CloudFile(final URI fileAbsoluteUri, final CloudFileClient client) throws StorageException,
-            URISyntaxException {
-        this(new StorageUri(fileAbsoluteUri), client);
-    }
-
-    /**
-     * Creates an instance of the <code>CloudFile</code> class using the specified URI and storage service client.
-     * 
-     * @param fileAbsoluteUri
-     *            A {@link StorageUri} object that represents the absolute URI to the file.
-     * @param client
-     *            A {@link CloudFileClient} object that specifies the endpoint for the file service.
-     * 
-     * @throws StorageException
-     *             If a storage service error occurred.
-     * @throws URISyntaxException
-     * @deprecated as of 3.0.0. Please use {@link CloudFile#CloudFile(StorageUri, StorageCredentials)}
-     */
-    @Deprecated
-    public CloudFile(final StorageUri fileAbsoluteUri, final CloudFileClient client) throws StorageException,
-            URISyntaxException {
-        this.parseQueryAndVerify(fileAbsoluteUri, client == null ? null : client.getCredentials());
-        
-        // Override the client set in parseQueryAndVerify to make sure request options are propagated.
-        if (client != null) {
-            this.fileServiceClient = client;
-        }
-    }
-
-    /**
-     * Creates an instance of the <code>CloudFile</code> class using the specified absolute URI, storage service
-     * client and share.
-     * 
-     * @param fileAbsoluteUri
-     *            A <code>java.net.URI</code> object that represents the absolute URI to the file.
-     * @param client
-     *            A {@link CloudFileClient} object that specifies the endpoint for the file service.
-     * @param share
-     *            A {@link CloudFileShare} object that represents the share to use for the file.
-     * 
-     * @throws StorageException
-     *             If a storage service error occurred.
-     * @throws URISyntaxException
-     * @deprecated as of 3.0.0. Please use {@link CloudFile#CloudFile(URI, StorageCredentials)}
-     */
-    @Deprecated
-    public CloudFile(final URI fileAbsoluteUri, final CloudFileClient client, final CloudFileShare share)
-            throws StorageException, URISyntaxException {
-        this(new StorageUri(fileAbsoluteUri), client, share);
-    }
-
-    /**
-     * Creates an instance of the <code>CloudFile</code> class using the specified absolute StorageUri, storage
-     * service client and share.
-     * 
-     * @param fileAbsoluteUri
-     *            A {@link StorageUri} object that represents the absolute URI to the file.
-     * @param client
-     *            A {@link CloudFileClient} object that specifies the endpoint for the file service.
-     * @param share
-     *            A {@link CloudFileShare} object that represents the share to use for the file.
-     * 
-     * @throws StorageException
-     *             If a storage service error occurred.
-     * @throws URISyntaxException
-     * @deprecated as of 3.0.0. Please use {@link CloudFile#CloudFile(StorageUri, StorageCredentials)}
-     */
-    @Deprecated
-    public CloudFile(final StorageUri fileAbsoluteUri, final CloudFileClient client, final CloudFileShare share)
-            throws StorageException, URISyntaxException {
-        this(fileAbsoluteUri, client);
-        this.share = share;
-    }
 
     /**
      * Creates an instance of the <code>CloudFile</code> class by copying values from another cloud file.
@@ -280,6 +197,28 @@ public class CloudFile implements ListFileItem {
         this.name = otherFile.name;
         this.setStreamMinimumReadSizeInBytes(otherFile.getStreamMinimumReadSizeInBytes());
         this.setStreamWriteSizeInBytes(otherFile.getStreamWriteSizeInBytes());
+    }
+    
+    /**
+     * Creates an instance of the <code>CloudFile</code> class using the specified address, share,
+     * and client.
+     * 
+     * @param uri
+     *            A {@link StorageUri} that represents the file directory's address.
+     * @param fileName
+     *            A <code>String</code> that represents the name of the file.
+     * @param share
+     *            A {@link CloudFileShare} object that represents the associated file share.
+     */
+    protected CloudFile(final StorageUri uri, final String fileName, final CloudFileShare share) {
+        Utility.assertNotNull("uri", uri);
+        Utility.assertNotNull("fileName", fileName);
+        Utility.assertNotNull("share", share);
+
+        this.name = fileName;
+        this.fileServiceClient = share.getServiceClient();
+        this.share = share;
+        this.storageUri = uri;
     }
 
     /**
@@ -997,10 +936,12 @@ public class CloudFile implements ListFileItem {
         }
 
         options = FileRequestOptions.populateAndApplyDefaults(options, this.fileServiceClient);
-
-        return ExecutionEngine.executeWithRetry(this.fileServiceClient, this, this.downloadToByteArrayImpl(fileOffset,
-                length, buffer, bufferOffset, accessCondition, options, opContext), options.getRetryPolicyFactory(),
-                opContext);
+        
+        WrappedByteArrayOutputStream outputStream = new WrappedByteArrayOutputStream(buffer, bufferOffset);
+        ExecutionEngine.executeWithRetry(this.fileServiceClient, this,
+                this.downloadToStreamImpl(fileOffset, length, outputStream, accessCondition, options, opContext),
+                options.getRetryPolicyFactory(), opContext);
+        return outputStream.getPosition();
     }
 
     /**
@@ -1131,10 +1072,12 @@ public class CloudFile implements ListFileItem {
 
         opContext.initialize();
         options = FileRequestOptions.populateAndApplyDefaults(options, this.fileServiceClient);
-
-        return ExecutionEngine.executeWithRetry(this.fileServiceClient, this,
-                this.downloadToByteArrayImpl(null, null, buffer, bufferOffset, accessCondition, options, opContext),
+        
+        WrappedByteArrayOutputStream outputStream = new WrappedByteArrayOutputStream(buffer, bufferOffset);
+        ExecutionEngine.executeWithRetry(this.fileServiceClient, this,
+                this.downloadToStreamImpl(null, null, outputStream, accessCondition, options, opContext),
                 options.getRetryPolicyFactory(), opContext);
+        return outputStream.getPosition();
     }
 
     /**
@@ -1349,151 +1292,6 @@ public class CloudFile implements ListFileItem {
         return getRequest;
     }
 
-    private StorageRequest<CloudFileClient, CloudFile, Integer> downloadToByteArrayImpl(final Long fileOffset,
-            final Long length, final byte[] buffer, final int bufferOffset, final AccessCondition accessCondition,
-            final FileRequestOptions options, OperationContext opContext) {
-        final long startingOffset = fileOffset == null ? 0 : fileOffset;
-        final boolean isRangeGet = fileOffset != null;
-        final StorageRequest<CloudFileClient, CloudFile, Integer> getRequest = new StorageRequest<CloudFileClient, CloudFile, Integer>(
-                options, this.getStorageUri()) {
-
-            @Override
-            public void setRequestLocationMode() {
-                this.setRequestLocationMode(RequestLocationMode.PRIMARY_OR_SECONDARY);
-            }
-
-            @Override
-            public HttpURLConnection buildRequest(CloudFileClient client, CloudFile file, OperationContext context)
-                    throws Exception {
-                // The first time this is called, we have to set the length and offset.
-                // On retries, these will already have values and need not be called.
-                if (this.getOffset() == null) {
-                    this.setOffset(fileOffset);
-                }
-
-                if (this.getLength() == null) {
-                    this.setLength(length);
-                }
-
-                // Only do this when we have support from the service.  
-                // AccessCondition tempCondition = (this.getETagLockCondition() != null) ? this.getETagLockCondition()
-                //       : accessCondition;
-                return FileRequest.getFile(file.getTransformedAddress(context).getUri(this.getCurrentLocation()),
-                        options, context, accessCondition, this.getOffset(), this.getLength(),
-                        (options.getUseTransactionalContentMD5() && !this.getArePropertiesPopulated()));
-            }
-
-            @Override
-            public void signRequest(HttpURLConnection connection, CloudFileClient client, OperationContext context)
-                    throws Exception {
-                StorageRequest.signBlobQueueAndFileRequest(connection, client, -1L, context);
-            }
-
-            @Override
-            public Integer preProcessResponse(CloudFile file, CloudFileClient client, OperationContext context)
-                    throws Exception {
-                return preProcessDownloadResponse(this, options, client, file, context, isRangeGet);
-            }
-
-            @Override
-            public Integer postProcessResponse(HttpURLConnection connection, CloudFile file, CloudFileClient client,
-                    OperationContext context, Integer storageObject) throws Exception {
-
-                final String contentLength = connection.getHeaderField(Constants.HeaderConstants.CONTENT_LENGTH);
-                final long expectedLength = Long.parseLong(contentLength);
-
-                Logger.info(context, String.format(SR.CREATING_NETWORK_STREAM, expectedLength));
-
-                final NetworkInputStream sourceStream = new NetworkInputStream(connection.getInputStream(),
-                        expectedLength);
-
-                try {
-                    int totalRead = 0;
-                    int nextRead = buffer.length - bufferOffset;
-                    int count = sourceStream.read(buffer, bufferOffset, nextRead);
-
-                    while (count > 0) {
-                        // if maximum execution time would be exceeded
-                        if (Utility.validateMaxExecutionTimeout(options.getOperationExpiryTimeInMs())) {
-                            // throw an exception
-                            TimeoutException timeoutException = new TimeoutException(
-                                    SR.MAXIMUM_EXECUTION_TIMEOUT_EXCEPTION);
-                            throw Utility.initIOException(timeoutException);
-                        }
-
-                        totalRead += count;
-                        this.setCurrentRequestByteCount(this.getCurrentRequestByteCount() + count);
-
-                        nextRead = buffer.length - (bufferOffset + totalRead);
-
-                        if (nextRead == 0) {
-                            // check for case where more data is returned
-                            if (sourceStream.read(new byte[1], 0, 1) != -1) {
-                                throw new StorageException(StorageErrorCodeStrings.OUT_OF_RANGE_INPUT,
-                                        SR.CONTENT_LENGTH_MISMATCH, Constants.HeaderConstants.HTTP_UNUSED_306, null,
-                                        null);
-                            }
-                        }
-
-                        count = sourceStream.read(buffer, bufferOffset + totalRead, nextRead);
-                    }
-
-                    if (totalRead != expectedLength) {
-                        throw new StorageException(StorageErrorCodeStrings.OUT_OF_RANGE_INPUT,
-                                SR.CONTENT_LENGTH_MISMATCH, Constants.HeaderConstants.HTTP_UNUSED_306, null, null);
-                    }
-                }
-                finally {
-                    // Close the stream. Closing an already closed stream is harmless. So its fine to try 
-                    // to drain the response and close the stream again in the executor.
-                    sourceStream.close();
-                }
-
-                final Boolean validateMD5 = !options.getDisableContentMD5Validation()
-                        && !Utility.isNullOrEmpty(this.getContentMD5());
-                if (validateMD5) {
-                    try {
-                        final MessageDigest digest = MessageDigest.getInstance("MD5");
-                        digest.update(buffer, bufferOffset, (int) this.getCurrentRequestByteCount());
-
-                        final String calculatedMD5 = Base64.encode(digest.digest());
-                        if (!this.getContentMD5().equals(calculatedMD5)) {
-                            throw new StorageException(StorageErrorCodeStrings.INVALID_MD5, String.format(
-                                    SR.FILE_HASH_MISMATCH, this.getContentMD5(), calculatedMD5),
-                                    Constants.HeaderConstants.HTTP_UNUSED_306, null, null);
-                        }
-                    }
-                    catch (final NoSuchAlgorithmException e) {
-                        // This wont happen, throw fatal.
-                        throw Utility.generateNewUnexpectedStorageException(e);
-                    }
-                }
-
-                return (int) this.getCurrentRequestByteCount();
-            }
-
-            @Override
-            public void recoveryAction(OperationContext context) throws IOException {
-                if (this.getETagLockCondition() == null && (!Utility.isNullOrEmpty(this.getLockedETag()))) {
-                    AccessCondition etagLockCondition = new AccessCondition();
-                    etagLockCondition.setIfMatch(this.getLockedETag());
-                    if (accessCondition != null) {
-                        etagLockCondition.setLeaseID(accessCondition.getLeaseID());
-                    }
-                    this.setETagLockCondition(etagLockCondition);
-                }
-
-                if (this.getCurrentRequestByteCount() > 0) {
-                    this.setOffset(startingOffset + this.getCurrentRequestByteCount());
-                    if (length != null) {
-                        this.setLength(length - this.getCurrentRequestByteCount());
-                    }
-                }
-            }
-        };
-        return getRequest;
-    }
-
     @DoesServiceRequest
     private final StorageRequest<CloudFileClient, CloudFile, Integer> downloadToStreamImpl(final Long fileOffset,
             final Long length, final OutputStream outStream, final AccessCondition accessCondition,
@@ -1541,7 +1339,53 @@ public class CloudFile implements ListFileItem {
             @Override
             public Integer preProcessResponse(CloudFile file, CloudFileClient client, OperationContext context)
                     throws Exception {
-                return preProcessDownloadResponse(this, options, client, file, context, isRangeGet);
+                if (this.getResult().getStatusCode() != HttpURLConnection.HTTP_PARTIAL
+                        && this.getResult().getStatusCode() != HttpURLConnection.HTTP_OK) {
+                    this.setNonExceptionedRetryableFailure(true);
+                    return null;
+                }
+
+                if (!this.getArePropertiesPopulated()) {
+                    String originalContentMD5 = null;
+
+                    final FileAttributes retrievedAttributes = FileResponse.getFileAttributes(this.getConnection(),
+                            file.getStorageUri());
+
+                    // Do not update Content-MD5 if it is a range get. 
+                    if (isRangeGet) {
+                        originalContentMD5 = file.properties.getContentMD5();
+                    }
+                    else {
+                        originalContentMD5 = retrievedAttributes.getProperties().getContentMD5();
+                    }
+
+                    if (!options.getDisableContentMD5Validation() && options.getUseTransactionalContentMD5()
+                            && Utility.isNullOrEmpty(retrievedAttributes.getProperties().getContentMD5())) {
+                        throw new StorageException(StorageErrorCodeStrings.MISSING_MD5_HEADER, SR.MISSING_MD5,
+                                Constants.HeaderConstants.HTTP_UNUSED_306, null, null);
+                    }
+
+                    file.properties = retrievedAttributes.getProperties();
+                    file.metadata = retrievedAttributes.getMetadata();
+                    this.setContentMD5(retrievedAttributes.getProperties().getContentMD5());
+                    file.properties.setContentMD5(originalContentMD5);
+                    this.setLockedETag(file.properties.getEtag());
+                    this.setArePropertiesPopulated(true);
+                }
+                else {
+                    if (this.getLockedETag() != null) {
+                        if (!this.getLockedETag().equals(file.properties.getEtag())) {
+                            throw new StorageException(StorageErrorCode.CONDITION_FAILED.toString(),
+                                    SR.INVALID_CONDITIONAL_HEADERS, HttpURLConnection.HTTP_PRECON_FAILED, null, null);
+                        }
+                    }
+                }
+
+                // If the download fails and we need to resume the download, going to the
+                // same storage location is important to prevent a possible ETag mismatch.
+                this.setRequestLocationMode((this.getResult().getTargetLocation() == StorageLocation.PRIMARY) ?
+                        RequestLocationMode.PRIMARY_ONLY : RequestLocationMode.SECONDARY_ONLY);
+                return null;
             }
 
             @Override
@@ -1598,59 +1442,6 @@ public class CloudFile implements ListFileItem {
         };
 
         return getRequest;
-
-    }
-
-    private Integer preProcessDownloadResponse(final StorageRequest<CloudFileClient, CloudFile, Integer> request,
-            final FileRequestOptions options, final CloudFileClient client, final CloudFile file,
-            final OperationContext context, final boolean isRangeGet) throws Exception {
-        if (request.getResult().getStatusCode() != HttpURLConnection.HTTP_PARTIAL
-                && request.getResult().getStatusCode() != HttpURLConnection.HTTP_OK) {
-            request.setNonExceptionedRetryableFailure(true);
-            return null;
-        }
-
-        if (!request.getArePropertiesPopulated()) {
-            String originalContentMD5 = null;
-
-            final FileAttributes retrievedAttributes = FileResponse.getFileAttributes(request.getConnection(),
-                    file.getStorageUri());
-
-            // Do not update Content-MD5 if it is a range get. 
-            if (isRangeGet) {
-                originalContentMD5 = file.properties.getContentMD5();
-            }
-            else {
-                originalContentMD5 = retrievedAttributes.getProperties().getContentMD5();
-            }
-
-            if (!options.getDisableContentMD5Validation() && options.getUseTransactionalContentMD5()
-                    && Utility.isNullOrEmpty(retrievedAttributes.getProperties().getContentMD5())) {
-                throw new StorageException(StorageErrorCodeStrings.MISSING_MD5_HEADER, SR.MISSING_MD5,
-                        Constants.HeaderConstants.HTTP_UNUSED_306, null, null);
-            }
-
-            file.properties = retrievedAttributes.getProperties();
-            file.metadata = retrievedAttributes.getMetadata();
-            request.setContentMD5(retrievedAttributes.getProperties().getContentMD5());
-            file.properties.setContentMD5(originalContentMD5);
-            request.setLockedETag(file.properties.getEtag());
-            request.setArePropertiesPopulated(true);
-        }
-        else {
-            if (request.getLockedETag() != null) {
-                if (!request.getLockedETag().equals(file.properties.getEtag())) {
-                    throw new StorageException(StorageErrorCode.CONDITION_FAILED.toString(),
-                            SR.INVALID_CONDITIONAL_HEADERS, HttpURLConnection.HTTP_PRECON_FAILED, null, null);
-                }
-            }
-        }
-
-        // If the download fails and we need to resume the download, going to the
-        // same storage location is important to prevent a possible ETag mismatch.
-        request.setRequestLocationMode((request.getResult().getTargetLocation() == StorageLocation.PRIMARY) ?
-                RequestLocationMode.PRIMARY_ONLY : RequestLocationMode.SECONDARY_ONLY);
-        return null;
     }
 
     /**
@@ -1892,18 +1683,55 @@ public class CloudFile implements ListFileItem {
      * @throws StorageException
      *             If a storage service error occurred.
      */
-    public String generateSharedAccessSignature(final SharedAccessFilePolicy policy,
-            final SharedAccessFileHeaders headers, final String groupPolicyIdentifier)
+    public String generateSharedAccessSignature(
+            final SharedAccessFilePolicy policy, final SharedAccessFileHeaders headers, final String groupPolicyIdentifier)
             throws InvalidKeyException, StorageException {
+
+        return this.generateSharedAccessSignature(policy, headers, groupPolicyIdentifier,
+                null /* IP range */, null /* protocols */);
+    }
+    
+    /**
+     * Returns a shared access signature for the file using the specified group policy identifier and
+     * shared access file headers. Note this does not contain the leading "?".
+     *
+     * @param policy
+     *            A <code>{@link SharedAccessFilePolicy}</code> object that represents the access policy for the shared
+     *            access signature.
+     * @param headers
+     *            A <code>{@link SharedAccessFileHeaders}</code> object that represents the optional header values to
+     *            set for a file accessed with this shared access signature.
+     * @param groupPolicyIdentifier
+     *            A <code>String</code> that represents the share-level access policy.
+     * @param ipRange
+     *            A {@link IPRange} object containing the range of allowed IP addresses.
+     * @param protocols
+     *            A {@link SharedAccessProtocols} representing the allowed Internet protocols.
+     *
+     * @return A <code>String</code> that represents the shared access signature.
+     *
+     * @throws IllegalArgumentException
+     *             If the credentials are invalid.
+     * @throws InvalidKeyException
+     *             If the credentials are invalid.
+     * @throws StorageException
+     *             If a storage service error occurred.
+     */
+    public String generateSharedAccessSignature(
+            final SharedAccessFilePolicy policy, final SharedAccessFileHeaders headers,
+            final String groupPolicyIdentifier, final IPRange ipRange, final SharedAccessProtocols protocols)
+            throws InvalidKeyException, StorageException {
+
         if (!StorageCredentialsHelper.canCredentialsSignRequest(this.fileServiceClient.getCredentials())) {
             throw new IllegalArgumentException(SR.CANNOT_CREATE_SAS_WITHOUT_ACCOUNT_KEY);
         }
 
         final String signature = SharedAccessSignatureHelper.generateSharedAccessSignatureHashForBlobAndFile(
-                policy, headers, groupPolicyIdentifier, this.getCanonicalName(), this.fileServiceClient);
+                policy, headers, groupPolicyIdentifier, this.getCanonicalName(),
+                ipRange, protocols, this.fileServiceClient);
 
         final UriQueryBuilder builder = SharedAccessSignatureHelper.generateSharedAccessSignatureForBlobAndFile(
-                policy, headers, groupPolicyIdentifier, "f", signature);
+                policy, headers, groupPolicyIdentifier, "f", ipRange, protocols, signature);
 
         return builder.toString();
     }
@@ -1961,7 +1789,7 @@ public class CloudFile implements ListFileItem {
      * Opens a file input stream to download the file using the specified request options and
      * operation context.
      * <p>
-     * Use {@link CloudFile#setStreamMinimumReadSizeInBytes(int)} to configure the read size.
+     * Use {@link #setStreamMinimumReadSizeInBytes(int)} to configure the read size.
      * 
      * @param accessCondition
      *            An {@link AccessCondition} object that represents the access conditions for the file.
@@ -2901,13 +2729,12 @@ public class CloudFile implements ListFileItem {
      * @throws URISyntaxException
      *             If the resource URI is invalid.
      */
-    @SuppressWarnings("deprecation")
     @Override
     public final CloudFileShare getShare() throws StorageException, URISyntaxException {
         if (this.share == null) {
             final StorageUri shareUri = PathUtility.getShareURI(this.getStorageUri(),
                     this.fileServiceClient.isUsePathStyleUris());
-            this.share = new CloudFileShare(shareUri, this.fileServiceClient);
+            this.share = new CloudFileShare(shareUri, this.fileServiceClient.getCredentials());
         }
 
         return this.share;
@@ -2941,7 +2768,6 @@ public class CloudFile implements ListFileItem {
      * @throws URISyntaxException
      *             If the resource URI is invalid.
      */
-    @SuppressWarnings("deprecation")
     @Override
     public final CloudFileDirectory getParent() throws URISyntaxException, StorageException {
         if (this.parent == null) {
@@ -2949,7 +2775,7 @@ public class CloudFile implements ListFileItem {
 
             if (parentName != null) {
                 StorageUri parentURI = PathUtility.appendPathToUri(this.share.getStorageUri(), parentName);
-                this.parent = new CloudFileDirectory(parentURI, this.getServiceClient());
+                this.parent = new CloudFileDirectory(parentURI, this.getServiceClient().getCredentials());
             }
         }
         return this.parent;

@@ -12,39 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.microsoft.azure.storage.blob;
+package com.microsoft.azure.storage;
 
 /**
- * Specifies the set of possible permissions for a shared access policy.
+ * Specifies the set of possible permissions for a shared access protocol.
  */
-public enum SharedAccessBlobPermissions {
+public enum SharedAccessProtocols {
     /**
-     * Specifies Read access granted.
+     * Permission to use SAS only through https granted.
      */
-    READ,
+    HTTPS_ONLY(Constants.HTTPS),
 
     /**
-     * Specifies Add access granted.
+     * Permission to use SAS only through https or http granted.
      */
-    ADD,
-
-    /**
-     * Specifies Create access granted.
-     */
-    CREATE,
-
-    /**
-     * Specifies Write access granted.
-     */
-    WRITE,
-
-    /**
-     * Specifies Delete access granted.
-     */
-    DELETE,
-
-    /**
-     * Specifies List access granted.
-     */
-    LIST;
+    HTTPS_HTTP(Constants.HTTPS_HTTP);
+    
+    private final String protocols;
+    
+    private SharedAccessProtocols(String p) {
+        this.protocols = p;
+    }
+    
+    @Override
+    public String toString() {
+        return this.protocols;
+    }
 }

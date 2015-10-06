@@ -55,10 +55,6 @@ import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.RequestOptions;
 import com.microsoft.azure.storage.ResultContinuation;
 import com.microsoft.azure.storage.ResultContinuationType;
-import com.microsoft.azure.storage.StorageCredentials;
-import com.microsoft.azure.storage.StorageCredentialsAccountAndKey;
-import com.microsoft.azure.storage.StorageCredentialsAnonymous;
-import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageErrorCode;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
@@ -216,42 +212,6 @@ public final class Utility {
         }
 
         return retVal;
-    }
-
-    /**
-     * Returns a value that indicates whether the specified credentials are equal.
-     * 
-     * @param thisCred
-     *            An object derived from {@link StorageCredentials} that represents the first set of credentials being
-     *            compared for equality.
-     * @param thatCred
-     *            An object derived from <code>StorageCredentials</code> that represents the second set of credentials
-     *            being compared for equality.
-     * 
-     * @return <code>true</code> if the credentials are equal; otherwise, <code>false</code>.
-     */
-    public static boolean areCredentialsEqual(final StorageCredentials thisCred, final StorageCredentials thatCred) {
-        if (thisCred == thatCred) {
-            return true;
-        }
-
-        if (thisCred == null || thatCred == null || thisCred.getClass() != thatCred.getClass()) {
-            return false;
-        }
-
-        if (thisCred instanceof StorageCredentialsAccountAndKey) {
-            return ((StorageCredentialsAccountAndKey) thisCred).toString(true).equals(
-                    ((StorageCredentialsAccountAndKey) thatCred).toString(true));
-        }
-        else if (thisCred instanceof StorageCredentialsSharedAccessSignature) {
-            return ((StorageCredentialsSharedAccessSignature) thisCred).getToken().equals(
-                    ((StorageCredentialsSharedAccessSignature) thatCred).getToken());
-        }
-        else if (thisCred instanceof StorageCredentialsAnonymous) {
-            return true;
-        }
-
-        return thisCred.equals(thatCred);
     }
 
     /**

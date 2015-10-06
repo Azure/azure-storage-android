@@ -14,6 +14,7 @@
  */
 package com.microsoft.azure.storage;
 
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
@@ -29,6 +30,11 @@ public final class OperationContext {
      * operation context instance by using setLoggingEnabled.
      */
     private static Integer defaultLogLevel;
+
+    /**
+     * Represents a proxy to be used when making a request.
+     */
+    private Proxy proxy;
 
     /**
      * Represents the operation latency, in milliseconds, from the client's perspective. This may include any potential
@@ -171,6 +177,15 @@ public final class OperationContext {
         else {
             return this.requestResults.get(this.requestResults.size() - 1);
         }
+    }
+
+    /**
+     * Gets a proxy which will be used when making a request. Default is <code>null</code>.
+     * 
+     * @return A {@link java.net.Proxy} to use when making a request.
+     */
+    public Proxy getProxy() {
+        return this.proxy;
     }
 
     /**
@@ -346,6 +361,16 @@ public final class OperationContext {
      */
     public static void setDefaultLogLevel(Integer defaultLogLevel) {
         OperationContext.defaultLogLevel = defaultLogLevel;
+    }
+
+    /**
+     * Sets a proxy which will be used when making a request. Default is <code>null</code>.
+     * 
+     * @param proxy
+     *            A {@link java.net.Proxy} to use when making a request.
+     */
+    public void setProxy(Proxy proxy) {
+        this.proxy = proxy;
     }
 
     /**

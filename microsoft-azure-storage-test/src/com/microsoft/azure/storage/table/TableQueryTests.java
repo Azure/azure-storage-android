@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 import junit.framework.TestCase;
@@ -117,6 +118,62 @@ public class TableQueryTests extends TestCase {
         assertEquals(EdmType.STRING, ent.getProperties().get("F").getEdmType());
     }
 
+    public void testTableQueryProjectionWithNull() throws URISyntaxException, StorageException {
+        CloudTable table = TableTestHelper.getRandomTableReference();
+        try {
+            // Create a new table so we don't pollute the main query table
+            table.createIfNotExists();
+
+            // Insert an entity which is missing String and IntegerPrimitive
+            DynamicTableEntity entity = new DynamicTableEntity(UUID.randomUUID().toString(), UUID.randomUUID()
+                    .toString());
+            table.execute(TableOperation.insert(entity));
+
+            testTableQueryProjectionWithSpecialCases(table);
+        }
+        finally {
+            table.deleteIfExists();
+        }
+    }
+
+    public void testTableQueryProjectionWithIncorrectTypes() throws URISyntaxException, StorageException {
+        CloudTable table = TableTestHelper.getRandomTableReference();
+        try {
+            // Create a new table so we don't pollute the main query table
+            table.createIfNotExists();
+
+            // Insert an entity with String as an int, and IntegerPrimitive as a bool
+            DynamicTableEntity entity = new DynamicTableEntity(UUID.randomUUID().toString(), UUID.randomUUID()
+                    .toString());
+            entity.getProperties().put("String", new EntityProperty(1234));
+            entity.getProperties().put("IntegerPrimitive", new EntityProperty(true));
+            table.execute(TableOperation.insert(entity));
+
+            testTableQueryProjectionWithSpecialCases(table);
+        }
+        finally {
+            table.deleteIfExists();
+        }
+    }
+
+    private void testTableQueryProjectionWithSpecialCases(CloudTable table) {
+        // Query on String and IntegerPrimitive
+        TableQuery<ComplexEntity> query = TableQuery.from(ComplexEntity.class).select(
+                new String[] { "String", "IntegerPrimitive"});
+        Iterable<ComplexEntity> iterable = table.execute(query);
+
+        List<ComplexEntity> entities = new ArrayList<ComplexEntity>();
+        for (ComplexEntity entity : iterable) {
+            entities.add(entity);
+        }
+
+        // Verify A has a set value and B and E have class defaults
+        assertEquals(1, entities.size());
+        ComplexEntity entity = entities.get(0);
+        assertNull(entity.getString());
+        assertEquals(-1, entity.getIntegerPrimitive());
+    }
+
     public void testTableQueryWithSpecialChars() throws StorageException, URISyntaxException {
         CloudTable table = TableTestHelper.getRandomTableReference();
 
@@ -127,7 +184,7 @@ public class TableQueryTests extends TestCase {
             testTableQueryWithSpecialChars('=', table);
             testTableQueryWithSpecialChars('_', table);
             testTableQueryWithSpecialChars(' ', table);
-            testTableQueryWithSpecialChars('Œ', table);
+            testTableQueryWithSpecialChars('ç•Œ', table);
         }
         finally {
             table.deleteIfExists();

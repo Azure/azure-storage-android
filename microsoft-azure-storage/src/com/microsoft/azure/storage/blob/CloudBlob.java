@@ -27,26 +27,23 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.concurrent.TimeoutException;
 
 import com.microsoft.azure.storage.AccessCondition;
 import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.DoesServiceRequest;
+import com.microsoft.azure.storage.IPRange;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.SharedAccessPolicy;
+import com.microsoft.azure.storage.SharedAccessProtocols;
 import com.microsoft.azure.storage.StorageCredentials;
 import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.StorageLocation;
 import com.microsoft.azure.storage.StorageUri;
-import com.microsoft.azure.storage.core.Base64;
 import com.microsoft.azure.storage.core.ExecutionEngine;
 import com.microsoft.azure.storage.core.Logger;
 import com.microsoft.azure.storage.core.NetworkInputStream;
@@ -59,6 +56,7 @@ import com.microsoft.azure.storage.core.StorageRequest;
 import com.microsoft.azure.storage.core.StreamMd5AndLength;
 import com.microsoft.azure.storage.core.UriQueryBuilder;
 import com.microsoft.azure.storage.core.Utility;
+import com.microsoft.azure.storage.core.WrappedByteArrayOutputStream;
 
 /**
  * Represents a Microsoft Azure blob. This is the base class for the {@link CloudBlockBlob} and {@link CloudPageBlob}
@@ -114,108 +112,33 @@ public abstract class CloudBlob implements ListBlobItem {
      * Represents the blob client.
      */
     protected CloudBlobClient blobServiceClient;
-
-    /**
-     * Creates an instance of the <code>CloudBlob</code> class.
-     *
-     * @param type
-     *            A {@link BlobType} value which represents the type of the blob.
-     */
-    protected CloudBlob(final BlobType type) {
-        this.properties = new BlobProperties(type);
-    }
-
-    /**
-     * Creates an instance of the <code>CloudBlob</code> class using the specified URI and cloud blob client.
-     *
-     * @param type
-     *            A {@link BlobType} value which represents the type of the blob.
-     * @param uri
-     *            A {@link StorageUri} object that represents the URI to the blob, beginning with the container name.
-     * @param client
-     *            A {@link CloudBlobClient} object that specifies the endpoint for the Blob service.
-     *
-     * @throws StorageException
-     *             If a storage service error occurred.
-     */
-    protected CloudBlob(final BlobType type, final StorageUri uri, final CloudBlobClient client)
-            throws StorageException {
-        this(type);
-        this.parseQueryAndVerify(uri, client == null ? null : client.getCredentials());
-
-        // Override the client set in parseQueryAndVerify to make sure request options are propagated.
-        if (client != null) {
-            this.blobServiceClient = client;
-        }
-    }
-
-    /**
-     * Creates an instance of the <code>CloudBlob</code> class using the specified URI, cloud blob client, and cloud
-     * blob container.
-     *
-     * @param type
-     *            A {@link BlobType} value which represents the type of the blob.
-     * @param uri
-     *            A {@link StorageUri} object that represents the URI to the blob, beginning with the container name.
-     * @param client
-     *            A {@link CloudBlobClient} object that specifies the endpoint for the Blob service.
-     * @param container
-     *            A {@link CloudBlobContainer} object that represents the container to use for the blob.
-     *
-     * @throws StorageException
-     *             If a storage service error occurred.
-     */
-    protected CloudBlob(final BlobType type, final StorageUri uri, final CloudBlobClient client,
-            final CloudBlobContainer container) throws StorageException {
-        this(type, uri, client);
-        this.container = container;
-    }
     
     /**
-     * Creates an instance of the <code>CloudBlob</code> class using the specified URI, snapshot ID, and cloud blob
-     * client.
+     * Creates an instance of the <code>CloudBlob</code> class using the specified type, name, snapshot ID, and
+     * container.
      *
      * @param type
      *            A {@link BlobType} value which represents the type of the blob.
-     * @param uri
-     *            A {@link StorageUri} object that represents the URI to the blob, beginning with the container name.
+     * @param blobName
+     *            Name of the blob.
      * @param snapshotID
      *            A <code>String</code> that represents the snapshot version, if applicable.
-     * @param client
-     *            A {@link CloudBlobClient} object that specifies the endpoint for the Blob service.
-     *
-     * @throws StorageException
-     *             If a storage service error occurred.
+     * @param container
+     *            The reference to the parent container.
+     * @throws URISyntaxException
+     *             If the resource URI is invalid.
      */
-    protected CloudBlob(final BlobType type, final StorageUri uri, final String snapshotID, final CloudBlobClient client)
-            throws StorageException {
-        this(type, uri, client);
-        if (snapshotID != null) {
-            if (this.snapshotID != null) {
-                throw new IllegalArgumentException(SR.SNAPSHOT_QUERY_OPTION_ALREADY_DEFINED);
-            }
-            else {
-                this.snapshotID = snapshotID;
-            }
-        }
-    }
-    
-    /**
-     * Creates an instance of the <code>CloudBlob</code> class using the specified URI and cloud blob client.
-     *
-     * @param type
-     *            A {@link BlobType} value which represents the type of the blob.
-     * @param uri
-     *            A {@link StorageUri} object that represents the URI to the blob, beginning with the container name.
-     * @param credentials
-     *            A {@link StorageCredentials} object used to authenticate access.
-     *
-     * @throws StorageException
-     *             If a storage service error occurred.
-     */
-    protected CloudBlob(final BlobType type, final StorageUri uri, final StorageCredentials credentials)
-            throws StorageException {
-        this(type, uri, null /* snapshotID */, credentials);
+    protected CloudBlob(final BlobType type, String blobName, String snapshotID, CloudBlobContainer container)
+            throws URISyntaxException {
+        Utility.assertNotNullOrEmpty("blobName", blobName);
+        Utility.assertNotNull("container", container);
+
+        this.storageUri = PathUtility.appendPathToUri(container.getStorageUri(), blobName);
+        this.name = blobName;
+        this.blobServiceClient = container.getServiceClient();
+        this.container = container;
+        this.snapshotID = snapshotID;
+        this.properties = new BlobProperties(type);
     }
     
     /**
@@ -235,7 +158,7 @@ public abstract class CloudBlob implements ListBlobItem {
      */
     protected CloudBlob(final BlobType type, final StorageUri uri, final String snapshotID,
             final StorageCredentials credentials) throws StorageException {
-        this(type);
+        this.properties = new BlobProperties(type);
         this.parseQueryAndVerify(uri, credentials);
 
         if (snapshotID != null) {
@@ -713,123 +636,6 @@ public abstract class CloudBlob implements ListBlobItem {
     }
 
     /**
-     * Requests the service to start copying a blob's contents, properties, and metadata to a new blob.
-     *
-     * @param sourceBlob
-     *            A <code>CloudBlob</code> object that represents the source blob to copy.
-     *
-     * @return A <code>String</code> which represents the copy ID associated with the copy operation.
-     *
-     * @throws StorageException
-     *             If a storage service error occurred.
-     * @throws URISyntaxException
-     * 
-     * @deprecated as of 3.0.0. Use {@link CloudBlob#startCopy(URI)} instead.
-     */
-    @Deprecated
-    @DoesServiceRequest
-    public final String startCopyFromBlob(final CloudBlob sourceBlob) throws StorageException, URISyntaxException {
-        return this.startCopyFromBlob(sourceBlob, null /* sourceAccessCondition */,
-                null /* destinationAccessCondition */, null /* options */, null /* opContext */);
-    }
-
-    /**
-     * Requests the service to start copying a blob's contents, properties, and metadata to a new blob, using the
-     * specified access conditions, lease ID, request options, and operation context.
-     *
-     * @param sourceBlob
-     *            A <code>CloudBlob</code> object that represents the source blob to copy.
-     * @param sourceAccessCondition
-     *            An {@link AccessCondition} object that represents the access conditions for the source blob.
-     * @param destinationAccessCondition
-     *            An {@link AccessCondition} object that represents the access conditions for the destination blob.
-     * @param options
-     *            A {@link BlobRequestOptions} object that specifies any additional options for the request. Specifying
-     *            <code>null</code> will use the default request options from the associated service client (
-     *            {@link CloudBlobClient}).
-     * @param opContext
-     *            An {@link OperationContext} object that represents the context for the current operation. This object
-     *            is used to track requests to the storage service, and to provide additional runtime information about
-     *            the operation.
-     *
-     * @return A <code>String</code> which represents the copy ID associated with the copy operation.
-     *
-     * @throws StorageException
-     *             If a storage service error occurred.
-     * @throws URISyntaxException
-     * 
-     * @deprecated as of 3.0.0. Use {@link CloudBlob#startCopy(
-     *             URI, AccessCondition, AccessCondition, BlobRequestOptions, OperationContext)} instead.
-     */
-    @Deprecated
-    @DoesServiceRequest
-    public final String startCopyFromBlob(final CloudBlob sourceBlob, final AccessCondition sourceAccessCondition,
-            final AccessCondition destinationAccessCondition, BlobRequestOptions options, OperationContext opContext)
-            throws StorageException, URISyntaxException {
-        Utility.assertNotNull("sourceBlob", sourceBlob);
-        return this.startCopy(
-                sourceBlob.getServiceClient().getCredentials().transformUri(sourceBlob.getQualifiedUri()),
-                sourceAccessCondition, destinationAccessCondition, options, opContext);
-    }
-
-    /**
-     * Requests the service to start copying a URI's contents, properties, and metadata to a new blob.
-     *
-     * @param source
-     *            A <code>java.net.URI</code> The source URI.  URIs for resources outside of Azure
-     *            may only be copied into block blobs.
-     *
-     * @return A <code>String</code> which represents the copy ID associated with the copy operation.
-     *
-     * @throws StorageException
-     *            If a storage service error occurred.
-     * 
-     * @deprecated as of 3.0.0. Use {@link CloudBlob#startCopy(URI)} instead.
-     */
-    @Deprecated
-    @DoesServiceRequest
-    public final String startCopyFromBlob(final URI source) throws StorageException {
-        return this.startCopy(source, null /* sourceAccessCondition */, null /* destinationAccessCondition */,
-                null /* options */, null /* opContext */);
-    }
-
-    /**
-     * Requests the service to start copying a URI's contents, properties, and metadata to a new blob, using the
-     * specified access conditions, lease ID, request options, and operation context.
-     *
-     * @param source
-     *            A <code>java.net.URI</code> The source URI.  URIs for resources outside of Azure
-     *            may only be copied into block blobs.
-     * @param sourceAccessCondition
-     *            An {@link AccessCondition} object that represents the access conditions for the source.
-     * @param destinationAccessCondition
-     *            An {@link AccessCondition} object that represents the access conditions for the destination.
-     * @param options
-     *            A {@link BlobRequestOptions} object that specifies any additional options for the request.
-     *            Specifying <code>null</code> will use the default request options from the associated
-     *            service client ({@link CloudBlobClient}).
-     * @param opContext
-     *            An {@link OperationContext} object that represents the context for the current operation.
-     *            This object is used to track requests to the storage service, and to provide additional
-     *            runtime information about the operation.
-     *
-     * @return A <code>String</code> which represents the copy ID associated with the copy operation.
-     *
-     * @throws StorageException
-     *            If a storage service error occurred.
-     * 
-     * @deprecated as of 3.0.0. Use {@link CloudBlob#startCopy(
-     *            URI, AccessCondition, AccessCondition, BlobRequestOptions, OperationContext)} instead.
-     */
-    @Deprecated
-    @DoesServiceRequest
-    public final String startCopyFromBlob(final URI source, final AccessCondition sourceAccessCondition,
-            final AccessCondition destinationAccessCondition, BlobRequestOptions options, OperationContext opContext)
-            throws StorageException {
-        return this.startCopy(source, sourceAccessCondition, destinationAccessCondition, options, opContext);
-    }
-
-    /**
      * Requests the service to start copying a URI's contents, properties, and metadata to a new blob.
      *
      * @param source
@@ -1039,7 +845,6 @@ public abstract class CloudBlob implements ListBlobItem {
                 StorageRequest.signBlobQueueAndFileRequest(connection, client, 0L, context);
             }
 
-            @SuppressWarnings("deprecation")
             @Override
             public CloudBlob preProcessResponse(CloudBlob blob, CloudBlobClient client, OperationContext context)
                     throws Exception {
@@ -1050,13 +855,13 @@ public abstract class CloudBlob implements ListBlobItem {
                 CloudBlob snapshot = null;
                 final String snapshotTime = BlobResponse.getSnapshotTime(this.getConnection());
                 if (blob instanceof CloudBlockBlob) {
-                    snapshot = new CloudBlockBlob(blob.getStorageUri(), snapshotTime, client);
+                    snapshot = new CloudBlockBlob(blob.getName(), snapshotTime, CloudBlob.this.getContainer());
                 }
                 else if (blob instanceof CloudPageBlob) {
-                    snapshot = new CloudPageBlob(blob.getStorageUri(), snapshotTime, client);
+                    snapshot = new CloudPageBlob(blob.getName(), snapshotTime, CloudBlob.this.getContainer());
                 }
                 else if (blob instanceof CloudAppendBlob) {
-                    snapshot = new CloudAppendBlob(blob.getStorageUri(), snapshotTime, client);
+                    snapshot = new CloudAppendBlob(blob.getName(), snapshotTime, CloudBlob.this.getContainer());
                 }
                 snapshot.setProperties(blob.properties);
 
@@ -1490,7 +1295,45 @@ public abstract class CloudBlob implements ListBlobItem {
             @Override
             public Integer preProcessResponse(CloudBlob blob, CloudBlobClient client, OperationContext context)
                     throws Exception {
-                return preProcessDownloadResponse(this, options, client, blob, context, isRangeGet);
+                if (this.getResult().getStatusCode() != HttpURLConnection.HTTP_PARTIAL
+                        && this.getResult().getStatusCode() != HttpURLConnection.HTTP_OK) {
+                    this.setNonExceptionedRetryableFailure(true);
+                    return null;
+                }
+
+                if (!this.getArePropertiesPopulated()) {
+                    String originalContentMD5 = null;
+
+                    final BlobAttributes retrievedAttributes = BlobResponse.getBlobAttributes(this.getConnection(),
+                            blob.getStorageUri(), blob.snapshotID);
+
+                    // Do not update Content-MD5 if it is a range get.
+                    if (isRangeGet) {
+                        originalContentMD5 = blob.properties.getContentMD5();
+                    }
+                    else {
+                        originalContentMD5 = retrievedAttributes.getProperties().getContentMD5();
+                    }
+
+                    if (!options.getDisableContentMD5Validation() && options.getUseTransactionalContentMD5()
+                            && Utility.isNullOrEmpty(retrievedAttributes.getProperties().getContentMD5())) {
+                        throw new StorageException(StorageErrorCodeStrings.MISSING_MD5_HEADER, SR.MISSING_MD5,
+                                Constants.HeaderConstants.HTTP_UNUSED_306, null, null);
+                    }
+
+                    blob.properties = retrievedAttributes.getProperties();
+                    blob.metadata = retrievedAttributes.getMetadata();
+                    this.setContentMD5(retrievedAttributes.getProperties().getContentMD5());
+                    blob.properties.setContentMD5(originalContentMD5);
+                    this.setLockedETag(blob.properties.getEtag());
+                    this.setArePropertiesPopulated(true);
+                }
+
+                // If the download fails and Get Blob needs to resume the download, going to the
+                // same storage location is important to prevent a possible ETag mismatch.
+                this.setRequestLocationMode(this.getResult().getTargetLocation() == StorageLocation.PRIMARY ? RequestLocationMode.PRIMARY_ONLY
+                        : RequestLocationMode.SECONDARY_ONLY);
+                return null;
             }
 
             @Override
@@ -1567,6 +1410,8 @@ public abstract class CloudBlob implements ListBlobItem {
      *            A {@link BlobRequestOptions} object that specifies any additional options for the request.
      * @param opContext
      *            An {@link OperationContext} object used to track the execution of the operation.
+     * @returns The total number of bytes read into the buffer.
+     * 
      * @throws StorageException
      *             an exception representing any error which occurred during the operation.
      */
@@ -1589,9 +1434,11 @@ public abstract class CloudBlob implements ListBlobItem {
             throw new IllegalArgumentException(SR.INVALID_RANGE_CONTENT_MD5_HEADER);
         }
 
-        return ExecutionEngine.executeWithRetry(this.blobServiceClient, this, this.downloadToByteArrayImpl(blobOffset,
-                length, buffer, bufferOffset, accessCondition, options, opContext), options.getRetryPolicyFactory(),
-                opContext);
+        WrappedByteArrayOutputStream outputStream = new WrappedByteArrayOutputStream(buffer, bufferOffset);
+        ExecutionEngine.executeWithRetry(this.blobServiceClient, this,
+                this.downloadToStreamImpl(blobOffset, length, outputStream, accessCondition, options, opContext),
+                options.getRetryPolicyFactory(), opContext);
+        return outputStream.getPosition();
     }
 
     /**
@@ -1603,15 +1450,16 @@ public abstract class CloudBlob implements ListBlobItem {
      *            A <code>Long</code> which represents the number of bytes to read or null.
      * @param buffer
      *            A <code>byte</code> array which represents the buffer to which the blob bytes are downloaded.
-     * @param bufferOffet
+     * @param bufferOffset
      *            An <code>int</code> which represents the byte offset to use as the starting point for the target.
-     *
+     * @returns The total number of bytes read into the buffer.
+     * 
      * @throws StorageException
      */
     @DoesServiceRequest
     public final int downloadRangeToByteArray(final long offset, final Long length, final byte[] buffer,
-            final int bufferOffet) throws StorageException {
-        return this.downloadRangeToByteArray(offset, length, buffer, bufferOffet, null /* accessCondition */,
+            final int bufferOffset) throws StorageException {
+        return this.downloadRangeToByteArray(offset, length, buffer, bufferOffset, null /* accessCondition */,
                 null /* options */, null /* opContext */);
     }
 
@@ -1637,7 +1485,8 @@ public abstract class CloudBlob implements ListBlobItem {
      *            An {@link OperationContext} object that represents the context for the current operation. This object
      *            is used to track requests to the storage service, and to provide additional runtime information about
      *            the operation.
-     *
+     * @returns The total number of bytes read into the buffer.
+     * 
      * @throws StorageException
      *             If a storage service error occurred.
      */
@@ -1668,16 +1517,16 @@ public abstract class CloudBlob implements ListBlobItem {
      *
      * @param buffer
      *            A <code>byte</code> array which represents the buffer to which the blob bytes are downloaded.
-     * @param bufferOffet
+     * @param bufferOffset
      *            An <code>int</code> which represents the byte offset to use as the starting point for the target.
      *
      * @throws StorageException
      *             If a storage service error occurred.
      */
     @DoesServiceRequest
-    public final int downloadToByteArray(final byte[] buffer, final int bufferOffet) throws StorageException {
+    public final int downloadToByteArray(final byte[] buffer, final int bufferOffset) throws StorageException {
         return this
-                .downloadToByteArray(buffer, bufferOffet, null /* accessCondition */, null /* options */, null /* opContext */);
+                .downloadToByteArray(buffer, bufferOffset, null /* accessCondition */, null /* options */, null /* opContext */);
     }
 
     /**
@@ -1723,152 +1572,11 @@ public abstract class CloudBlob implements ListBlobItem {
         opContext.initialize();
         options = BlobRequestOptions.populateAndApplyDefaults(options, this.properties.getBlobType(), this.blobServiceClient);
 
-        return ExecutionEngine.executeWithRetry(this.blobServiceClient, this,
-                this.downloadToByteArrayImpl(null, null, buffer, bufferOffset, accessCondition, options, opContext),
+        WrappedByteArrayOutputStream outputStream = new WrappedByteArrayOutputStream(buffer, bufferOffset);
+        ExecutionEngine.executeWithRetry(this.blobServiceClient, this,
+                this.downloadToStreamImpl(null, null, outputStream, accessCondition, options, opContext),
                 options.getRetryPolicyFactory(), opContext);
-    }
-
-    private StorageRequest<CloudBlobClient, CloudBlob, Integer> downloadToByteArrayImpl(final Long blobOffset,
-            final Long length, final byte[] buffer, final int bufferOffset, final AccessCondition accessCondition,
-            final BlobRequestOptions options, OperationContext opContext) {
-        final long startingOffset = blobOffset == null ? 0 : blobOffset;
-        final boolean isRangeGet = blobOffset != null;
-        final StorageRequest<CloudBlobClient, CloudBlob, Integer> getRequest = new StorageRequest<CloudBlobClient, CloudBlob, Integer>(
-                options, this.getStorageUri()) {
-
-            @Override
-            public void setRequestLocationMode() {
-                this.setRequestLocationMode(RequestLocationMode.PRIMARY_OR_SECONDARY);
-            }
-
-            @Override
-            public HttpURLConnection buildRequest(CloudBlobClient client, CloudBlob blob, OperationContext context)
-                    throws Exception {
-                // The first time this is called, we have to set the length and blob offset. On retries, these will already have values and need not be called.
-                if (this.getOffset() == null) {
-                    this.setOffset(blobOffset);
-                }
-
-                if (this.getLength() == null) {
-                    this.setLength(length);
-                }
-
-                AccessCondition tempCondition = (this.getETagLockCondition() != null) ? this.getETagLockCondition()
-                        : accessCondition;
-                return BlobRequest.getBlob(blob.getTransformedAddress(context).getUri(this.getCurrentLocation()),
-                        options, context, tempCondition, blob.snapshotID, this.getOffset(), this.getLength(),
-                        (options.getUseTransactionalContentMD5() && !this.getArePropertiesPopulated()));
-            }
-
-            @Override
-            public void signRequest(HttpURLConnection connection, CloudBlobClient client, OperationContext context)
-                    throws Exception {
-                StorageRequest.signBlobQueueAndFileRequest(connection, client, -1L, context);
-            }
-
-            @Override
-            public Integer preProcessResponse(CloudBlob blob, CloudBlobClient client, OperationContext context)
-                    throws Exception {
-                return preProcessDownloadResponse(this, options, client, blob, context, isRangeGet);
-            }
-
-            @Override
-            public Integer postProcessResponse(HttpURLConnection connection, CloudBlob blob, CloudBlobClient client,
-                    OperationContext context, Integer storageObject) throws Exception {
-
-                final String contentLength = connection.getHeaderField(Constants.HeaderConstants.CONTENT_LENGTH);
-                final long expectedLength = Long.parseLong(contentLength);
-
-                Logger.info(context, String.format(SR.CREATING_NETWORK_STREAM, expectedLength));
-
-                final NetworkInputStream sourceStream = new NetworkInputStream(connection.getInputStream(),
-                        expectedLength);
-
-                try {
-                    int totalRead = 0;
-                    int nextRead = buffer.length - bufferOffset;
-                    int count = sourceStream.read(buffer, bufferOffset, nextRead);
-
-                    while (count > 0) {
-                        // if maximum execution time would be exceeded
-                        if (Utility.validateMaxExecutionTimeout(options.getOperationExpiryTimeInMs())) {
-                            // throw an exception
-                            TimeoutException timeoutException = new TimeoutException(
-                                    SR.MAXIMUM_EXECUTION_TIMEOUT_EXCEPTION);
-                            throw Utility.initIOException(timeoutException);
-                        }
-
-                        totalRead += count;
-                        this.setCurrentRequestByteCount(this.getCurrentRequestByteCount() + count);
-
-                        nextRead = buffer.length - (bufferOffset + totalRead);
-
-                        if (nextRead == 0) {
-                            // check for case where more data is returned
-                            if (sourceStream.read(new byte[1], 0, 1) != -1) {
-                                throw new StorageException(StorageErrorCodeStrings.OUT_OF_RANGE_INPUT,
-                                        SR.CONTENT_LENGTH_MISMATCH, Constants.HeaderConstants.HTTP_UNUSED_306, null,
-                                        null);
-                            }
-                        }
-
-                        count = sourceStream.read(buffer, bufferOffset + totalRead, nextRead);
-                    }
-
-                    if (totalRead != expectedLength) {
-                        throw new StorageException(StorageErrorCodeStrings.OUT_OF_RANGE_INPUT,
-                                SR.CONTENT_LENGTH_MISMATCH, Constants.HeaderConstants.HTTP_UNUSED_306, null, null);
-                    }
-                }
-                finally {
-                    // Close the stream. Closing an already closed stream is harmless. So its fine to try
-                    // to drain the response and close the stream again in the executor.
-                    sourceStream.close();
-                }
-
-                final Boolean validateMD5 = !options.getDisableContentMD5Validation()
-                        && !Utility.isNullOrEmpty(this.getContentMD5());
-                if (validateMD5) {
-                    try {
-                        final MessageDigest digest = MessageDigest.getInstance("MD5");
-                        digest.update(buffer, bufferOffset, (int) this.getCurrentRequestByteCount());
-
-                        final String calculatedMD5 = Base64.encode(digest.digest());
-                        if (!this.getContentMD5().equals(calculatedMD5)) {
-                            throw new StorageException(StorageErrorCodeStrings.INVALID_MD5, String.format(
-                                    SR.BLOB_HASH_MISMATCH, this.getContentMD5(), calculatedMD5),
-                                    Constants.HeaderConstants.HTTP_UNUSED_306, null, null);
-                        }
-                    }
-                    catch (final NoSuchAlgorithmException e) {
-                        // This wont happen, throw fatal.
-                        throw Utility.generateNewUnexpectedStorageException(e);
-                    }
-                }
-
-                return (int) this.getCurrentRequestByteCount();
-            }
-
-            @Override
-            public void recoveryAction(OperationContext context) throws IOException {
-                if (this.getETagLockCondition() == null && (!Utility.isNullOrEmpty(this.getLockedETag()))) {
-                    AccessCondition etagLockCondition = new AccessCondition();
-                    etagLockCondition.setIfMatch(this.getLockedETag());
-                    if (accessCondition != null) {
-                        etagLockCondition.setLeaseID(accessCondition.getLeaseID());
-                    }
-                    this.setETagLockCondition(etagLockCondition);
-                }
-
-                if (this.getCurrentRequestByteCount() > 0) {
-                    this.setOffset(startingOffset + this.getCurrentRequestByteCount());
-                    if (length != null) {
-                        this.setLength(length - this.getCurrentRequestByteCount());
-                    }
-                }
-            }
-        };
-        return getRequest;
+        return outputStream.getPosition();
     }
 
     /**
@@ -2161,14 +1869,13 @@ public abstract class CloudBlob implements ListBlobItem {
 
         return this.generateSharedAccessSignature(policy, null /* headers */, groupPolicyIdentifier);
     }
-
+    
     /**
      * Returns a shared access signature for the blob using the specified group policy identifier and operation context.
      * Note this does not contain the leading "?".
      *
      * @param policy
-     *            A <code>{@link SharedAccessPolicy}</code> object that represents the access policy for the shared
-     *            access
+     *            A <code>SharedAccessPolicy</code> object that represents the access policy for the shared access
      *            signature.
      * @param headers
      *            A <code>{@link SharedAccessBlobHeaders}</code> object that represents the optional header values to
@@ -2185,25 +1892,60 @@ public abstract class CloudBlob implements ListBlobItem {
      * @throws StorageException
      *             If a storage service error occurred.
      */
-    public String generateSharedAccessSignature(final SharedAccessBlobPolicy policy,
-            final SharedAccessBlobHeaders headers, final String groupPolicyIdentifier) throws InvalidKeyException,
-            StorageException {
+    public String generateSharedAccessSignature(final SharedAccessBlobPolicy policy, final SharedAccessBlobHeaders headers,
+            final String groupPolicyIdentifier)
+            throws InvalidKeyException, StorageException {
+
+        return this.generateSharedAccessSignature(policy, headers, groupPolicyIdentifier,
+                null /* IP range */, null /* protocols */);
+    }
+    
+    /**
+     * Returns a shared access signature for the blob using the specified group policy identifier and operation context.
+     * Note this does not contain the leading "?".
+     *
+     * @param policy
+     *            A <code>{@link SharedAccessPolicy}</code> object that represents the access policy for the shared
+     *            access signature.
+     * @param headers
+     *            A <code>{@link SharedAccessBlobHeaders}</code> object that represents the optional header values to
+     *            set for a blob accessed with this shared access signature.
+     * @param groupPolicyIdentifier
+     *            A <code>String</code> that represents the container-level access policy.
+     * @param ipRange
+     *            A {@link IPRange} object containing the range of allowed IP addresses.
+     * @param protocols
+     *            A {@link SharedAccessProtocols} representing the allowed Internet protocols.
+     *
+     * @return A <code>String</code> that represents the shared access signature.
+     *
+     * @throws IllegalArgumentException
+     *             If the credentials are invalid or the blob is a snapshot.
+     * @throws InvalidKeyException
+     *             If the credentials are invalid.
+     * @throws StorageException
+     *             If a storage service error occurred.
+     */
+    public String generateSharedAccessSignature(
+            final SharedAccessBlobPolicy policy, final SharedAccessBlobHeaders headers,
+            final String groupPolicyIdentifier, final IPRange ipRange, final SharedAccessProtocols protocols)
+            throws InvalidKeyException, StorageException {
         
         if (!StorageCredentialsHelper.canCredentialsSignRequest(this.blobServiceClient.getCredentials())) {
             throw new IllegalArgumentException(SR.CANNOT_CREATE_SAS_WITHOUT_ACCOUNT_KEY);
         }
-
+        
         if (this.isSnapshot()) {
             throw new IllegalArgumentException(SR.CANNOT_CREATE_SAS_FOR_SNAPSHOTS);
         }
 
         final String resourceName = this.getCanonicalName(true);
 
-        final String signature = SharedAccessSignatureHelper.generateSharedAccessSignatureHashForBlobAndFile(policy, headers,
-                groupPolicyIdentifier, resourceName, this.blobServiceClient);
+        final String signature = SharedAccessSignatureHelper.generateSharedAccessSignatureHashForBlobAndFile(
+                policy, headers, groupPolicyIdentifier, resourceName, ipRange, protocols, this.blobServiceClient);
 
-        final UriQueryBuilder builder = SharedAccessSignatureHelper.generateSharedAccessSignatureForBlobAndFile(policy,
-                headers, groupPolicyIdentifier, "b", signature);
+        final UriQueryBuilder builder = SharedAccessSignatureHelper.generateSharedAccessSignatureForBlobAndFile(
+                policy, headers, groupPolicyIdentifier, "b", ipRange, protocols, signature);
 
         return builder.toString();
     }
@@ -2249,13 +1991,12 @@ public abstract class CloudBlob implements ListBlobItem {
      * @throws URISyntaxException
      *             If the resource URI is invalid.
      */
-    @SuppressWarnings("deprecation")
     @Override
     public final CloudBlobContainer getContainer() throws StorageException, URISyntaxException {
         if (this.container == null) {
             final StorageUri containerURI = PathUtility.getContainerURI(this.getStorageUri(),
                     this.blobServiceClient.isUsePathStyleUris());
-            this.container = new CloudBlobContainer(containerURI, this.blobServiceClient);
+            this.container = new CloudBlobContainer(containerURI, this.blobServiceClient.getCredentials());
         }
 
         return this.container;
@@ -3039,51 +2780,6 @@ public abstract class CloudBlob implements ListBlobItem {
         };
 
         return putRequest;
-    }
-
-    private Integer preProcessDownloadResponse(final StorageRequest<CloudBlobClient, CloudBlob, Integer> request,
-            final BlobRequestOptions options, final CloudBlobClient client, final CloudBlob blob,
-            final OperationContext context, final boolean isRangeGet) throws StorageException, URISyntaxException,
-            ParseException {
-        if (request.getResult().getStatusCode() != HttpURLConnection.HTTP_PARTIAL
-                && request.getResult().getStatusCode() != HttpURLConnection.HTTP_OK) {
-            request.setNonExceptionedRetryableFailure(true);
-            return null;
-        }
-
-        if (!request.getArePropertiesPopulated()) {
-            String originalContentMD5 = null;
-
-            final BlobAttributes retrievedAttributes = BlobResponse.getBlobAttributes(request.getConnection(),
-                    blob.getStorageUri(), blob.snapshotID);
-
-            // Do not update Content-MD5 if it is a range get.
-            if (isRangeGet) {
-                originalContentMD5 = blob.properties.getContentMD5();
-            }
-            else {
-                originalContentMD5 = retrievedAttributes.getProperties().getContentMD5();
-            }
-
-            if (!options.getDisableContentMD5Validation() && options.getUseTransactionalContentMD5()
-                    && Utility.isNullOrEmpty(retrievedAttributes.getProperties().getContentMD5())) {
-                throw new StorageException(StorageErrorCodeStrings.MISSING_MD5_HEADER, SR.MISSING_MD5,
-                        Constants.HeaderConstants.HTTP_UNUSED_306, null, null);
-            }
-
-            blob.properties = retrievedAttributes.getProperties();
-            blob.metadata = retrievedAttributes.getMetadata();
-            request.setContentMD5(retrievedAttributes.getProperties().getContentMD5());
-            blob.properties.setContentMD5(originalContentMD5);
-            request.setLockedETag(blob.properties.getEtag());
-            request.setArePropertiesPopulated(true);
-        }
-
-        // If the download fails and Get Blob needs to resume the download, going to the
-        // same storage location is important to prevent a possible ETag mismatch.
-        request.setRequestLocationMode(request.getResult().getTargetLocation() == StorageLocation.PRIMARY ? RequestLocationMode.PRIMARY_ONLY
-                : RequestLocationMode.SECONDARY_ONLY);
-        return null;
     }
 
     /**

@@ -542,8 +542,8 @@ public class TableClientTests extends TestCase {
                 transformedTable.execute(TableOperation.insert(ent));
             }
             catch (StorageException e) {
-                assertEquals(404, e.getHttpStatusCode());
-                assertEquals("ResourceNotFound", e.getExtendedErrorInformation().getErrorCode());
+                assertEquals(HttpURLConnection.HTTP_FORBIDDEN, e.getHttpStatusCode());
+                assertEquals("AuthorizationFailure", e.getExtendedErrorInformation().getErrorCode());
             }
 
             ent = new Class1("javatables_batch_1", "05");
@@ -552,8 +552,8 @@ public class TableClientTests extends TestCase {
                 transformedTable.execute(TableOperation.insert(ent));
             }
             catch (StorageException e) {
-                assertEquals(404, e.getHttpStatusCode());
-                assertEquals("ResourceNotFound", e.getExtendedErrorInformation().getErrorCode());
+                assertEquals(HttpURLConnection.HTTP_FORBIDDEN, e.getHttpStatusCode());
+                assertEquals("AuthorizationFailure", e.getExtendedErrorInformation().getErrorCode());
             }
 
         }
