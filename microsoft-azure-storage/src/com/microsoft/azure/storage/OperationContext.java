@@ -32,6 +32,12 @@ public final class OperationContext {
     private static Integer defaultLogLevel;
 
     /**
+     * Indicates whether the client library should use a proxy by default. The default can be overridden to
+     * enable proxy for an individual operation context instance by using {@link #setProxy}.
+     */
+    private static Proxy proxyDefault;
+
+    /**
      * Represents a proxy to be used when making a request.
      */
     private Proxy proxy;
@@ -364,7 +370,8 @@ public final class OperationContext {
     }
 
     /**
-     * Sets a proxy which will be used when making a request. Default is <code>null</code>.
+     * Sets a proxy which will be used when making a request. Default is <code>null</code>. To set a proxy to use by 
+     * default, use {@link #setDefaultProxy}
      * 
      * @param proxy
      *            A {@link java.net.Proxy} to use when making a request.
@@ -483,5 +490,26 @@ public final class OperationContext {
     public void setRetryingEventHandler(
             final StorageEventMultiCaster<RetryingEvent, StorageEvent<RetryingEvent>> retryingEventHandler) {
         this.retryingEventHandler = retryingEventHandler;
+    }
+
+    /**
+     * Gets the default proxy used by the client library if enabled. The default can be overridden
+     * to enable a proxy for an individual operation context instance by using {@link #setProxy}.
+     * 
+     * @return The default {@link java.net.Proxy} if set; otherwise <code>null</code>
+     */
+    public static Proxy getDefaultProxy() {
+        return OperationContext.proxyDefault;
+    }
+
+    /**
+     * Specifies the proxy the client library should use by default. The default can be overridden
+     * to turn on a proxy for an individual operation context instance by using {@link #setProxy}.
+     * 
+     * @param defaultProxy
+     *        The {@link java.net.Proxy} to use by default, or <code>null</code> to not use a proxy.
+     */
+    public static void setDefaultProxy(Proxy defaultProxy) {
+        OperationContext.proxyDefault = defaultProxy;
     }
 }
