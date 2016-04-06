@@ -32,6 +32,12 @@ public final class OperationContext {
     private static Integer defaultLogLevel;
 
     /**
+     * Indicates whether the client library should produce log entries by default. The default can be overridden to
+     * enable logging for an individual operation context instance by using {@link #setLoggingEnabled}.
+     */
+    private static boolean enableLoggingByDefault = false;
+    
+    /**
      * Indicates whether the client library should use a proxy by default. The default can be overridden to
      * enable proxy for an individual operation context instance by using {@link #setProxy}.
      */
@@ -186,7 +192,8 @@ public final class OperationContext {
     }
 
     /**
-     * Gets a proxy which will be used when making a request. Default is <code>null</code>.
+     * Gets a proxy which will be used when making a request. Default is <code>null</code>. To set a proxy to use by 
+     * default, use {@link #setDefaultProxy}
      * 
      * @return A {@link java.net.Proxy} to use when making a request.
      */

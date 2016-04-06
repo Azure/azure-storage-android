@@ -869,21 +869,6 @@ public class CloudPageBlobTests extends TestCase {
             assertEquals(expectedPageRanges.get(i).getEndOffset(), actualPageRanges.get(i).getEndOffset());
         }
     }
-
-    @Test
-    public void testDownloadPageRangesWithOffsetAndLength() throws StorageException, URISyntaxException, IOException {
-        final CloudPageBlob blobRef = setUpPageRanges();
-        
-        List<PageRange> actualPageRanges = blobRef.downloadPageRanges((long)1*512, (long)5*512);
-        List<PageRange> expectedPageRanges = new ArrayList<PageRange>();
-        expectedPageRanges.add(new PageRange(2 * 512, 5 * 512 - 1));
-
-        assertEquals(expectedPageRanges.size(), actualPageRanges.size());
-        for (int i = 0; i < expectedPageRanges.size(); i++) {
-            assertEquals(expectedPageRanges.get(i).getStartOffset(), actualPageRanges.get(i).getStartOffset());
-            assertEquals(expectedPageRanges.get(i).getEndOffset(), actualPageRanges.get(i).getEndOffset());
-        }
-    }
     
     @Test
     public void testDownloadPageRangeDiff() throws StorageException, URISyntaxException, IOException {
@@ -908,6 +893,21 @@ public class CloudPageBlobTests extends TestCase {
             assertEquals(expectedPageRanges.get(i).getStartOffset(), actualPageRanges.get(i).getStartOffset());
             assertEquals(expectedPageRanges.get(i).getEndOffset(), actualPageRanges.get(i).getEndOffset());
             assertEquals(expectedPageRanges.get(i).isCleared(), actualPageRanges.get(i).isCleared());
+        }
+    }
+
+    @Test
+    public void testDownloadPageRangesWithOffsetAndLength() throws StorageException, URISyntaxException, IOException {
+        final CloudPageBlob blobRef = setUpPageRanges();
+        
+        List<PageRange> actualPageRanges = blobRef.downloadPageRanges((long)1*512, (long)5*512);
+        List<PageRange> expectedPageRanges = new ArrayList<PageRange>();
+        expectedPageRanges.add(new PageRange(2 * 512, 5 * 512 - 1));
+
+        assertEquals(expectedPageRanges.size(), actualPageRanges.size());
+        for (int i = 0; i < expectedPageRanges.size(); i++) {
+            assertEquals(expectedPageRanges.get(i).getStartOffset(), actualPageRanges.get(i).getStartOffset());
+            assertEquals(expectedPageRanges.get(i).getEndOffset(), actualPageRanges.get(i).getEndOffset());
         }
     }
     

@@ -138,7 +138,7 @@ public class GenericTests extends TestCase {
         // Use a default proxy
         OperationContext.setDefaultProxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.1.1.1", 8888)));
 
-        // Turn of retries to make the failure happen faster
+        // Turn off retries to make the failure happen faster
         BlobRequestOptions opt = new BlobRequestOptions();
         opt.setRetryPolicyFactory(new RetryNoRetry());
         
