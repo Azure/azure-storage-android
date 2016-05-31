@@ -1054,8 +1054,7 @@ public final class CloudBlobContainer {
         };
 
         return getRequest;
-    }    
-    
+    }
     
     /**
      * Returns the metadata for the container. This value is initialized with the metadata from the queue by a call to
