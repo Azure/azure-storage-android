@@ -1,6 +1,7 @@
 2016.07.XX Version 0.8.0
- * Added support for getBlobReferenceFromServer methods on CloudBlobContainer to support retrieving a blob without knowing its type.
+ * Added support for server-side encryption.
  * Fixed a bug in the retry policies where 300 status codes were being retried when they shouldn't be.
+ * Added support for getBlobReferenceFromServer methods on CloudBlobContainer to support retrieving a blob without knowing its type.
  * Added support for setting a library-wide proxy. The default proxy can be set on OperationContext.
  * Added support in Page Blob for getting a list of differing page ranges between snapshot versions.
  * Added support in Page Blob for getting ranges of pages.
@@ -91,4 +92,4 @@
  * Fixed a bug where an empty file would be left over during the downloadToFile error case.
  * Updated StorageErrorCodeStrings class. 
  * Requests made using SAS credentials have the api-version query parameter appended to the URI.
- * Fixed a null pointer exception that resulted when the first request was made with a blob created using the uri-only constructor (no sas creds appended). 
+ * Fixed a null pointer exception that resulted when the first request was made with a blob created using the uri-only constructor (no sas creds appended).
