@@ -92,4 +92,4 @@
  * Fixed a bug where an empty file would be left over during the downloadToFile error case.
  * Updated StorageErrorCodeStrings class. 
  * Requests made using SAS credentials have the api-version query parameter appended to the URI.
- * Fixed a null pointer exception that resulted when the first request was made with a blob created using the uri-only constructor (no sas creds appended).
+ * Fixed a null pointer exception that resulted when the first request was made with a blob created using the uri-only constructor (no sas creds appended). 
