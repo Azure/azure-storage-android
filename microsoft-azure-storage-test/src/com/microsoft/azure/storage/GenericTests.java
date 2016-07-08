@@ -28,6 +28,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
+import org.junit.Test;
+
 import junit.framework.TestCase;
 
 import com.microsoft.azure.storage.blob.BlobOutputStream;

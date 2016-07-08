@@ -1,5 +1,7 @@
 2016.07.XX Version 0.8.0
  * Added support for setting a library-wide proxy. The default proxy can be set on OperationContext.
+ * Added support in Page Blob for getting a list of differing page ranges between snapshot versions.
+ * Added support in Page Blob for getting ranges of pages.
  * Removed deprecated table AtomPub support.
 
 2015.10.05 Version 0.7.0
