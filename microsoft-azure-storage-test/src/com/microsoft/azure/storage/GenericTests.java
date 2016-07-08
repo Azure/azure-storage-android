@@ -163,6 +163,22 @@ public class GenericTests extends TestCase {
         // Set a default proxy
         OperationContext.setDefaultProxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.1.1.1", 8888)));
 
+        // Turn off retries to make the failure happen faster
+        BlobRequestOptions opt = new BlobRequestOptions();
+        opt.setRetryPolicyFactory(new RetryNoRetry());
+        
+        // Unfortunately HttpURLConnection doesn't expose a getter and the usingProxy method it does have doesn't 
+        // work as one would expect and will always for us return false. So, we validate by making sure the request
+        // fails when we set a bad proxy rather than check the proxy setting itself succeeding.
+        try {
+            container.exists(null, opt, null);
+            fail("Bad proxy should throw an exception.");
+        }
+        catch (StorageException e) {
+            assertEquals(ConnectException.class, e.getCause().getClass());
+            assertEquals("Connection timed out: connect", e.getCause().getMessage());
+        }
+        
         // Override it with no proxy
         OperationContext opContext = new OperationContext();
         opContext.setProxy(Proxy.NO_PROXY);
