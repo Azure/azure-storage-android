@@ -20,6 +20,7 @@ import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -28,6 +29,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import junit.framework.TestCase;
@@ -47,6 +49,16 @@ import com.microsoft.azure.storage.table.CloudTableClient;
 
 public class GenericTests extends TestCase {
 
+	@Override
+    public void setUp() {
+        OperationContext.setDefaultProxy(Proxy.NO_PROXY);
+    }
+	
+	@Override
+    public void tearDown() {
+		OperationContext.setDefaultProxy(Proxy.NO_PROXY);
+    }
+	
     public void testReadTimeoutIssue() throws URISyntaxException, StorageException, IOException {
         // part 1
         byte[] buffer = BlobTestHelper.getRandomBuffer(1 * 1024 * 1024);
@@ -125,8 +137,11 @@ public class GenericTests extends TestCase {
             fail("Bad proxy should throw an exception.");
         }
         catch (StorageException e) {
-            assertEquals(ConnectException.class, e.getCause().getClass());
-            assertEquals("Connection timed out: connect", e.getCause().getMessage());
+        	if (e.getCause().getClass() != ConnectException.class && 
+        		e.getCause().getClass() != SocketTimeoutException.class)
+        	{
+        		Assert.fail("Unepected exception for bad proxy");
+        	}
         }
     }
 
@@ -150,8 +165,11 @@ public class GenericTests extends TestCase {
             fail("Bad proxy should throw an exception.");
         }
         catch (StorageException e) {
-            assertEquals(ConnectException.class, e.getCause().getClass());
-            assertEquals("Connection timed out: connect", e.getCause().getMessage());
+        	if (e.getCause().getClass() != ConnectException.class &&
+        		e.getCause().getClass() != SocketTimeoutException.class)
+        	{
+        		Assert.fail("Unepected exception for bad proxy");
+        	}
         }
     }
     
@@ -175,8 +193,11 @@ public class GenericTests extends TestCase {
             fail("Bad proxy should throw an exception.");
         }
         catch (StorageException e) {
-            assertEquals(ConnectException.class, e.getCause().getClass());
-            assertEquals("Connection timed out: connect", e.getCause().getMessage());
+        	if (e.getCause().getClass() != ConnectException.class &&
+        		e.getCause().getClass() != SocketTimeoutException.class)
+        	{
+        		Assert.fail("Unepected exception for bad proxy");
+        	}
         }
         
         // Override it with no proxy
