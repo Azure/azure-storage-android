@@ -81,7 +81,7 @@ public class CloudBlobServerEncryptionTests {
         ctxt.getRequestCompletedEventHandler().addListener(new StorageEvent<RequestCompletedEvent>() {
             @Override
             public void eventOccurred(RequestCompletedEvent eventArg) {
-            	Assert.assertTrue(eventArg.getRequestResult().isRequestServiceEncrypted());
+                Assert.assertTrue(eventArg.getRequestResult().isRequestServiceEncrypted());
                 CloudBlobServerEncryptionTests.this.requestFound = true;
             }
         });

@@ -49,16 +49,16 @@ import com.microsoft.azure.storage.table.CloudTableClient;
 
 public class GenericTests extends TestCase {
 
-	@Override
+    @Override
     public void setUp() {
         OperationContext.setDefaultProxy(Proxy.NO_PROXY);
     }
-	
+
 	@Override
     public void tearDown() {
-		OperationContext.setDefaultProxy(Proxy.NO_PROXY);
+        OperationContext.setDefaultProxy(Proxy.NO_PROXY);
     }
-	
+
     public void testReadTimeoutIssue() throws URISyntaxException, StorageException, IOException {
         // part 1
         byte[] buffer = BlobTestHelper.getRandomBuffer(1 * 1024 * 1024);
@@ -137,11 +137,11 @@ public class GenericTests extends TestCase {
             fail("Bad proxy should throw an exception.");
         }
         catch (StorageException e) {
-        	if (e.getCause().getClass() != ConnectException.class && 
-        		e.getCause().getClass() != SocketTimeoutException.class)
-        	{
-        		Assert.fail("Unepected exception for bad proxy");
-        	}
+            if (e.getCause().getClass() != ConnectException.class && 
+                e.getCause().getClass() != SocketTimeoutException.class)
+            {
+                Assert.fail("Unepected exception for bad proxy");
+            }
         }
     }
 
@@ -165,14 +165,14 @@ public class GenericTests extends TestCase {
             fail("Bad proxy should throw an exception.");
         }
         catch (StorageException e) {
-        	if (e.getCause().getClass() != ConnectException.class &&
-        		e.getCause().getClass() != SocketTimeoutException.class)
-        	{
-        		Assert.fail("Unepected exception for bad proxy");
-        	}
+            if (e.getCause().getClass() != ConnectException.class &&
+                e.getCause().getClass() != SocketTimeoutException.class)
+            {
+                Assert.fail("Unepected exception for bad proxy");
+            }
         }
     }
-    
+
     @Test
     public void testProxyOverridesDefault() throws URISyntaxException, StorageException {
         CloudBlobClient blobClient = TestHelper.createCloudBlobClient();
@@ -207,7 +207,7 @@ public class GenericTests extends TestCase {
         // Should succeed as request-level proxy should override the bad default proxy
         container.exists(null, null, opContext);
     }
-    
+
     /**
      * Make sure that if a request throws an error when it is being built that the request is not sent.
      * 
@@ -347,7 +347,7 @@ public class GenericTests extends TestCase {
         milliDate = Utility.parseDate(fullDateString);
         assertEquals(milliDate.getTime(), millisSinceEpoch);
     }
-    
+
     public void testDateStringParsing() throws ParseException {
         // 2014-12-07T09:15:12.123Z  from Java
         testDate("2014-12-07T09:15:12.123Z", 1417943712123L, 0, false, false);
@@ -375,7 +375,7 @@ public class GenericTests extends TestCase {
         // 2015-02-14T03:11:13.0000229Z  from .Net
         testDate("2015-02-14T03:11:13.0000229Z", 1423883473000L, 229, true, false);
     }
-    
+
     public void testDateStringParsingWithBackwardCompatibility() throws ParseException {
         // 2014-12-07T09:15:12.123Z  from Java
         testDate("2014-12-07T09:15:12.123Z", 1417943712123L, 0, false, true);

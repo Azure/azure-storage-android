@@ -7,6 +7,7 @@ The Azure Storage development team uses Eclipse so instructions will be tailored
 * [Eclipse](https://eclipse.org/downloads/)
 * [Maven plugin for Eclipse](http://www.eclipse.org/m2e/index.html). Some Eclipse packages (ex Eclipse IDE for Java Developers) may come with this plugin already installed.
 * [Maven](https://maven.apache.org/install.html)
+* [Jackson-Core](https://github.com/FasterXML/jackson-core) is used for JSON parsing. 
 * Clone the source code from GitHub
 
 ### Open Solution

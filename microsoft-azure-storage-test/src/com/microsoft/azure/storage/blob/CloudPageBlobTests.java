@@ -881,21 +881,21 @@ public class CloudPageBlobTests extends TestCase {
     }
 
     @Test
-	public void testDownloadPageRangesWithOffsetAndLength() throws StorageException, URISyntaxException, IOException {
-	    final CloudPageBlob blobRef = setUpPageRanges();
-	    
-	    List<PageRange> actualPageRanges = blobRef.downloadPageRanges((long)1*512, (long)5*512);
-	    List<PageRange> expectedPageRanges = new ArrayList<PageRange>();
-	    expectedPageRanges.add(new PageRange(2 * 512, 5 * 512 - 1));
-	
-	    assertEquals(expectedPageRanges.size(), actualPageRanges.size());
-	    for (int i = 0; i < expectedPageRanges.size(); i++) {
-	        assertEquals(expectedPageRanges.get(i).getStartOffset(), actualPageRanges.get(i).getStartOffset());
-	        assertEquals(expectedPageRanges.get(i).getEndOffset(), actualPageRanges.get(i).getEndOffset());
-	    }
-	}
+    public void testDownloadPageRangesWithOffsetAndLength() throws StorageException, URISyntaxException, IOException {
+        final CloudPageBlob blobRef = setUpPageRanges();
+        
+        List<PageRange> actualPageRanges = blobRef.downloadPageRanges((long)1*512, (long)5*512);
+        List<PageRange> expectedPageRanges = new ArrayList<PageRange>();
+        expectedPageRanges.add(new PageRange(2 * 512, 5 * 512 - 1));
 
-	@Test
+        assertEquals(expectedPageRanges.size(), actualPageRanges.size());
+        for (int i = 0; i < expectedPageRanges.size(); i++) {
+            assertEquals(expectedPageRanges.get(i).getStartOffset(), actualPageRanges.get(i).getStartOffset());
+            assertEquals(expectedPageRanges.get(i).getEndOffset(), actualPageRanges.get(i).getEndOffset());
+        }
+    }
+
+    @Test
     public void testDownloadPageRangesWithOffset() throws StorageException, URISyntaxException, IOException {
         final CloudPageBlob blobRef = setUpPageRanges();
         
@@ -922,7 +922,7 @@ public class CloudPageBlobTests extends TestCase {
 
         List<PageRangeDiff> actualPageRanges = blobRef.downloadPageRangesDiff(snapshot.getSnapshotID(), (long) 0,
                 (long) 5 * 512, null, null, null);
-        
+
         List<PageRangeDiff> expectedPageRanges = new ArrayList<PageRangeDiff>();
         expectedPageRanges.add(new PageRangeDiff(0, 512 - 1, false));
 
@@ -933,7 +933,7 @@ public class CloudPageBlobTests extends TestCase {
             assertEquals(expectedPageRanges.get(i).isCleared(), actualPageRanges.get(i).isCleared());
         }
     }
-    
+
     @Test
     public void testUploadDownloadBlobProperties() throws URISyntaxException, StorageException, IOException {
         final int length = 512;

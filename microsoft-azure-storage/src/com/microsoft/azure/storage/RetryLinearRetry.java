@@ -80,7 +80,7 @@ public final class RetryLinearRetry extends RetryPolicy implements RetryPolicyFa
             
             // If this method is called after a successful response, it means
             // we failed during the response body download. So, we should not
-            // check for success codes here.            
+            // check for success codes here.
             int statusCode = retryContext.getLastRequestResult().getStatusCode();
             if ((!secondaryNotFound && statusCode >= 300 && statusCode < 500 && statusCode != 408)
                     || statusCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED
