@@ -2016,10 +2016,8 @@ public abstract class CloudBlob implements ListBlobItem {
      *
      * @return A <code>String</code> that represents the name of the blob.
      *
-     * @throws URISyntaxException
-     *             If the resource URI is invalid.
      */
-    public final String getName() throws URISyntaxException {
+    public final String getName() {
         return this.name;
     }
 
@@ -2689,6 +2687,7 @@ public abstract class CloudBlob implements ListBlobItem {
                 }
 
                 blob.updateEtagAndLastModifiedFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(CloudBlob.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
         };
@@ -2837,5 +2836,9 @@ public abstract class CloudBlob implements ListBlobItem {
         }
 
         return parentName;
+    }
+    
+    protected static boolean isServerRequestEncrypted(HttpURLConnection connection) {
+        return Constants.TRUE.equals(connection.getHeaderField(Constants.HeaderConstants.SERVER_REQUEST_ENCRYPTED));
     }
 }

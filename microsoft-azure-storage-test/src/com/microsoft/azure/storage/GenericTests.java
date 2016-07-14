@@ -16,7 +16,11 @@ package com.microsoft.azure.storage;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -24,6 +28,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 import junit.framework.TestCase;
 
@@ -41,6 +48,16 @@ import com.microsoft.azure.storage.table.CloudTable;
 import com.microsoft.azure.storage.table.CloudTableClient;
 
 public class GenericTests extends TestCase {
+
+    @Override
+    public void setUp() {
+        OperationContext.setDefaultProxy(Proxy.NO_PROXY);
+    }
+
+	@Override
+    public void tearDown() {
+        OperationContext.setDefaultProxy(Proxy.NO_PROXY);
+    }
 
     public void testReadTimeoutIssue() throws URISyntaxException, StorageException, IOException {
         // part 1
@@ -97,6 +114,98 @@ public class GenericTests extends TestCase {
             inputStream2.close();
             container2.deleteIfExists();
         }
+    }
+    
+    @Test
+    public void testProxy() throws URISyntaxException, StorageException {
+        CloudBlobClient blobClient = TestHelper.createCloudBlobClient();
+        CloudBlobContainer container = blobClient.getContainerReference("container1");
+        
+        // Use a request-level proxy
+        OperationContext opContext = new OperationContext();
+        opContext.setProxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.1.1.1", 8888)));
+
+        // Turn of retries to make the failure happen faster
+        BlobRequestOptions opt = new BlobRequestOptions();
+        opt.setRetryPolicyFactory(new RetryNoRetry());
+        
+        // Unfortunately HttpURLConnection doesn't expose a getter and the usingProxy method it does have doesn't 
+        // work as one would expect and will always for us return false. So, we validate by making sure the request
+        // fails when we set a bad proxy rather than check the proxy setting itself.
+        try {
+            container.exists(null, opt, opContext);
+            fail("Bad proxy should throw an exception.");
+        }
+        catch (StorageException e) {
+            if (e.getCause().getClass() != ConnectException.class && 
+                e.getCause().getClass() != SocketTimeoutException.class)
+            {
+                Assert.fail("Unepected exception for bad proxy");
+            }
+        }
+    }
+
+    @Test
+    public void testDefaultProxy() throws URISyntaxException, StorageException {        
+        CloudBlobClient blobClient = TestHelper.createCloudBlobClient();
+        CloudBlobContainer container = blobClient.getContainerReference("container1");
+        
+        // Use a default proxy
+        OperationContext.setDefaultProxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.1.1.1", 8888)));
+
+        // Turn off retries to make the failure happen faster
+        BlobRequestOptions opt = new BlobRequestOptions();
+        opt.setRetryPolicyFactory(new RetryNoRetry());
+        
+        // Unfortunately HttpURLConnection doesn't expose a getter and the usingProxy method it does have doesn't 
+        // work as one would expect and will always for us return false. So, we validate by making sure the request
+        // fails when we set a bad proxy rather than check the proxy setting itself succeeding.
+        try {
+            container.exists(null, opt, null);
+            fail("Bad proxy should throw an exception.");
+        }
+        catch (StorageException e) {
+            if (e.getCause().getClass() != ConnectException.class &&
+                e.getCause().getClass() != SocketTimeoutException.class)
+            {
+                Assert.fail("Unepected exception for bad proxy");
+            }
+        }
+    }
+
+    @Test
+    public void testProxyOverridesDefault() throws URISyntaxException, StorageException {
+        CloudBlobClient blobClient = TestHelper.createCloudBlobClient();
+        CloudBlobContainer container = blobClient.getContainerReference("container1");
+        
+        // Set a default proxy
+        OperationContext.setDefaultProxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.1.1.1", 8888)));
+
+        // Turn off retries to make the failure happen faster
+        BlobRequestOptions opt = new BlobRequestOptions();
+        opt.setRetryPolicyFactory(new RetryNoRetry());
+        
+        // Unfortunately HttpURLConnection doesn't expose a getter and the usingProxy method it does have doesn't 
+        // work as one would expect and will always for us return false. So, we validate by making sure the request
+        // fails when we set a bad proxy rather than check the proxy setting itself succeeding.
+        try {
+            container.exists(null, opt, null);
+            fail("Bad proxy should throw an exception.");
+        }
+        catch (StorageException e) {
+        	if (e.getCause().getClass() != ConnectException.class &&
+        		e.getCause().getClass() != SocketTimeoutException.class)
+        	{
+        		Assert.fail("Unepected exception for bad proxy");
+        	}
+        }
+        
+        // Override it with no proxy
+        OperationContext opContext = new OperationContext();
+        opContext.setProxy(Proxy.NO_PROXY);
+        
+        // Should succeed as request-level proxy should override the bad default proxy
+        container.exists(null, null, opContext);
     }
 
     /**
@@ -238,7 +347,7 @@ public class GenericTests extends TestCase {
         milliDate = Utility.parseDate(fullDateString);
         assertEquals(milliDate.getTime(), millisSinceEpoch);
     }
-    
+
     public void testDateStringParsing() throws ParseException {
         // 2014-12-07T09:15:12.123Z  from Java
         testDate("2014-12-07T09:15:12.123Z", 1417943712123L, 0, false, false);
@@ -266,7 +375,7 @@ public class GenericTests extends TestCase {
         // 2015-02-14T03:11:13.0000229Z  from .Net
         testDate("2015-02-14T03:11:13.0000229Z", 1423883473000L, 229, true, false);
     }
-    
+
     public void testDateStringParsingWithBackwardCompatibility() throws ParseException {
         // 2014-12-07T09:15:12.123Z  from Java
         testDate("2014-12-07T09:15:12.123Z", 1417943712123L, 0, false, true);

@@ -14,15 +14,20 @@
  */
 package com.microsoft.azure.storage;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Test;
+
 import junit.framework.TestCase;
 
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.BlobTestHelper;
+import com.microsoft.azure.storage.blob.BlobType;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
@@ -620,6 +625,32 @@ public class SecondaryTests extends TestCase {
                 StorageLocation.SECONDARY, retryContextList, retryInfoList);
         testTableDownloadPermissions(null, LocationMode.SECONDARY_THEN_PRIMARY, StorageLocation.SECONDARY,
                 retryContextList, retryInfoList);
+    }
+    
+    @Test
+    public void testRetryOn304() throws StorageException, IOException, URISyntaxException {
+        OperationContext operationContext = new OperationContext();
+        operationContext.getRetryingEventHandler().addListener(new StorageEvent<RetryingEvent>() {
+            @Override
+            public void eventOccurred(RetryingEvent eventArg) {
+                fail("Request should not be retried.");
+            }
+        });
+
+        CloudBlobContainer container = BlobTestHelper.getRandomContainerReference();
+        try {
+            container.create();
+            CloudBlockBlob blockBlobRef = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(container, BlobType.BLOCK_BLOB,
+                    "originalBlob", 1024, null);
+            AccessCondition accessCondition = AccessCondition.generateIfNoneMatchCondition(blockBlobRef.getProperties().getEtag());
+            blockBlobRef.download(new ByteArrayOutputStream(), accessCondition, null, operationContext);
+            
+            fail("Download should fail with a 304.");
+        } catch (StorageException ex) {
+            assertEquals("The condition specified using HTTP conditional header(s) is not met.", ex.getMessage());
+        } finally {
+            container.deleteIfExists();
+        }
     }
 
     private static void AddUpdatedLocationModes(List<RetryContext> retryContextList, List<RetryInfo> retryInfoList) {

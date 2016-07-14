@@ -1,3 +1,12 @@
+2016.07.14 Version 0.8.0
+ * Added support for server-side encryption.
+ * Fixed a bug in the retry policies where 300 status codes were being retried when they shouldn't be.
+ * Added support for getBlobReferenceFromServer methods on CloudBlobContainer to support retrieving a blob without knowing its type.
+ * Added support for setting a library-wide proxy. The default proxy can be set on OperationContext.
+ * Added support in Page Blob for getting a list of differing page ranges between snapshot versions.
+ * Added support in Page Blob for getting ranges of pages.
+ * Removed deprecated table AtomPub support.
+
 2015.10.05 Version 0.7.0
  * Fixed a bug in table where a select on a non-existent field resulted in a null reference exception if the corresponding field in the TableEntity was not nullable.
  * Fixed a bug in table where JsonParser was automatically closing the response stream before it was completely drained causing socket exhaustion.
@@ -83,4 +92,4 @@
  * Fixed a bug where an empty file would be left over during the downloadToFile error case.
  * Updated StorageErrorCodeStrings class. 
  * Requests made using SAS credentials have the api-version query parameter appended to the URI.
- * Fixed a null pointer exception that resulted when the first request was made with a blob created using the uri-only constructor (no sas creds appended). 
+ * Fixed a null pointer exception that resulted when the first request was made with a blob created using the uri-only constructor (no sas creds appended).

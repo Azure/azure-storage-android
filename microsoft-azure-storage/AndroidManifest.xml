@@ -11,7 +11,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.microsoft.azure.android"
     android:versionCode="0"
-    android:versionName="0.7.0" >    <uses-sdk
+    android:versionName="0.8.0" >    <uses-sdk
         android:minSdkVersion="15"
         android:targetSdkVersion="22" />
 
