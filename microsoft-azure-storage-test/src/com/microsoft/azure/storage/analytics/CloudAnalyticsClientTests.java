@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,6 +13,20 @@
  * limitations under the License.
  */
 package com.microsoft.azure.storage.analytics;
+
+import com.microsoft.azure.storage.Constants;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.StorageLocation;
+import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import com.microsoft.azure.storage.blob.ListBlobItem;
+import com.microsoft.azure.storage.table.CloudTable;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.net.URI;
@@ -26,40 +40,39 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import junit.framework.TestCase;
-
-import com.microsoft.azure.storage.Constants;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.StorageLocation;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import com.microsoft.azure.storage.blob.CloudBlockBlob;
-import com.microsoft.azure.storage.blob.ListBlobItem;
-import com.microsoft.azure.storage.table.CloudTable;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Analytics Client Tests
  */
-public class CloudAnalyticsClientTests extends TestCase {
+@Category({TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class})
+public class CloudAnalyticsClientTests {
 
     protected CloudAnalyticsClient client;
     protected CloudBlobContainer container;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException {
+    @Before
+    public void analyticsTestMethodSetUp() throws URISyntaxException, StorageException {
         this.container = AnalyticsTestHelper.getRandomContainerReference();
         this.client = AnalyticsTestHelper.createCloudAnalyticsClient();
     }
 
-    public void tearDown() throws StorageException {
+    @After
+    public void analyticsTestMethodTearDown() throws StorageException {
         this.container.deleteIfExists();
     }
 
     /**
      * Test table getters.
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      */
+    @Test
     public void testCloudAnalyticsClientGetTables() throws URISyntaxException, StorageException {
         CloudTable blobHourPrimary = this.client.getHourMetricsTable(StorageService.BLOB);
         CloudTable blobHourSecondary = this.client.getHourMetricsTable(StorageService.BLOB, StorageLocation.SECONDARY);
@@ -104,7 +117,7 @@ public class CloudAnalyticsClientTests extends TestCase {
 
     /**
      * List all logs
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      * @throws IOException
@@ -131,12 +144,13 @@ public class CloudAnalyticsClientTests extends TestCase {
 
     /**
      * List Logs with open ended time range
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
     public void testCloudAnalyticsClientListLogsStartTime() throws URISyntaxException, StorageException, IOException {
         this.container.create();
         this.client.LogContainer = this.container.getName();
@@ -160,12 +174,13 @@ public class CloudAnalyticsClientTests extends TestCase {
 
     /**
      * List Logs with well defined time range
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
     public void testCloudAnalyticsClientListLogsStartEndTime() throws URISyntaxException, StorageException, IOException {
         this.container.create();
         this.client.LogContainer = this.container.getName();
@@ -191,13 +206,14 @@ public class CloudAnalyticsClientTests extends TestCase {
 
     /**
      * Validate Log Parser
-     * 
+     *
      * @throws ParseException
      * @throws URISyntaxException
      * @throws StorageException
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
     public void testCloudAnalyticsClientParseExLogs() throws ParseException, URISyntaxException, StorageException,
             IOException {
         String logText = "1.0;2011-08-09T18:52:40.9241789Z;GetBlob;AnonymousSuccess;200;18;10;anonymous;;myaccount;blob;\"https://myaccount.blob.core.windows.net/thumb&amp;nails/lake.jpg?timeout=30000\";\"/myaccount/thumbnails/lake.jpg\";a84aa705-8a85-48c5-b064-b43bd22979c3;0;123.100.2.10;2009-09-19;252;0;265;100;0;;;\"0x8CE1B6EA95033D5\";Tuesday, 09-Aug-11 18:52:40 GMT;;;;\"8/9/2011 6:52:40 PM ba98eb12-700b-4d53-9230-33a3330571fc\""
@@ -288,13 +304,14 @@ public class CloudAnalyticsClientTests extends TestCase {
 
     /**
      * Validate Log Parser with prod data
-     * 
+     *
      * @throws ParseException
      * @throws URISyntaxException
      * @throws StorageException
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
     public void testCloudAnalyticsClientParseProdLogs() throws ParseException, URISyntaxException, StorageException,
             IOException {
 
@@ -315,13 +332,14 @@ public class CloudAnalyticsClientTests extends TestCase {
 
     /**
      * Log parser error cases.
-     * 
+     *
      * @throws ParseException
      * @throws URISyntaxException
      * @throws StorageException
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
     public void testCloudAnalyticsClientParseLogErrors() throws ParseException, URISyntaxException, StorageException,
             IOException {
         this.container.createIfNotExists();
@@ -333,8 +351,7 @@ public class CloudAnalyticsClientTests extends TestCase {
         try {
             v2Iterator.next();
             fail();
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             assertEquals(e.getMessage(), "A storage log version of 2.0 is unsupported.");
         }
 
@@ -347,8 +364,7 @@ public class CloudAnalyticsClientTests extends TestCase {
         try {
             nonLogDataIterator.next();
             fail();
-        }
-        catch (NoSuchElementException e) {
+        } catch (NoSuchElementException e) {
             assertEquals(e.getMessage(),
                     "An error occurred while enumerating the result, check the original exception for details.");
             assertEquals(e.getCause().getMessage(), "Error parsing log record: unexpected end of stream.");
@@ -365,8 +381,7 @@ public class CloudAnalyticsClientTests extends TestCase {
         try {
             nullLogIterator.next();
             fail();
-        }
-        catch (NoSuchElementException e) {
+        } catch (NoSuchElementException e) {
             assertEquals(e.getMessage(),
                     "An error occurred while enumerating the result, check the original exception for details.");
             assertEquals(e.getCause().getMessage(), "The specified blob does not exist.");
@@ -376,15 +391,13 @@ public class CloudAnalyticsClientTests extends TestCase {
             Iterator<LogRecord> emptyIterator = CloudAnalyticsClient.parseLogBlobs(new ArrayList<ListBlobItem>()).iterator();
             assertFalse(emptyIterator.hasNext());
             emptyIterator.next();
-        }
-        catch (NoSuchElementException e) {
+        } catch (NoSuchElementException e) {
             assertEquals(e.getMessage(), "There are no more elements in this enumeration.");
         }
 
         try {
             CloudAnalyticsClient.parseLogBlobs(null);
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             assertEquals(e.getMessage(), "The argument must not be null or an empty string. Argument name: logBlobs.");
         }
     }

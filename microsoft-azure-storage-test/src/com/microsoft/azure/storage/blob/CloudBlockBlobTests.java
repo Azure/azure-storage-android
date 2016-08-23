@@ -14,6 +14,32 @@
  */
 package com.microsoft.azure.storage.blob;
 
+import com.microsoft.azure.storage.AccessCondition;
+import com.microsoft.azure.storage.Constants;
+import com.microsoft.azure.storage.NameValidator;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.RetryNoRetry;
+import com.microsoft.azure.storage.SendingRequestEvent;
+import com.microsoft.azure.storage.StorageCredentialsAnonymous;
+import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
+import com.microsoft.azure.storage.StorageEvent;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.core.Utility;
+import com.microsoft.azure.storage.file.CloudFile;
+import com.microsoft.azure.storage.file.CloudFileShare;
+import com.microsoft.azure.storage.file.FileProperties;
+import com.microsoft.azure.storage.file.FileTestHelper;
+import com.microsoft.azure.storage.file.SharedAccessFilePermissions;
+import com.microsoft.azure.storage.file.SharedAccessFilePolicy;
+
+import junit.framework.Assert;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -34,52 +60,42 @@ import java.util.Map;
 import java.util.Random;
 import java.util.TimeZone;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import com.microsoft.azure.storage.AccessCondition;
-import com.microsoft.azure.storage.Constants;
-import com.microsoft.azure.storage.NameValidator;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.RetryNoRetry;
-import com.microsoft.azure.storage.SendingRequestEvent;
-import com.microsoft.azure.storage.StorageCredentialsAnonymous;
-import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.core.Utility;
-import com.microsoft.azure.storage.file.CloudFile;
-import com.microsoft.azure.storage.file.CloudFileShare;
-import com.microsoft.azure.storage.file.FileProperties;
-import com.microsoft.azure.storage.file.FileTestHelper;
-import com.microsoft.azure.storage.file.SharedAccessFilePermissions;
-import com.microsoft.azure.storage.file.SharedAccessFilePolicy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Block Blob Tests
  */
-public class CloudBlockBlobTests extends TestCase {
+
+@Category({ TestRunners.CloudTests.class })
+public class CloudBlockBlobTests {
 
     protected CloudBlobContainer container;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException {
+    @Before
+    public void blobEncryptionTestMethodSetUp() throws URISyntaxException, StorageException {
         this.container = BlobTestHelper.getRandomContainerReference();
         this.container.create();
     }
 
-    @Override
+    @After
     public void tearDown() throws StorageException {
         this.container.deleteIfExists();
     }
 
     /**
      * Create a block blob.
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      * @throws IOException
      */
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testBlockBlobCreate() throws StorageException, URISyntaxException, IOException {
         final CloudBlockBlob blob = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("testBlob"));
@@ -115,25 +131,27 @@ public class CloudBlockBlobTests extends TestCase {
 
     /**
      * Delete a block blob.
-     * 
+     *
      * @throws StorageException
-     * @throws URISyntaxException 
-     * @throws IOException 
+     * @throws URISyntaxException
+     * @throws IOException
      */
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testBlockBlobDelete() throws StorageException, URISyntaxException, IOException {
         final CloudBlockBlob blob = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("testBlob"));
-        
+
         assertFalse(blob.exists());
-        
+
         // create
         blob.uploadText("text");
         assertTrue(blob.exists());
-        
+
         // delete
         blob.delete();
         assertFalse(blob.exists());
-        
+
         // delete again, should fail as it doesn't exist
         try {
             blob.delete();
@@ -142,12 +160,13 @@ public class CloudBlockBlobTests extends TestCase {
             assertEquals(HttpURLConnection.HTTP_NOT_FOUND, ex.getHttpStatusCode());
             assertEquals("The specified blob does not exist.", ex.getMessage());
             assertEquals("BlobNotFound", ex.getErrorCode());
-        }                     
+        }
     }
 
     /**
      * Test blob name validation.
      */
+    @Test
     public void testCloudBlobNameValidation()
     {
         NameValidator.validateBlobName("alpha");
@@ -156,7 +175,7 @@ public class CloudBlockBlobTests extends TestCase {
         NameValidator.validateBlobName("white space");
         NameValidator.validateBlobName("0th3r(h@racter$");
         NameValidator.validateBlobName(new String(new char[253]).replace("\0", "a/a"));
-        
+
         invalidBlobTestHelper("", "No empty strings.", "Invalid blob name. The name may not be null, empty, or whitespace only.");
         invalidBlobTestHelper(null, "No null strings.", "Invalid blob name. The name may not be null, empty, or whitespace only.");
         invalidBlobTestHelper(new String(new char[1025]).replace("\0", "n"), "Maximum 1024 characters.", "Invalid blob name length. The name must be between 1 and 1024 characters long.");
@@ -176,6 +195,7 @@ public class CloudBlockBlobTests extends TestCase {
         }
     }
 
+    @Test
     public void testBlobUriOnlyConstructors() throws URISyntaxException, StorageException, InvalidKeyException {
         URI blobURI = new URI(container.getUri().toString() + "/anonblob");
         CloudBlockBlob blob = new CloudBlockBlob(blobURI);
@@ -193,33 +213,42 @@ public class CloudBlockBlobTests extends TestCase {
         assertEquals(StorageCredentialsSharedAccessSignature.class, blob.getServiceClient().getCredentials().getClass());
     }
 
+    @Test
+    @Category(TestRunners.SlowTests.class)
     public void testCopyBlockBlobSasToSasTest() throws InvalidKeyException, URISyntaxException, StorageException,
     IOException, InterruptedException {
         this.doCloudBlockBlobCopy(true, true);
     }
 
+    @Test
+    @Category(TestRunners.SlowTests.class)
     public void testCopyBlockBlobToSasTest() throws InvalidKeyException, URISyntaxException, StorageException,
     IOException, InterruptedException {
         this.doCloudBlockBlobCopy(false, true);
     }
 
+    @Test
+    @Category(TestRunners.SlowTests.class)
     public void testCopyBlockBlobSasTest() throws InvalidKeyException, URISyntaxException, StorageException,
     IOException, InterruptedException {
         this.doCloudBlockBlobCopy(true, false);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
     public void testCopyBlockBlobTest() throws InvalidKeyException, URISyntaxException, StorageException, IOException,
     InterruptedException {
         this.doCloudBlockBlobCopy(false, false);
     }
-    
+
+    @Test
     public void testCopyWithChineseChars() throws StorageException, IOException, URISyntaxException {
         String data = "sample data chinese chars 阿䶵";
         CloudBlockBlob copySource = container.getBlockBlobReference("sourcechinescharsblob阿䶵.txt");
         copySource.uploadText(data);
 
         assertEquals(this.container.getUri() + "/sourcechinescharsblob阿䶵.txt", copySource.getUri().toString());
-        assertEquals(this.container.getUri() + "/sourcechinescharsblob%E9%98%BF%E4%B6%B5.txt", 
+        assertEquals(this.container.getUri() + "/sourcechinescharsblob%E9%98%BF%E4%B6%B5.txt",
                 copySource.getUri().toASCIIString());
 
         CloudBlockBlob copyDestination = container.getBlockBlobReference("destchinesecharsblob阿䶵.txt");
@@ -233,21 +262,23 @@ public class CloudBlockBlobTests extends TestCase {
             @Override
             public void eventOccurred(SendingRequestEvent eventArg) {
                 HttpURLConnection con = (HttpURLConnection) eventArg.getConnectionObject();
-                
+
                 // Test the copy destination request url
                 assertEquals(CloudBlockBlobTests.this.container.getUri() + "/destchinesecharsblob%E9%98%BF%E4%B6%B5.txt",
                         con.getURL().toString());
-                
+
                 // Test the copy source request property
                 assertEquals(CloudBlockBlobTests.this.container.getUri() + "/sourcechinescharsblob%E9%98%BF%E4%B6%B5.txt",
                         con.getRequestProperty("x-ms-copy-source"));
             }
         });
-        
+
         copyDestination.startCopy(copySource.getUri(), null, null, null, ctx);
         copyDestination.startCopy(copySource, null, null, null, ctx);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
     public void testCopyBlockBlobWithMetadataOverride() throws URISyntaxException, StorageException, IOException,
     InterruptedException {
         Calendar calendar = Calendar.getInstance(Utility.UTC_ZONE);
@@ -294,6 +325,8 @@ public class CloudBlockBlobTests extends TestCase {
         copy.delete();
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
     public void testCopyBlockBlobFromSnapshot() throws StorageException, IOException, URISyntaxException,
     InterruptedException {
         CloudBlockBlob source = this.container.getBlockBlobReference("source");
@@ -356,7 +389,8 @@ public class CloudBlockBlobTests extends TestCase {
      * @throws IOException
      * @throws InterruptedException
      */
-
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testCopyFromBlobAbortTest() throws StorageException, URISyntaxException, IOException {
         final int length = 128;
         CloudBlockBlob originalBlob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(
@@ -374,6 +408,8 @@ public class CloudBlockBlobTests extends TestCase {
         }
     }
 
+    @Test
+    @Category(TestRunners.SlowTests.class)
     public void testCopyFileSas()
             throws InvalidKeyException, URISyntaxException, StorageException, IOException, InterruptedException {
         // Create source on server.
@@ -444,6 +480,8 @@ public class CloudBlockBlobTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
     public void testCopyFileWithMetadataOverride()
             throws URISyntaxException, StorageException, IOException, InterruptedException, InvalidKeyException {
         Calendar calendar = Calendar.getInstance(Utility.UTC_ZONE);
@@ -517,13 +555,15 @@ public class CloudBlockBlobTests extends TestCase {
 
     /**
      * Start copying a file and then abort
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      * @throws IOException
-     * @throws InvalidKeyException 
+     * @throws InvalidKeyException
      * @throws InterruptedException
      */
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testCopyFileAbort()
             throws StorageException, URISyntaxException, IOException, InvalidKeyException, InterruptedException {
         final int length = 128;
@@ -534,7 +574,7 @@ public class CloudBlockBlobTests extends TestCase {
         // Source SAS must have read permissions
         SharedAccessFilePolicy policy = new SharedAccessFilePolicy();
         policy.setPermissions(EnumSet.of(SharedAccessFilePermissions.READ));
-        
+
         Calendar cal = Calendar.getInstance(Utility.UTC_ZONE);
         cal.add(Calendar.MINUTE, 5);
         policy.setSharedAccessExpiryTime(cal.getTime());
@@ -560,6 +600,8 @@ public class CloudBlockBlobTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testDeleteBlobIfExists() throws URISyntaxException, StorageException, IOException {
         final CloudBlockBlob blob1 = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("testBlob"));
@@ -604,7 +646,7 @@ public class CloudBlockBlobTests extends TestCase {
      * @throws IOException
      * @throws InterruptedException
      */
-
+    @Test
     public void testBlobSnapshotValidationTest() throws StorageException, URISyntaxException, IOException{
         final int length = 1024;
         CloudBlockBlob blockBlobRef = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(this.container,
@@ -683,7 +725,7 @@ public class CloudBlockBlobTests extends TestCase {
      * @throws IOException
      * @throws InterruptedException
      */
-
+    @Test
     public void testBlobDownloadRangeValidationTest() throws StorageException, URISyntaxException, IOException {
         final int blockLength = 1024 * 1024;
         final int length = 5 * blockLength;
@@ -714,7 +756,9 @@ public class CloudBlockBlobTests extends TestCase {
         blockBlobRef.downloadBlockList();
         assertEquals(length, blockBlobRef.getProperties().getLength());
     }
-    
+
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testCommitBlockListContentMd5() throws URISyntaxException, StorageException, IOException {
         int length = 1024;
         byte[] buffer = BlobTestHelper.getRandomBuffer(length);
@@ -725,7 +769,7 @@ public class CloudBlockBlobTests extends TestCase {
         for (BlockEntry block : blocks.values()) {
             blob.uploadBlock(block.getId(), new ByteArrayInputStream(buffer), length);
         }
-        
+
         OperationContext ctx = new OperationContext();
         ctx.getSendingRequestEventHandler().addListener(new StorageEvent<SendingRequestEvent>() {
 
@@ -735,12 +779,12 @@ public class CloudBlockBlobTests extends TestCase {
                 assertNull(conn.getRequestProperty("Content-MD5"));
             }
         });
-        
+
         blob.commitBlockList(blocks.values(), null, null, ctx);
-        
+
         BlobRequestOptions opt = new BlobRequestOptions();
         opt.setUseTransactionalContentMD5(true);
-        
+
         ctx = new OperationContext();
         ctx.getSendingRequestEventHandler().addListener(new StorageEvent<SendingRequestEvent>() {
 
@@ -750,10 +794,12 @@ public class CloudBlockBlobTests extends TestCase {
                 assertNotNull(conn.getRequestProperty("Content-MD5"));
             }
         });
-        
+
         blob.commitBlockList(blocks.values(), null, opt, ctx);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testDownloadBlockList() throws URISyntaxException, StorageException, IOException {
         int length = 1024;
         byte[] buffer = BlobTestHelper.getRandomBuffer(length);
@@ -792,11 +838,13 @@ public class CloudBlockBlobTests extends TestCase {
             assertFalse(extraBlocks.remove(blockItem.getId()) == null);
         }
         assertEquals(0, extraBlocks.size());
-        
+
         blockList = blob2.downloadBlockList(BlockListingFilter.ALL, null, null, null);
         assertEquals(5, blockList.size());
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testBlockBlobDownloadRangeTest() throws URISyntaxException, StorageException, IOException {
         byte[] buffer = BlobTestHelper.getRandomBuffer(2 * 1024);
 
@@ -833,6 +881,8 @@ public class CloudBlockBlobTests extends TestCase {
         BlobTestHelper.assertAreEqual(blob, blob2);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testBlobUploadFromStreamTest() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
@@ -851,12 +901,13 @@ public class CloudBlockBlobTests extends TestCase {
         blockBlobRef.download(dstStream);
         BlobTestHelper.assertStreamsAreEqual(srcStream, new ByteArrayInputStream(dstStream.toByteArray()));
     }
-    
-    public void testBlobUploadFromStreamAccessConditionTest() throws URISyntaxException, StorageException, IOException {        
+
+    @Test
+    public void testBlobUploadFromStreamAccessConditionTest() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
-        AccessCondition accessCondition = AccessCondition.generateIfNotModifiedSinceCondition(new Date()); 
-        
+        AccessCondition accessCondition = AccessCondition.generateIfNotModifiedSinceCondition(new Date());
+
         int length = 2 * 1024;
         ByteArrayInputStream srcStream = BlobTestHelper.getRandomDataStream(length);
         blockBlobRef.upload(srcStream, -1, accessCondition, null, null);
@@ -872,6 +923,8 @@ public class CloudBlockBlobTests extends TestCase {
         BlobTestHelper.assertStreamsAreEqual(srcStream, new ByteArrayInputStream(dstStream.toByteArray()));
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testBlobUploadFromStreamRequestOptionsTest() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName1 = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         final CloudBlockBlob blockBlobRef1 = this.container.getBlockBlobReference(blockBlobName1);
@@ -898,6 +951,8 @@ public class CloudBlockBlobTests extends TestCase {
         assertTrue(context.getRequestResults().size() <= 2);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testUploadDownloadBlobProperties() throws URISyntaxException, StorageException, IOException {
         final int length = 0;
 
@@ -939,6 +994,8 @@ public class CloudBlockBlobTests extends TestCase {
         BlobTestHelper.assertAreEqual(props1, props2);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testBlobUploadWithoutMD5Validation() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
@@ -967,6 +1024,8 @@ public class CloudBlockBlobTests extends TestCase {
         blockBlobRef.download(new ByteArrayOutputStream(), null, options, null);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testBlockBlobUploadContentMD5() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
@@ -1015,6 +1074,8 @@ public class CloudBlockBlobTests extends TestCase {
         assertTrue(callList.size() > 1);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testBlobEmptyHeaderSigningTest() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
@@ -1036,6 +1097,8 @@ public class CloudBlockBlobTests extends TestCase {
         blockBlobRef.download(new ByteArrayOutputStream(), null, null, context);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testCloudBlockBlobDownloadToByteArray() throws URISyntaxException, StorageException, IOException {
         CloudBlockBlob blob = this.container.getBlockBlobReference("blob1");
         BlobTestHelper.doDownloadTest(blob, 1 * 512, 2 * 512, 0);
@@ -1045,6 +1108,8 @@ public class CloudBlockBlobTests extends TestCase {
         BlobTestHelper.doDownloadTest(blob, 5 * 1024 * 1024, 6 * 1024 * 1024, 512);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testCloudBlockBlobDownloadRangeToByteArray() throws URISyntaxException, StorageException, IOException {
         CloudBlockBlob blob = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("downloadrange"));
@@ -1073,6 +1138,8 @@ public class CloudBlockBlobTests extends TestCase {
         BlobTestHelper.doDownloadRangeToByteArrayTest(blob, 1024, 1024, 512, new Long(1023), new Long(1));
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testCloudBlockBlobDownloadRangeToByteArrayNegativeTest() throws URISyntaxException, StorageException,
     IOException {
         CloudBlockBlob blob = this.container.getBlockBlobReference(BlobTestHelper
@@ -1080,6 +1147,8 @@ public class CloudBlockBlobTests extends TestCase {
         BlobTestHelper.doDownloadRangeToByteArrayNegativeTests(blob);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testCloudBlockBlobUploadFromStreamWithAccessCondition() throws URISyntaxException, StorageException,
             IOException {
         CloudBlockBlob blob1 = this.container.getBlockBlobReference("blob1");
@@ -1128,6 +1197,8 @@ public class CloudBlockBlobTests extends TestCase {
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
     public void testBlobNamePlusEncodingTest() throws StorageException, URISyntaxException, IOException,
     InterruptedException {
         final int length = 1 * 1024;
@@ -1147,7 +1218,8 @@ public class CloudBlockBlobTests extends TestCase {
      * @throws IOException
      * @throws InterruptedException
      */
-
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testSendingRequestEventBlob() throws StorageException, URISyntaxException, IOException {
         final int length = 128;
 
@@ -1189,7 +1261,8 @@ public class CloudBlockBlobTests extends TestCase {
      * @throws StorageException
      * @throws IOException
      */
-
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testBlobInputStream() throws URISyntaxException, StorageException, IOException {
         final int blobLength = 16 * 1024;
         final Random randGenerator = new Random();
@@ -1222,6 +1295,8 @@ public class CloudBlockBlobTests extends TestCase {
         blobRef.delete();
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testUploadFromByteArray() throws Exception {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
         final CloudBlockBlob blob = this.container.getBlockBlobReference(blobName);
@@ -1251,6 +1326,8 @@ public class CloudBlockBlobTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testUploadDownloadFromFile() throws IOException, StorageException, URISyntaxException {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
         final CloudBlockBlob blob = this.container.getBlockBlobReference(blobName);
@@ -1298,6 +1375,8 @@ public class CloudBlockBlobTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testUploadDownloadFromText() throws URISyntaxException, StorageException, IOException {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
         final CloudBlockBlob blob = this.container.getBlockBlobReference(blobName);
@@ -1306,6 +1385,8 @@ public class CloudBlockBlobTests extends TestCase {
         this.doUploadDownloadStringTest(blob, 8000);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testBlobMultiConditionHeaders() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
@@ -1333,6 +1414,8 @@ public class CloudBlockBlobTests extends TestCase {
         blockBlobRef.upload(srcStream, -1, condition, null, context);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
     public void testBlobConditionalAccess() throws StorageException, IOException, URISyntaxException {
         CloudBlockBlob blob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB,
                 "test", 128, null);

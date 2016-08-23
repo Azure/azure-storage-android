@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,22 +14,32 @@
  */
 package com.microsoft.azure.storage.queue;
 
+import com.microsoft.azure.storage.LocationMode;
+import com.microsoft.azure.storage.ResultSegment;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestHelper;
+import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.core.SR;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.UUID;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import com.microsoft.azure.storage.LocationMode;
-import com.microsoft.azure.storage.ResultSegment;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestHelper;
-import com.microsoft.azure.storage.core.SR;
+@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+public final class CloudQueueClientTests {
 
-public final class CloudQueueClientTests extends TestCase {
-
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
     public void testListQueuesSmallNumber() throws URISyntaxException, StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
         int initialCount = 0;
@@ -74,6 +84,8 @@ public final class CloudQueueClientTests extends TestCase {
         assertEquals(count, 25);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
     public void testListQueuesAndListQueuesSegmentedLargeNumber() throws URISyntaxException, StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
         int count = 0;
@@ -101,6 +113,8 @@ public final class CloudQueueClientTests extends TestCase {
         assertTrue(segment.getContinuationToken() != null);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
     public void testListQueuesSegmented() throws URISyntaxException, StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
         String prefix = "segment" + UUID.randomUUID().toString().substring(0, 8).toLowerCase();
@@ -136,6 +150,8 @@ public final class CloudQueueClientTests extends TestCase {
         assertTrue(segment3.getLength() == 35);
     }
 
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
     public void testListQueuesSegmentedMaxResultsValidation() throws URISyntaxException, StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
 
@@ -152,7 +168,9 @@ public final class CloudQueueClientTests extends TestCase {
         }
         assertNotNull(qClient.listQueuesSegmented("thereshouldntbeanyqueueswiththisprefix"));
     }
-    
+
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
     public void testListQueuesEqual() throws StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
         int count1 = 0;
@@ -190,6 +208,8 @@ public final class CloudQueueClientTests extends TestCase {
         }
     }
 
+    @Test
+    @Category(TestRunners.CloudTests.class)
     public void testGetServiceStats() throws StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
         qClient.getDefaultRequestOptions().setLocationMode(LocationMode.SECONDARY_ONLY);
