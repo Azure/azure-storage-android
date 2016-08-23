@@ -1,3 +1,7 @@
+2016.XX.XX Version XX
+ * Android Studio support via Gradle build system.
+ * Updated tests from JUnit 3 to Android Junit 4.
+
 2016.07.14 Version 0.8.0
  * Added support for server-side encryption.
  * Fixed a bug in the retry policies where 300 status codes were being retried when they shouldn't be.

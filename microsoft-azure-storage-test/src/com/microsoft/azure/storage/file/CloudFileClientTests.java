@@ -14,27 +14,36 @@
  */
 package com.microsoft.azure.storage.file;
 
-import junit.framework.TestCase;
+import com.microsoft.azure.storage.ResultContinuation;
+import com.microsoft.azure.storage.ResultSegment;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.core.SR;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.UUID;
 
-import com.microsoft.azure.storage.ResultContinuation;
-import com.microsoft.azure.storage.ResultSegment;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.core.SR;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * File Client Tests
  */
-public class CloudFileClientTests extends TestCase {
+public class CloudFileClientTests {
     /**
      * Tests doing a listShares.
      * 
      * @throws StorageException
      * @throws URISyntaxException
      */
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
     public void testListSharesTest() throws StorageException, URISyntaxException {
         CloudFileClient fileClient = FileTestHelper.createCloudFileClient();
         ArrayList<String> shareList = new ArrayList<String>();
@@ -83,6 +92,8 @@ public class CloudFileClientTests extends TestCase {
      * @throws StorageException
      * @throws URISyntaxException
      */
+    @Test
+    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
     public void testListSharesMaxResultsValidationTest() throws StorageException, URISyntaxException {
         CloudFileClient fileClient = FileTestHelper.createCloudFileClient();
         String prefix = UUID.randomUUID().toString();

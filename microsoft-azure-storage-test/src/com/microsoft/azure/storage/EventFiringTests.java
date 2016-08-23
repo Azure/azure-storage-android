@@ -14,19 +14,26 @@
  */
 package com.microsoft.azure.storage;
 
-import java.net.HttpURLConnection;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-
-import junit.framework.TestCase;
-
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.core.SR;
 
-public class EventFiringTests extends TestCase {
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+public class EventFiringTests {
+
+    @Test
     public void testSendingRequestEvents() throws URISyntaxException, StorageException {
         final ArrayList<Boolean> callList = new ArrayList<Boolean>();
         final ArrayList<Boolean> globalCallList = new ArrayList<Boolean>();
@@ -78,6 +85,7 @@ public class EventFiringTests extends TestCase {
         assertEquals(2, globalCallList.size());
     }
 
+    @Test
     public void testResponseReceivedEvents() throws URISyntaxException, StorageException {
         final ArrayList<Boolean> callList = new ArrayList<Boolean>();
         final ArrayList<Boolean> globalCallList = new ArrayList<Boolean>();
@@ -129,6 +137,7 @@ public class EventFiringTests extends TestCase {
         assertEquals(2, globalCallList.size());
     }
 
+    @Test
     public void testRequestCompletedEvents() throws URISyntaxException, StorageException {
         final ArrayList<Boolean> callList = new ArrayList<Boolean>();
         final ArrayList<Boolean> globalCallList = new ArrayList<Boolean>();
@@ -180,6 +189,8 @@ public class EventFiringTests extends TestCase {
         assertEquals(2, globalCallList.size());
     }
 
+    @Test
+    @Category({ SecondaryTests.class })
     public void testRetryingEvents() throws URISyntaxException, StorageException {
         final ArrayList<Boolean> callList = new ArrayList<Boolean>();
         final ArrayList<Boolean> globalCallList = new ArrayList<Boolean>();
@@ -262,6 +273,8 @@ public class EventFiringTests extends TestCase {
         assertEquals(2, globalCallList.size());
     }
 
+    @Test
+    @Category({ SecondaryTests.class })
     public void testSendingRequestRequestCompletedPairs() throws URISyntaxException, StorageException {
         final ArrayList<Boolean> sendingCallList = new ArrayList<Boolean>();
         final ArrayList<Boolean> completedCallList = new ArrayList<Boolean>();

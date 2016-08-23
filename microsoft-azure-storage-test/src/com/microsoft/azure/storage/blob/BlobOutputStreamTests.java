@@ -14,6 +14,20 @@
  */
 package com.microsoft.azure.storage.blob;
 
+import com.microsoft.azure.storage.AccessCondition;
+import com.microsoft.azure.storage.Constants;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.ResponseReceivedEvent;
+import com.microsoft.azure.storage.StorageEvent;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.core.SR;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -26,34 +40,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import junit.framework.TestCase;
-
-import com.microsoft.azure.storage.AccessCondition;
-import com.microsoft.azure.storage.Constants;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.ResponseReceivedEvent;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.core.SR;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Blob Output Stream Tests
  */
-public class BlobOutputStreamTests extends TestCase {
+@Category({ TestRunners.CloudTests.class })
+public class BlobOutputStreamTests {
 
     protected CloudBlobContainer container;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException {
+    @Before
+    public void blobOutputStreamTestMethodSetUp() throws URISyntaxException, StorageException {
         this.container = BlobTestHelper.getRandomContainerReference();
         this.container.create();
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void blobOutputStreamTestMethodTearDown() throws StorageException {
         this.container.deleteIfExists();
     }
-    
+
+    @Test
     public void testEmpty() throws URISyntaxException, StorageException, IOException {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
 
@@ -68,7 +78,8 @@ public class BlobOutputStreamTests extends TestCase {
         ArrayList<BlockEntry> blocks = blockBlob2.downloadBlockList(BlockListingFilter.ALL, null, null, null);
         assertEquals(0, blocks.size());
     }
-    
+
+    @Test
     public void testClose() throws URISyntaxException, StorageException, IOException {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
 
@@ -92,7 +103,8 @@ public class BlobOutputStreamTests extends TestCase {
         blocks = blockBlob.downloadBlockList(BlockListingFilter.COMMITTED, null, null, null);
         assertEquals(1, blocks.size());
     }
-    
+
+    @Test
     public void testWithAccessCondition() throws URISyntaxException, StorageException, IOException {
         int blobLengthToUse = 8 * 512;
         byte[] buffer = BlobTestHelper.getRandomBuffer(blobLengthToUse);
@@ -121,7 +133,8 @@ public class BlobOutputStreamTests extends TestCase {
             assertEquals(0, result[i]);
         }
     }
-    
+
+    @Test
     public void testWriteStream() throws URISyntaxException, StorageException, IOException {
         int blobLengthToUse = 8 * 512;
         byte[] buffer = BlobTestHelper.getRandomBuffer(blobLengthToUse);
@@ -149,7 +162,8 @@ public class BlobOutputStreamTests extends TestCase {
             assertEquals(0, result[i]);
         }
     }
-    
+
+    @Test
     public void testFlush() throws Exception {
         CloudBlockBlob blockBlob = this.container.getBlockBlobReference(
                 BlobTestHelper.generateRandomBlobNameWithPrefix("flush"));
@@ -200,7 +214,8 @@ public class BlobOutputStreamTests extends TestCase {
         assertEquals(2, blocks.size());
         assertEquals(513, blocks.get(1).getSize());
     }
-    
+
+    @Test
     public void testWritesDoubleConcurrency() throws URISyntaxException, StorageException, IOException,
             InterruptedException {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("concurrency");
@@ -241,7 +256,8 @@ public class BlobOutputStreamTests extends TestCase {
         blockBlob.downloadAttributes();
         assertTrue(blockBlob.getProperties().getLength() == length*writes*tasks);
     }
-    
+
+    @Test
     public void testWritesNoConcurrency() throws URISyntaxException, StorageException, IOException {
         int writes = 10;
         

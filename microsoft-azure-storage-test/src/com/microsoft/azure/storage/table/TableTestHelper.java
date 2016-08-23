@@ -14,16 +14,16 @@
  */
 package com.microsoft.azure.storage.table;
 
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestHelper;
+import com.microsoft.azure.storage.table.TableRequestOptions.PropertyResolver;
+
+import junit.framework.Assert;
+
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
-
-import junit.framework.Assert;
-
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestHelper;
-import com.microsoft.azure.storage.table.TableRequestOptions.PropertyResolver;
 
 /**
  * Table Test Base

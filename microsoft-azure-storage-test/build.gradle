@@ -13,16 +13,26 @@
  * limitations under the License.
  */
 
-apply plugin: 'com.android.library'
+apply plugin: 'com.android.application'
 
 dependencies {
     compile fileTree(include: '*.jar', dir: 'libs')
-    compile files('com.fasterxml.jackson.core.jar')
+    compile 'com.android.support.test:runner:0.4.1'
+    compile 'com.android.support:support-annotations:23.3.0'
+    compile project(':microsoft-azure-storage')
+}
+
+repositories {
+    mavenCentral()
 }
 
 android {
     compileSdkVersion 19
     buildToolsVersion "24.0.1"
+
+    defaultConfig {
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
 
     sourceSets {
         main {
@@ -33,7 +43,15 @@ android {
             renderscript.srcDirs = ['src']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
+            java.excludes = ['androidTest/**']
         }
+
+            //androidTest.setRoot('src')
+            //androidTest.setRoot('src')
+            androidTest {
+                java.srcDirs = ['src']
+            }
+
 
         // Move the build types to build-types/<type>
         // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...

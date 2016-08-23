@@ -15,6 +15,30 @@
 
 package com.microsoft.azure.storage.file;
 
+import com.microsoft.azure.storage.Constants;
+import com.microsoft.azure.storage.IPRange;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.ResponseReceivedEvent;
+import com.microsoft.azure.storage.SecondaryTests;
+import com.microsoft.azure.storage.SendingRequestEvent;
+import com.microsoft.azure.storage.SharedAccessProtocols;
+import com.microsoft.azure.storage.StorageCredentials;
+import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
+import com.microsoft.azure.storage.StorageEvent;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.StorageUri;
+import com.microsoft.azure.storage.TestHelper;
+import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.core.PathUtility;
+import com.microsoft.azure.storage.core.SR;
+
+import junit.framework.Assert;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -31,32 +55,19 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.TimeZone;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import com.microsoft.azure.storage.Constants;
-import com.microsoft.azure.storage.IPRange;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.ResponseReceivedEvent;
-import com.microsoft.azure.storage.SendingRequestEvent;
-import com.microsoft.azure.storage.SharedAccessProtocols;
-import com.microsoft.azure.storage.StorageCredentials;
-import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.StorageUri;
-import com.microsoft.azure.storage.TestHelper;
-import com.microsoft.azure.storage.core.PathUtility;
-import com.microsoft.azure.storage.core.SR;
-
-public class FileSasTests extends TestCase {
+@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+public class FileSasTests {
 
     protected static CloudFileClient fileClient = null;
     protected CloudFileShare share;
     protected CloudFile file;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException, IOException {
+    @Before
+    public void fileSASTestMethodSetUp() throws URISyntaxException, StorageException, IOException {
         if (fileClient == null) {
             fileClient = TestHelper.createCloudFileClient();
         }
@@ -66,11 +77,12 @@ public class FileSasTests extends TestCase {
         this.file = (CloudFile) FileTestHelper.uploadNewFile(this.share, 100, null);
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void fileSASTestMethodTearDown() throws StorageException {
         this.share.deleteIfExists();
     }
-    
+
+    @Test
     public void testApiVersion() throws InvalidKeyException, StorageException, URISyntaxException {
         SharedAccessFilePolicy policy = createSharedAccessPolicy(
                 EnumSet.of(SharedAccessFilePermissions.READ, SharedAccessFilePermissions.WRITE,
@@ -94,7 +106,8 @@ public class FileSasTests extends TestCase {
         CloudFile sasFile = new CloudFile(new URI(this.file.getUri().toString() + "?" + sas));
         sasFile.uploadMetadata(null, null, ctx);
     }
-    
+
+    @Test
     public void testDirectorySas() throws InvalidKeyException, IllegalArgumentException, StorageException,
             URISyntaxException, InterruptedException {
         CloudFileDirectory dir = this.share.getRootDirectoryReference().getDirectoryReference("dirFile");
@@ -123,6 +136,8 @@ public class FileSasTests extends TestCase {
         sasDir.downloadAttributes();
     }
 
+    @Test
+    @Category({ SecondaryTests.class })
     public void testIpAcl()
             throws StorageException, URISyntaxException, InvalidKeyException, InterruptedException, UnknownHostException {
         
@@ -181,6 +196,8 @@ public class FileSasTests extends TestCase {
         allFile.download(new ByteArrayOutputStream());
     }
 
+    @Test
+    @Category({ SecondaryTests.class })
     public void testProtocolRestrictions()
             throws StorageException, URISyntaxException, InvalidKeyException, InterruptedException {
         
@@ -238,6 +255,8 @@ public class FileSasTests extends TestCase {
         httpsFile.download(new ByteArrayOutputStream());
     }
 
+    @Test
+    @Category({ SecondaryTests.class, TestRunners.SlowTests.class })
     public void testShareSAS() throws IllegalArgumentException, StorageException, URISyntaxException,
             InvalidKeyException, InterruptedException {
         SharedAccessFilePolicy policy1 = createSharedAccessPolicy(
@@ -279,6 +298,8 @@ public class FileSasTests extends TestCase {
         assertEquals(client, shareFromClient.getServiceClient());
     }
 
+    @Test
+    @Category({ TestRunners.SlowTests.class })
     public void testShareUpdateSAS()
             throws InvalidKeyException, StorageException, IOException, URISyntaxException, InterruptedException {
         // Create a policy with read/write access and get SAS.
@@ -317,6 +338,8 @@ public class FileSasTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ TestRunners.SlowTests.class })
     public void testShareSASCombinations()
             throws StorageException, URISyntaxException, IOException, InvalidKeyException, InterruptedException {
         EnumSet<SharedAccessFilePermissions> permissionSet = null;
@@ -351,6 +374,7 @@ public class FileSasTests extends TestCase {
         }
     }
 
+    @Test
     public void testFileSASCombinations() throws URISyntaxException, StorageException, InvalidKeyException, IOException {
         EnumSet<SharedAccessFilePermissions> permissionSet = null;
 
@@ -365,6 +389,7 @@ public class FileSasTests extends TestCase {
         }
     }
 
+    @Test
     public void testFileSAS() throws InvalidKeyException, IllegalArgumentException, StorageException,
             URISyntaxException, InterruptedException {
         SharedAccessFilePolicy policy = createSharedAccessPolicy(
@@ -397,6 +422,7 @@ public class FileSasTests extends TestCase {
         assertEquals(client, fileFromClient.getServiceClient());
     }
 
+    @Test
     public void testFileSASWithSharedAccessFileHeaders() throws InvalidKeyException, IllegalArgumentException,
             StorageException, URISyntaxException, InterruptedException {
         SharedAccessFilePolicy policy = createSharedAccessPolicy(EnumSet.of(SharedAccessFilePermissions.READ,
