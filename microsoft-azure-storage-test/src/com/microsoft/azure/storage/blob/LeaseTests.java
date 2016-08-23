@@ -14,34 +14,45 @@
  */
 package com.microsoft.azure.storage.blob;
 
+import com.microsoft.azure.storage.AccessCondition;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.StorageErrorCodeStrings;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners;
+
+import junit.framework.Assert;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import com.microsoft.azure.storage.AccessCondition;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.StorageErrorCodeStrings;
-import com.microsoft.azure.storage.StorageException;
-
-public class LeaseTests extends TestCase {
+@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+public class LeaseTests {
 
     protected CloudBlobContainer container;
 
-    @Override
-    public void setUp() throws StorageException, URISyntaxException {
+    @Before
+    public void leaseTestMethodSetUp() throws StorageException, URISyntaxException {
         this.container = BlobTestHelper.getRandomContainerReference();
         this.container.create();
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void leaseTestMethodTearDown() throws StorageException {
         this.container.deleteIfExists();
     }
-    
+
+    @Test
     public void testContainerLeaseInvalidParams() throws StorageException, URISyntaxException {
         try {
             this.container.acquireLease(100, null);   
@@ -58,6 +69,7 @@ public class LeaseTests extends TestCase {
         }
     }
 
+    @Test
     public void testContainerAcquireLease() throws StorageException, URISyntaxException {
         CloudBlobContainer leaseContainer1 = BlobTestHelper.getRandomContainerReference();
         leaseContainer1.create();
@@ -99,6 +111,7 @@ public class LeaseTests extends TestCase {
         }
     }
 
+    @Test
     public void testContainerReleaseLease() throws StorageException {
         // 15 sec
         String proposedLeaseId = UUID.randomUUID().toString();
@@ -118,6 +131,8 @@ public class LeaseTests extends TestCase {
         assertTrue(operationContext2.getLastResult().getStatusCode() == HttpURLConnection.HTTP_OK);
     }
 
+    @Test
+    @Category(TestRunners.SlowTests.class)
     public void testContainerBreakLease() throws StorageException, InterruptedException {
         String proposedLeaseId = UUID.randomUUID().toString();
         try {
@@ -146,6 +161,7 @@ public class LeaseTests extends TestCase {
         }
     }
 
+    @Test
     public void testContainerRenewLeaseTest() throws StorageException{
         String proposedLeaseId = UUID.randomUUID().toString();
         try {
@@ -174,6 +190,7 @@ public class LeaseTests extends TestCase {
         }
     }
 
+    @Test
     public void testContainerChangeLeaseTest() throws StorageException {
         // Get Lease 
         String leaseID1;
@@ -244,6 +261,7 @@ public class LeaseTests extends TestCase {
         }
     }
 
+    @Test
     public void testBlobLeaseAcquireAndRelease() throws URISyntaxException, StorageException, IOException {
         final int length = 128;
         final CloudBlob blobRef = BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB, "test", 128, null);
@@ -267,6 +285,7 @@ public class LeaseTests extends TestCase {
         blobRef.upload(BlobTestHelper.getRandomDataStream(length), -1);
     }
 
+    @Test
     public void testBlobLeaseChange() throws StorageException, IOException, URISyntaxException {
         final int length = 128;
         final CloudBlob blobRef = BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB, "test", 128, null);
@@ -334,6 +353,7 @@ public class LeaseTests extends TestCase {
         }
     }
 
+    @Test
     public void testBlobLeaseBreak() throws StorageException, IOException, URISyntaxException {
         final CloudBlob blobRef = BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB, "test", 128, null);
 
@@ -346,6 +366,8 @@ public class LeaseTests extends TestCase {
         assertTrue(operationContext.getLastResult().getStatusCode() == HttpURLConnection.HTTP_ACCEPTED);
     }
 
+    @Test
+    @Category(TestRunners.SlowTests.class)
     public void testBlobLeaseRenew() throws StorageException, IOException, InterruptedException, URISyntaxException {
         final CloudBlob blobRef = BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB, "test", 128, null);
 

@@ -15,6 +15,29 @@
 
 package com.microsoft.azure.storage.blob;
 
+import com.microsoft.azure.storage.Constants;
+import com.microsoft.azure.storage.IPRange;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.ResponseReceivedEvent;
+import com.microsoft.azure.storage.SecondaryTests;
+import com.microsoft.azure.storage.SendingRequestEvent;
+import com.microsoft.azure.storage.SharedAccessProtocols;
+import com.microsoft.azure.storage.StorageCredentials;
+import com.microsoft.azure.storage.StorageCredentialsAnonymous;
+import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
+import com.microsoft.azure.storage.StorageEvent;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.core.PathUtility;
+import com.microsoft.azure.storage.core.SR;
+
+import junit.framework.Assert;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -31,41 +54,30 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.TimeZone;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import com.microsoft.azure.storage.Constants;
-import com.microsoft.azure.storage.IPRange;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.ResponseReceivedEvent;
-import com.microsoft.azure.storage.SendingRequestEvent;
-import com.microsoft.azure.storage.SharedAccessProtocols;
-import com.microsoft.azure.storage.StorageCredentials;
-import com.microsoft.azure.storage.StorageCredentialsAnonymous;
-import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.core.PathUtility;
-import com.microsoft.azure.storage.core.SR;
-
-public class SasTests extends TestCase {
+@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+public class SasTests {
 
     protected CloudBlobContainer container;
     protected CloudBlockBlob blob;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException, IOException {
+    @Before
+    public void blobSasTestMethodSetUp() throws URISyntaxException, StorageException, IOException {
         this.container = BlobTestHelper.getRandomContainerReference();
         this.container.create();
 
         this.blob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB, "test", 100, null);
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void blobSasTestMethodTearDown() throws StorageException {
         this.container.deleteIfExists();
     }
 
+    @Test
     public void testApiVersion() throws InvalidKeyException, StorageException, URISyntaxException {
         SharedAccessBlobPolicy sp1 = createSharedAccessPolicy(
                 EnumSet.of(SharedAccessBlobPermissions.READ, SharedAccessBlobPermissions.WRITE,
@@ -90,6 +102,8 @@ public class SasTests extends TestCase {
         sasBlob.uploadMetadata(null, null, ctx);
     }
 
+    @Test
+    @Category(SecondaryTests.class)
     public void testIpAcl()
             throws StorageException, URISyntaxException, InvalidKeyException, InterruptedException, UnknownHostException {
         
@@ -148,6 +162,8 @@ public class SasTests extends TestCase {
         allBlob.download(new ByteArrayOutputStream());
     }
 
+    @Test
+    @Category(SecondaryTests.class)
     public void testProtocolRestrictions()
             throws StorageException, URISyntaxException, InvalidKeyException, InterruptedException {
         
@@ -204,7 +220,9 @@ public class SasTests extends TestCase {
         httpsBlob = httpsContainer.getBlockBlobReference(this.blob.getName());
         httpsBlob.download(new ByteArrayOutputStream());
     }
-    
+
+    @Test
+    @Category ({ SecondaryTests.class, TestRunners.SlowTests.class })
     public void testContainerSaS() throws IllegalArgumentException, StorageException, URISyntaxException,
             InvalidKeyException, InterruptedException {
         SharedAccessBlobPolicy sp1 = createSharedAccessPolicy(
@@ -246,6 +264,8 @@ public class SasTests extends TestCase {
         assertEquals(bClient, containerFromClient.getServiceClient());
     }
 
+    @Test
+    @Category(TestRunners.SlowTests.class)
     public void testContainerUpdateSAS() throws InvalidKeyException, StorageException, IOException, URISyntaxException,
             InterruptedException {
         //Create a policy with read/write access and get SAS.
@@ -286,6 +306,8 @@ public class SasTests extends TestCase {
         }
     }
 
+    @Test
+    @Category(TestRunners.SlowTests.class)
     public void testContainerSASCombinations()
             throws StorageException, URISyntaxException, IOException, InvalidKeyException, InterruptedException {
         EnumSet<SharedAccessBlobPermissions> permissions;
@@ -332,6 +354,8 @@ public class SasTests extends TestCase {
         }
     }
 
+    @Test
+    @Category(TestRunners.SlowTests.class)
     public void testContainerPublicAccess() throws StorageException, IOException, URISyntaxException,
             InterruptedException {
         CloudBlockBlob testBlockBlob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(
@@ -357,6 +381,7 @@ public class SasTests extends TestCase {
         testAccess(null, EnumSet.of(SharedAccessBlobPermissions.READ), null, this.container, testPageBlob);
     }
 
+    @Test
     public void testAppendBlobSASCombinations()
             throws URISyntaxException, StorageException, InvalidKeyException, IOException {
         for (int bits = 0x1; bits < 0x20; bits++) {
@@ -366,6 +391,7 @@ public class SasTests extends TestCase {
         }
     }
 
+    @Test
     public void testBlockBlobSASCombinations()
             throws URISyntaxException, StorageException, InvalidKeyException, IOException {
         for (int bits = 0x1; bits < 0x20; bits++) {
@@ -375,6 +401,7 @@ public class SasTests extends TestCase {
         }
     }
 
+    @Test
     public void testPageBlobSASCombinations()
             throws InvalidKeyException, StorageException, IOException, URISyntaxException {
         for (int bits = 0x1; bits < 0x20; bits++) {
@@ -384,6 +411,8 @@ public class SasTests extends TestCase {
         }
     }
 
+    @Test
+    @Category(TestRunners.SlowTests.class)
     public void testBlobSaS() throws InvalidKeyException, IllegalArgumentException, StorageException,
             URISyntaxException, InterruptedException {
         SharedAccessBlobPolicy sp = createSharedAccessPolicy(
@@ -416,6 +445,8 @@ public class SasTests extends TestCase {
         assertEquals(bClient, blobFromClient.getServiceClient());
     }
 
+    @Test
+    @Category(TestRunners.SlowTests.class)
     public void testBlobSaSWithSharedAccessBlobHeaders() throws InvalidKeyException, IllegalArgumentException,
             StorageException, URISyntaxException,  InterruptedException {
         SharedAccessBlobPolicy sp = createSharedAccessPolicy(EnumSet.of(SharedAccessBlobPermissions.READ,

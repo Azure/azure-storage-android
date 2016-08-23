@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,6 +13,23 @@
  * limitations under the License.
  */
 package com.microsoft.azure.storage.table;
+
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.ResponseReceivedEvent;
+import com.microsoft.azure.storage.ResultSegment;
+import com.microsoft.azure.storage.StorageEvent;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.core.SR;
+import com.microsoft.azure.storage.table.TableQuery.QueryComparisons;
+import com.microsoft.azure.storage.table.TableTestHelper.Class1;
+import com.microsoft.azure.storage.table.TableTestHelper.ComplexEntity;
+import com.microsoft.azure.storage.table.TableTestHelper.EmptyClass;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
@@ -23,28 +40,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import junit.framework.TestCase;
-
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.ResponseReceivedEvent;
-import com.microsoft.azure.storage.ResultSegment;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.core.SR;
-import com.microsoft.azure.storage.table.TableQuery.QueryComparisons;
-import com.microsoft.azure.storage.table.TableTestHelper.Class1;
-import com.microsoft.azure.storage.table.TableTestHelper.ComplexEntity;
-import com.microsoft.azure.storage.table.TableTestHelper.EmptyClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Table Query Tests
  */
-public class TableQueryTests extends TestCase {
+@Category({TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class})
+public class TableQueryTests {
 
     private static CloudTable table;
 
-    @Override
-    public void setUp() throws Exception {
+    @BeforeClass
+    public static void setUp() throws Exception {
         table = TableTestHelper.getRandomTableReference();
         table.createIfNotExists();
 
@@ -62,11 +73,12 @@ public class TableQueryTests extends TestCase {
         }
     }
 
-    @Override
-    public void tearDown() throws Exception {
+    @AfterClass
+    public static void tearDown() throws Exception {
         table.deleteIfExists();
     }
 
+    @Test
     public void testQueryWithNullClassType()  {
         try {
             TableQuery.from(null);
@@ -76,6 +88,7 @@ public class TableQueryTests extends TestCase {
         }
     }
 
+    @Test
     public void testQueryWithInvalidTakeCount()  {
         try {
             TableQuery.from(TableServiceEntity.class).take(0);
@@ -91,27 +104,28 @@ public class TableQueryTests extends TestCase {
             assertEquals(ex.getMessage(), "Take count must be positive and greater than 0.");
         }
     }
-    
+
+    @Test
     public void testTableWithSelectOnMissingFields() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
         options.setTablePayloadFormat(TablePayloadFormat.Json);
         testTableWithSelectOnMissingFields(options);
-        
+
         options.setTablePayloadFormat(TablePayloadFormat.JsonNoMetadata);
         testTableWithSelectOnMissingFields(options);
     }
-    
+
     private void testTableWithSelectOnMissingFields(TableRequestOptions options) throws StorageException {
         TableQuery<DynamicTableEntity> projectionQuery = TableQuery.from(DynamicTableEntity.class).where(
                 "(PartitionKey eq 'javatables_batch_0') and (RowKey eq '000000')");
-        
+
         // A exists, F does not
         projectionQuery.select(new String[]{"A", "F"});
-        
+
         ResultSegment<DynamicTableEntity> seg = table.executeSegmented(projectionQuery, null, options, null);
         assertEquals(1, seg.getResults().size());
-        
+
         DynamicTableEntity ent = seg.getResults().get(0);
         assertEquals("foo_A", ent.getProperties().get("A").getValueAsString());
         assertEquals(null, ent.getProperties().get("F").getValueAsString());
@@ -136,6 +150,7 @@ public class TableQueryTests extends TestCase {
         }
     }
 
+    @Test
     public void testTableQueryProjectionWithIncorrectTypes() throws URISyntaxException, StorageException {
         CloudTable table = TableTestHelper.getRandomTableReference();
         try {
@@ -174,6 +189,7 @@ public class TableQueryTests extends TestCase {
         assertEquals(-1, entity.getIntegerPrimitive());
     }
 
+    @Test
     public void testTableQueryWithSpecialChars() throws StorageException, URISyntaxException {
         CloudTable table = TableTestHelper.getRandomTableReference();
 
@@ -190,24 +206,25 @@ public class TableQueryTests extends TestCase {
             table.deleteIfExists();
         }
     }
-    
-    private void testTableQueryWithSpecialChars(char charToTest, CloudTable table) 
+
+    private void testTableQueryWithSpecialChars(char charToTest, CloudTable table)
             throws StorageException, URISyntaxException {
         String partitionKey = "partition" + charToTest + "key";
         String rowKey = "row" + charToTest + "key";
-        
+
         EmptyClass ref = new EmptyClass();
         ref.setPartitionKey(partitionKey);
         ref.setRowKey(rowKey);
-        
+
         table.execute(TableOperation.insert(ref));
         String condition = TableQuery.generateFilterCondition(TableConstants.PARTITION_KEY, QueryComparisons.EQUAL, partitionKey);
         ResultSegment<EmptyClass> seg = table.executeSegmented(TableQuery.from(EmptyClass.class).where(condition), null);
-        
+
         assertEquals(1, seg.getLength());
         assertEquals(partitionKey, seg.getResults().get(0).getPartitionKey());
     }
 
+    @Test
     public void testTableInvalidQuery() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -226,6 +243,7 @@ public class TableQueryTests extends TestCase {
         }
     }
 
+    @Test
     public void testQueryOnSupportedTypes() throws InterruptedException, StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -333,7 +351,7 @@ public class TableQueryTests extends TestCase {
                     TableQuery.generateFilterCondition("BoolPrimitive", QueryComparisons.EQUAL, middleRef.getBool()),
                     50, options, usePropertyResolver);
 
-            // 8. Filter on Binary 
+            // 8. Filter on Binary
             executeQueryAndAssertResults(
                     TableQuery.generateFilterCondition("Binary", QueryComparisons.EQUAL, middleRef.getBinary()), 1,
                     options, usePropertyResolver);
@@ -396,6 +414,7 @@ public class TableQueryTests extends TestCase {
         assertEquals(expectedResults, count);
     }
 
+    @Test
     public void testTableQueryIterateTwice()  {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -455,6 +474,7 @@ public class TableQueryTests extends TestCase {
         }
     }
 
+    @Test
     public void testTableQueryWithDynamicEntity() {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -485,6 +505,7 @@ public class TableQueryTests extends TestCase {
         }
     }
 
+    @Test
     public void testTableQueryWithProjection()  {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -528,6 +549,7 @@ public class TableQueryTests extends TestCase {
         }
     }
 
+    @Test
     public void testSelectOnlySendsReservedColumnsOnce()  {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -581,6 +603,7 @@ public class TableQueryTests extends TestCase {
         }
     }
 
+    @Test
     public void testTableQueryWithReflection()  {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -617,6 +640,7 @@ public class TableQueryTests extends TestCase {
         }
     }
 
+    @Test
     public void testTableQueryWithEntityResolver()  {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -666,6 +690,7 @@ public class TableQueryTests extends TestCase {
         }
     }
 
+    @Test
     public void testTableQueryWithTake() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -706,6 +731,7 @@ public class TableQueryTests extends TestCase {
         assertEquals(count, 25);
     }
 
+    @Test
     public void testTableQueryWithFilter()  {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -747,6 +773,7 @@ public class TableQueryTests extends TestCase {
         assertEquals(50, count);
     }
 
+    @Test
     public void testTableQueryWithContinuation()  {
         TableRequestOptions options = new TableRequestOptions();
 
