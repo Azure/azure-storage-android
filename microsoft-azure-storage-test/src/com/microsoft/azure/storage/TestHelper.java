@@ -14,6 +14,14 @@
  */
 package com.microsoft.azure.storage;
 
+import com.microsoft.azure.storage.analytics.CloudAnalyticsClient;
+import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.file.CloudFileClient;
+import com.microsoft.azure.storage.queue.CloudQueueClient;
+import com.microsoft.azure.storage.table.CloudTableClient;
+
+import junit.framework.Assert;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -23,27 +31,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
-import junit.framework.Assert;
-
-import com.microsoft.azure.storage.SharedAccessAccountPolicy;
-import com.microsoft.azure.storage.analytics.CloudAnalyticsClient;
-import com.microsoft.azure.storage.blob.CloudBlobClient;
-import com.microsoft.azure.storage.file.CloudFileClient;
-import com.microsoft.azure.storage.queue.CloudQueueClient;
-import com.microsoft.azure.storage.table.CloudTableClient;
-
 public class TestHelper {
 	private static CloudStorageAccount account;
 
 	public static String connectionString;
-	public static String accountName;
-	public static String accountKey;
-	public static StorageUri blobEndpoint;
+	public static String accountName = "xclientdev";
+	public static String accountKey = "6zpyzolkkD1XTJqI4X1kaO1g3aZKcG4JauF9ld5OEyeuPROWkFdJExkvFPQqFEf8TIZbTqyX819YSMcZJw91sw==";
+
+    public static StorageUri blobEndpoint;
 	public static StorageUri queueEndpoint;
 	public static StorageUri tableEndpoint;
 
 	public static CloudBlobClient createCloudBlobClient() throws StorageException {
-		return getAccount().createCloudBlobClient();
+        try {
+            blobEndpoint = new StorageUri(new URI("http://xclientdev.blob.core.windows.net"));
+        } catch (URISyntaxException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return getAccount().createCloudBlobClient();
 	}
 	
 	public static CloudFileClient createCloudFileClient() throws StorageException {
@@ -51,11 +58,25 @@ public class TestHelper {
     }
 
 	public static CloudQueueClient createCloudQueueClient() throws StorageException {
-		return getAccount().createCloudQueueClient();
+        try {
+            queueEndpoint = new StorageUri(new URI("http://xclientdev.queue.core.windows.net"));
+        } catch (URISyntaxException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return getAccount().createCloudQueueClient();
 	}
 
 	public static CloudTableClient createCloudTableClient() throws StorageException {
-		return getAccount().createCloudTableClient();
+        try {
+            tableEndpoint = new StorageUri(new URI("http://xclientdev.table.core.windows.net"));
+        } catch (URISyntaxException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return getAccount().createCloudTableClient();
 	}
 
     public static CloudBlobClient createCloudBlobClient(SharedAccessAccountPolicy policy, boolean useHttps)
