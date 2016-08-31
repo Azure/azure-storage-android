@@ -15,7 +15,9 @@
 package com.microsoft.azure.storage.table;
 
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 
 import org.junit.After;
 import org.junit.Before;
@@ -31,19 +33,19 @@ import static org.junit.Assert.assertTrue;
 /**
  * Table Operation Tests
  */
-@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class TableDateTests {
 
     private CloudTable table;
 
     @Before
-    public void tableTestMethodSetUp() throws URISyntaxException, StorageException {
+    public void tableDateTestMethodSetUp() throws URISyntaxException, StorageException {
         this.table = TableTestHelper.getRandomTableReference();
         this.table.createIfNotExists();
     }
 
     @After
-    public void tableTestMethodTearDown() throws StorageException {
+    public void tableDateTestMethodTearDown() throws StorageException {
         this.table.deleteIfExists();
     }
 

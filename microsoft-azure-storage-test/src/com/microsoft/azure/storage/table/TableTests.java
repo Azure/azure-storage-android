@@ -26,7 +26,10 @@ import com.microsoft.azure.storage.StorageCredentialsAccountAndKey;
 import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.core.PathUtility;
 import com.microsoft.azure.storage.table.TableTestHelper.Class1;
 
@@ -50,7 +53,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category({TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class})
+@Category({DevFabricTests.class, DevStoreTests.class, CloudTests.class})
 public class TableTests {
 
     /**
@@ -312,7 +315,7 @@ public class TableTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testTableGetSetPermissionTest() throws StorageException, URISyntaxException, InterruptedException {
         CloudTableClient tClient = TableTestHelper.createCloudTableClient();
         String tableName = TableTestHelper.generateRandomTableName();
@@ -358,7 +361,7 @@ public class TableTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testTableSas() throws StorageException, URISyntaxException, InvalidKeyException, InterruptedException {
         CloudTableClient tClient = TableTestHelper.createCloudTableClient();
 

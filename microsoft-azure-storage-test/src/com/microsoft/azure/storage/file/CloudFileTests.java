@@ -23,7 +23,10 @@ import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.blob.BlobProperties;
 import com.microsoft.azure.storage.blob.BlobTestHelper;
 import com.microsoft.azure.storage.blob.CloudBlob;
@@ -71,7 +74,7 @@ import static org.junit.Assert.fail;
 /**
  * File Tests
  */
-@Category({ TestRunners.CloudTests.class })
+@Category({ CloudTests.class })
 public class CloudFileTests {
     protected CloudFileShare share;
 
@@ -390,7 +393,7 @@ public class CloudFileTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testCopyBlockBlobSas() throws Exception {
         // Create source on server.
         final CloudBlobContainer container = BlobTestHelper.getRandomContainerReference();
@@ -413,7 +416,7 @@ public class CloudFileTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testCopyPageBlobSas() throws Exception {
         // Create source on server.
         final CloudBlobContainer container = BlobTestHelper.getRandomContainerReference();
@@ -438,7 +441,7 @@ public class CloudFileTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testCopyFileSasToSas() throws InvalidKeyException, URISyntaxException, StorageException,
             IOException, InterruptedException {
         this.doCloudFileCopy(true, true);
@@ -447,14 +450,14 @@ public class CloudFileTests {
     // There is no testCopyFileToSas() because there is no way for the SAS destination to access a shared key source.
     // This means it would require the source to have public access, which files do not support.
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testCopyFileSas() throws InvalidKeyException, URISyntaxException, StorageException,
             IOException, InterruptedException {
         this.doCloudFileCopy(true, false);
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testCopyFile() throws InvalidKeyException, URISyntaxException, StorageException, IOException,
             InterruptedException {
         // This works because we use Shared Key for source and destination.
@@ -507,7 +510,7 @@ public class CloudFileTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testCopyFileWithMetadataOverride() throws URISyntaxException, StorageException, IOException,
             InterruptedException {
         Calendar calendar = Calendar.getInstance(Utility.UTC_ZONE);
@@ -567,7 +570,7 @@ public class CloudFileTests {
      * @throws InterruptedException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCopyFileAbort() throws StorageException, URISyntaxException, IOException {
         final int length = 128;
         CloudFile originalFile = FileTestHelper.uploadNewFile(this.share, length, null);
@@ -1302,7 +1305,7 @@ public class CloudFileTests {
      * @throws IOException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudFileDeleteIfExistsErrorCode() throws URISyntaxException, StorageException, IOException {
         CloudFileClient client = FileTestHelper.createCloudFileClient();
         CloudFileShare share = client.getShareReference(FileTestHelper.generateRandomShareName());
@@ -1358,7 +1361,7 @@ public class CloudFileTests {
      * @throws InterruptedException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testFileNamePlusEncoding() throws StorageException, URISyntaxException, IOException,
             InterruptedException {
         CloudFile originalFile = FileTestHelper.uploadNewFile(this.share, 1024 /* length */, null);

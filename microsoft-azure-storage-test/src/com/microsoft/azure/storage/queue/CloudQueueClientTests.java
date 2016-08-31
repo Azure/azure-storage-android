@@ -18,7 +18,9 @@ import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.ResultSegment;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.TestHelper;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.core.SR;
 
 import org.junit.Test;
@@ -35,11 +37,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public final class CloudQueueClientTests {
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListQueuesSmallNumber() throws URISyntaxException, StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
         int initialCount = 0;
@@ -85,7 +87,7 @@ public final class CloudQueueClientTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListQueuesAndListQueuesSegmentedLargeNumber() throws URISyntaxException, StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
         int count = 0;
@@ -114,7 +116,7 @@ public final class CloudQueueClientTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListQueuesSegmented() throws URISyntaxException, StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
         String prefix = "segment" + UUID.randomUUID().toString().substring(0, 8).toLowerCase();
@@ -151,7 +153,7 @@ public final class CloudQueueClientTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListQueuesSegmentedMaxResultsValidation() throws URISyntaxException, StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
 
@@ -170,7 +172,7 @@ public final class CloudQueueClientTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListQueuesEqual() throws StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
         int count1 = 0;
@@ -209,7 +211,7 @@ public final class CloudQueueClientTests {
     }
 
     @Test
-    @Category(TestRunners.CloudTests.class)
+    @Category(CloudTests.class)
     public void testGetServiceStats() throws StorageException {
         CloudQueueClient qClient = QueueTestHelper.createCloudQueueClient();
         qClient.getDefaultRequestOptions().setLocationMode(LocationMode.SECONDARY_ONLY);

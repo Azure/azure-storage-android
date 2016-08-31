@@ -19,7 +19,9 @@ import com.microsoft.azure.storage.ResponseReceivedEvent;
 import com.microsoft.azure.storage.ResultSegment;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.core.SR;
 import com.microsoft.azure.storage.table.TableQuery.QueryComparisons;
 import com.microsoft.azure.storage.table.TableTestHelper.Class1;
@@ -49,13 +51,13 @@ import static org.junit.Assert.fail;
 /**
  * Table Query Tests
  */
-@Category({TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class})
+@Category({DevFabricTests.class, DevStoreTests.class, CloudTests.class})
 public class TableQueryTests {
 
     private static CloudTable table;
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void tableQueryTestMethodSetUp() throws Exception {
         table = TableTestHelper.getRandomTableReference();
         table.createIfNotExists();
 
@@ -74,7 +76,7 @@ public class TableQueryTests {
     }
 
     @AfterClass
-    public static void tearDown() throws Exception {
+    public static void tableQueryTestMethodTearDown() throws Exception {
         table.deleteIfExists();
     }
 

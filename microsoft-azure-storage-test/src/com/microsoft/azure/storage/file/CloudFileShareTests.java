@@ -20,7 +20,10 @@ import com.microsoft.azure.storage.SendingRequestEvent;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.core.SR;
 
 import org.junit.After;
@@ -47,7 +50,7 @@ import static org.junit.Assert.fail;
 /**
  * File Share Tests
  */
-@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class CloudFileShareTests {
 
     protected static CloudFileClient client;
@@ -187,7 +190,7 @@ public class CloudFileShareTests {
      * @throws InterruptedException
      */
     @Test
-    @Category({ TestRunners.SlowTests.class, TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ SlowTests.class, DevFabricTests.class, DevStoreTests.class })
     public void testCloudFileShareSetPermissions()
             throws StorageException, InterruptedException, URISyntaxException {
         CloudFileClient client = FileTestHelper.createCloudFileClient();
@@ -228,7 +231,7 @@ public class CloudFileShareTests {
      * Get permissions from string
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudFileSharePermissionsFromString() {
         SharedAccessFilePolicy policy = new SharedAccessFilePolicy();
 
@@ -257,7 +260,7 @@ public class CloudFileShareTests {
      * Write permission to string
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudFileSharePermissionsToString() {
         SharedAccessFilePolicy policy = new SharedAccessFilePolicy();
 
@@ -359,7 +362,7 @@ public class CloudFileShareTests {
      * @throws URISyntaxException
      */
     @Test
-    @Category({ TestRunners.CloudTests.class })
+    @Category({ CloudTests.class })
     public void testGetShareStats() throws StorageException, IOException, URISyntaxException {
         share.createIfNotExists();
         ShareStats stats = share.getStats();

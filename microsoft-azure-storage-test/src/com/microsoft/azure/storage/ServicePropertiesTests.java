@@ -14,6 +14,10 @@
  */
 package com.microsoft.azure.storage;
 
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.core.SR;
 import com.microsoft.azure.storage.file.CloudFileClient;
@@ -35,7 +39,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category({ TestRunners.SlowTests.class, TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ SlowTests.class, DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class ServicePropertiesTests {
 
     /**

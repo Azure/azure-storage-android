@@ -14,6 +14,11 @@
  */
 package com.microsoft.azure.storage;
 
+
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.blob.BlobOutputStream;
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.BlobTestHelper;
@@ -46,11 +51,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class MaximumExecutionTimeTests {
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, SecondaryTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SecondaryTests.class })
     public void testBlobMaximumExecutionTime() throws URISyntaxException, StorageException {
         OperationContext opContext = new OperationContext();
         setDelay(opContext, 2500);
@@ -80,7 +85,7 @@ public class MaximumExecutionTimeTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, SecondaryTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SecondaryTests.class })
     public void testFileMaximumExecutionTime() throws URISyntaxException, StorageException {
         OperationContext opContext = new OperationContext();
         setDelay(opContext, 2500);
@@ -115,7 +120,7 @@ public class MaximumExecutionTimeTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, SecondaryTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SecondaryTests.class })
     public void testQueueMaximumExecutionTime() throws URISyntaxException, StorageException {
         OperationContext opContext = new OperationContext();
         setDelay(opContext, 2500);
@@ -145,7 +150,7 @@ public class MaximumExecutionTimeTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, SecondaryTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SecondaryTests.class })
     public void testTableMaximumExecutionTime() throws URISyntaxException, StorageException {
         OperationContext opContext = new OperationContext();
         setDelay(opContext, 2500);
@@ -182,7 +187,7 @@ public class MaximumExecutionTimeTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testMaximumExecutionTimeBlobWrites() throws URISyntaxException, StorageException, IOException {
         byte[] buffer = BlobTestHelper.getRandomBuffer(80 * 1024 * 1024);
 
@@ -279,7 +284,7 @@ public class MaximumExecutionTimeTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testMaximumExecutionTimeBlobByteArray() throws URISyntaxException, StorageException, IOException {
         int length = 10 * 1024 * 1024;
         byte[] uploadBuffer = BlobTestHelper.getRandomBuffer(length);

@@ -18,7 +18,9 @@ import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.RequestCompletedEvent;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 
 import org.junit.After;
 import org.junit.Before;
@@ -31,7 +33,7 @@ import java.net.URISyntaxException;
 
 import static org.junit.Assert.assertTrue;
 
-@Category({ TestRunners.CloudTests.class, TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+@Category({ CloudTests.class, DevFabricTests.class, DevStoreTests.class })
 @Ignore
 /* These test only works on accounts with server-side encryption enabled. */
 public class CloudBlobServerEncryptionTests {

@@ -20,7 +20,7 @@ import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.ResponseReceivedEvent;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
 import com.microsoft.azure.storage.core.SR;
 
 import org.junit.After;
@@ -47,7 +47,7 @@ import static org.junit.Assert.fail;
 /**
  * Blob Output Stream Tests
  */
-@Category({ TestRunners.CloudTests.class })
+@Category({ CloudTests.class })
 public class BlobOutputStreamTests {
 
     protected CloudBlobContainer container;
