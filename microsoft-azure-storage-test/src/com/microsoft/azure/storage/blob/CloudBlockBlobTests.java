@@ -24,7 +24,10 @@ import com.microsoft.azure.storage.StorageCredentialsAnonymous;
 import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.core.Utility;
 import com.microsoft.azure.storage.file.CloudFile;
 import com.microsoft.azure.storage.file.CloudFileShare;
@@ -71,19 +74,19 @@ import static org.junit.Assert.fail;
  * Block Blob Tests
  */
 
-@Category({ TestRunners.CloudTests.class })
+@Category({ CloudTests.class })
 public class CloudBlockBlobTests {
 
     protected CloudBlobContainer container;
 
     @Before
-    public void blobEncryptionTestMethodSetUp() throws URISyntaxException, StorageException {
+    public void cloudBlockBlobTestMethodSetUp() throws URISyntaxException, StorageException {
         this.container = BlobTestHelper.getRandomContainerReference();
         this.container.create();
     }
 
     @After
-    public void tearDown() throws StorageException {
+    public void cloudBlockBlobTestMethodTearDown() throws StorageException {
         this.container.deleteIfExists();
     }
 
@@ -95,7 +98,7 @@ public class CloudBlockBlobTests {
      * @throws IOException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlockBlobCreate() throws StorageException, URISyntaxException, IOException {
         final CloudBlockBlob blob = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("testBlob"));
@@ -137,7 +140,7 @@ public class CloudBlockBlobTests {
      * @throws IOException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlockBlobDelete() throws StorageException, URISyntaxException, IOException {
         final CloudBlockBlob blob = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("testBlob"));
@@ -214,28 +217,28 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testCopyBlockBlobSasToSasTest() throws InvalidKeyException, URISyntaxException, StorageException,
     IOException, InterruptedException {
         this.doCloudBlockBlobCopy(true, true);
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testCopyBlockBlobToSasTest() throws InvalidKeyException, URISyntaxException, StorageException,
     IOException, InterruptedException {
         this.doCloudBlockBlobCopy(false, true);
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testCopyBlockBlobSasTest() throws InvalidKeyException, URISyntaxException, StorageException,
     IOException, InterruptedException {
         this.doCloudBlockBlobCopy(true, false);
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testCopyBlockBlobTest() throws InvalidKeyException, URISyntaxException, StorageException, IOException,
     InterruptedException {
         this.doCloudBlockBlobCopy(false, false);
@@ -278,7 +281,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testCopyBlockBlobWithMetadataOverride() throws URISyntaxException, StorageException, IOException,
     InterruptedException {
         Calendar calendar = Calendar.getInstance(Utility.UTC_ZONE);
@@ -326,7 +329,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testCopyBlockBlobFromSnapshot() throws StorageException, IOException, URISyntaxException,
     InterruptedException {
         CloudBlockBlob source = this.container.getBlockBlobReference("source");
@@ -390,7 +393,7 @@ public class CloudBlockBlobTests {
      * @throws InterruptedException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCopyFromBlobAbortTest() throws StorageException, URISyntaxException, IOException {
         final int length = 128;
         CloudBlockBlob originalBlob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(
@@ -409,7 +412,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testCopyFileSas()
             throws InvalidKeyException, URISyntaxException, StorageException, IOException, InterruptedException {
         // Create source on server.
@@ -481,7 +484,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testCopyFileWithMetadataOverride()
             throws URISyntaxException, StorageException, IOException, InterruptedException, InvalidKeyException {
         Calendar calendar = Calendar.getInstance(Utility.UTC_ZONE);
@@ -563,7 +566,7 @@ public class CloudBlockBlobTests {
      * @throws InterruptedException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCopyFileAbort()
             throws StorageException, URISyntaxException, IOException, InvalidKeyException, InterruptedException {
         final int length = 128;
@@ -601,7 +604,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testDeleteBlobIfExists() throws URISyntaxException, StorageException, IOException {
         final CloudBlockBlob blob1 = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("testBlob"));
@@ -758,7 +761,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCommitBlockListContentMd5() throws URISyntaxException, StorageException, IOException {
         int length = 1024;
         byte[] buffer = BlobTestHelper.getRandomBuffer(length);
@@ -799,7 +802,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testDownloadBlockList() throws URISyntaxException, StorageException, IOException {
         int length = 1024;
         byte[] buffer = BlobTestHelper.getRandomBuffer(length);
@@ -844,7 +847,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlockBlobDownloadRangeTest() throws URISyntaxException, StorageException, IOException {
         byte[] buffer = BlobTestHelper.getRandomBuffer(2 * 1024);
 
@@ -882,7 +885,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlobUploadFromStreamTest() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
@@ -924,7 +927,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlobUploadFromStreamRequestOptionsTest() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName1 = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         final CloudBlockBlob blockBlobRef1 = this.container.getBlockBlobReference(blockBlobName1);
@@ -952,7 +955,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUploadDownloadBlobProperties() throws URISyntaxException, StorageException, IOException {
         final int length = 0;
 
@@ -995,7 +998,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlobUploadWithoutMD5Validation() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
@@ -1025,7 +1028,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlockBlobUploadContentMD5() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
@@ -1075,7 +1078,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlobEmptyHeaderSigningTest() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
@@ -1098,7 +1101,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlockBlobDownloadToByteArray() throws URISyntaxException, StorageException, IOException {
         CloudBlockBlob blob = this.container.getBlockBlobReference("blob1");
         BlobTestHelper.doDownloadTest(blob, 1 * 512, 2 * 512, 0);
@@ -1109,7 +1112,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlockBlobDownloadRangeToByteArray() throws URISyntaxException, StorageException, IOException {
         CloudBlockBlob blob = this.container.getBlockBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("downloadrange"));
@@ -1139,7 +1142,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlockBlobDownloadRangeToByteArrayNegativeTest() throws URISyntaxException, StorageException,
     IOException {
         CloudBlockBlob blob = this.container.getBlockBlobReference(BlobTestHelper
@@ -1148,7 +1151,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlockBlobUploadFromStreamWithAccessCondition() throws URISyntaxException, StorageException,
             IOException {
         CloudBlockBlob blob1 = this.container.getBlockBlobReference("blob1");
@@ -1198,7 +1201,7 @@ public class CloudBlockBlobTests {
      * @throws InterruptedException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.SlowTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testBlobNamePlusEncodingTest() throws StorageException, URISyntaxException, IOException,
     InterruptedException {
         final int length = 1 * 1024;
@@ -1219,7 +1222,7 @@ public class CloudBlockBlobTests {
      * @throws InterruptedException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testSendingRequestEventBlob() throws StorageException, URISyntaxException, IOException {
         final int length = 128;
 
@@ -1262,7 +1265,7 @@ public class CloudBlockBlobTests {
      * @throws IOException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlobInputStream() throws URISyntaxException, StorageException, IOException {
         final int blobLength = 16 * 1024;
         final Random randGenerator = new Random();
@@ -1296,7 +1299,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUploadFromByteArray() throws Exception {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
         final CloudBlockBlob blob = this.container.getBlockBlobReference(blobName);
@@ -1327,7 +1330,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUploadDownloadFromFile() throws IOException, StorageException, URISyntaxException {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
         final CloudBlockBlob blob = this.container.getBlockBlobReference(blobName);
@@ -1376,7 +1379,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUploadDownloadFromText() throws URISyntaxException, StorageException, IOException {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
         final CloudBlockBlob blob = this.container.getBlockBlobReference(blobName);
@@ -1386,7 +1389,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlobMultiConditionHeaders() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
@@ -1415,7 +1418,7 @@ public class CloudBlockBlobTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlobConditionalAccess() throws StorageException, IOException, URISyntaxException {
         CloudBlockBlob blob = (CloudBlockBlob) BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB,
                 "test", 128, null);

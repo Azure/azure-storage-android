@@ -18,7 +18,10 @@ import com.microsoft.azure.storage.AccessCondition;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 
 import junit.framework.Assert;
 
@@ -36,7 +39,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class LeaseTests {
 
     protected CloudBlobContainer container;
@@ -132,7 +135,7 @@ public class LeaseTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testContainerBreakLease() throws StorageException, InterruptedException {
         String proposedLeaseId = UUID.randomUUID().toString();
         try {
@@ -367,7 +370,7 @@ public class LeaseTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testBlobLeaseRenew() throws StorageException, IOException, InterruptedException, URISyntaxException {
         final CloudBlob blobRef = BlobTestHelper.uploadNewBlob(this.container, BlobType.BLOCK_BLOB, "test", 128, null);
 

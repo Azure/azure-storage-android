@@ -15,6 +15,9 @@
 
 package com.microsoft.azure.storage;
 
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.blob.BlobTestHelper;
 import com.microsoft.azure.storage.blob.BlobType;
 import com.microsoft.azure.storage.blob.CloudAppendBlob;
@@ -64,7 +67,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class AccountSasTests {
     private static final String DOES_NOT_EXIST_ERROR_MESSAGE = "The specified resource does not exist.";
     private static final String ENUMERATION_ERROR_MESSAGE =
@@ -132,7 +135,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testInvalidIP() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         // Arbitrary non-IP string
         String ip = "not an IP";
@@ -158,7 +161,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testBlobServiceAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         // A file policy should not work on blobs or containers
         try {
@@ -192,7 +195,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testBlobIPAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
 
         IPRange allIP = new IPRange("0.0.0.0", "255.255.255.255");
@@ -232,7 +235,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testBlobProtocolAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
 
@@ -265,7 +268,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testBlobAccountSasCombinations()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         // Test full and empty permissions
@@ -290,7 +293,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testFileServiceAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         // A blob policy should not work on files or shares
         try {
@@ -324,7 +327,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testFileIPAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
 
         IPRange allIP = new IPRange("0.0.0.0", "255.255.255.255");
@@ -364,7 +367,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testFileProtocolAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
 
@@ -397,7 +400,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testFileAccountSasCombinations()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         // Test full and empty permissions
@@ -421,7 +424,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testQueueServiceAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException, InterruptedException {
 
@@ -457,7 +460,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testQueueIPAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException, InterruptedException {
 
@@ -498,7 +501,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testQueueProtocolAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException, InterruptedException {
 
@@ -531,7 +534,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testQueueAccountSasCombinations()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException, InterruptedException {
         // Test full and empty permissions
@@ -558,7 +561,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testTableServiceAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         // A blob policy should not work on tables
         try {
@@ -592,7 +595,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testTableIPAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
 
         IPRange allIP = new IPRange("0.0.0.0", "255.255.255.255");
@@ -632,7 +635,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testTableProtocolAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
 
@@ -665,7 +668,7 @@ public class AccountSasTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testTableAccountSasCombinations()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         // Test full and empty permissions

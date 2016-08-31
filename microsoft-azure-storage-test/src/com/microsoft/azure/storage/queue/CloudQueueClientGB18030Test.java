@@ -15,7 +15,9 @@
 package com.microsoft.azure.storage.queue;
 
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 
 import org.junit.After;
 import org.junit.Before;
@@ -27,7 +29,7 @@ import java.util.EnumSet;
 
 import static org.junit.Assert.assertEquals;
 
-@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class CloudQueueClientGB18030Test {
 
     // GB18030CharSet is "Ã¥â€¢Å Ã©Â½â€žÃ¤Â¸â€šÃ§â€¹â€ºÃ§â€¹Å“Ã¯Â§Â±Ã¯Â¤Â¬Ã¯Â§Â±Ã¯Â¨Å’Ã¯Â¨Â©Ã‹Å Ã¢â€“â€¡Ã¢â€“Ë†Ã£â‚¬Å¾Ã£â‚¬Â¡Ã¯Â¿Â¤Ã¢â€žÂ¡Ã£Ë†Â±Ã¢â‚¬ï¿½Ã£Æ’Â¼Ã¯Â¹Â¡Ã¯Â¹Â¢Ã¯Â¹Â«Ã£â‚¬ï¿½Ã£â‚¬â€œÃ¢â€¦Â°Ã¢â€¦Â¹Ã¢â€™Ë†Ã¢â€šÂ¬Ã£Ë†Â Ã£Ë†Â©Ã¢â€¦Â Ã¢â€¦Â«Ã¯Â¼ï¿½Ã¯Â¿Â£Ã£ï¿½ï¿½Ã£â€šâ€œÃ£â€šÂ¡Ã£Æ’Â¶ÃŽâ€˜Ã¯Â¸Â´Ã�ï¿½Ã�Â¯Ã�Â°Ã‘ï¿½Ã„ï¿½Ã‰Â¡Ã£â€žâ€¦Ã£â€žÂ©Ã¢â€�â‚¬Ã¢â€¢â€¹Ã¯Â¸ÂµÃ¯Â¹â€žÃ¯Â¸Â»Ã¯Â¸Â±Ã¯Â¸Â³Ã¯Â¸Â´Ã¢â€¦Â°Ã¢â€¦Â¹Ã‰â€˜Ã®Å¸â€¡Ã‰Â¡Ã£â‚¬â€¡Ã£â‚¬Â¾Ã¢Â¿Â»Ã¢Âºï¿½Ã®Â¡Æ’Ã¤Å“Â£Ã®Â¡Â¤Ã¢â€šÂ¬Ã£ï¿½â‚¬Ã£â€™Â£Ã£â€¢Â´Ã£â€¢ÂµÃ£â„¢â€°Ã£â„¢Å Ã¤ÂµÂ¯Ã¤ÂµÂ°Ã¤Â¶Â´Ã¤Â¶Âµ".

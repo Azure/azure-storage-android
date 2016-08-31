@@ -14,6 +14,10 @@
  */
 package com.microsoft.azure.storage;
 
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.BlobTestHelper;
 import com.microsoft.azure.storage.blob.BlobType;
@@ -44,7 +48,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-@Category({ SecondaryTests.class, TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ SecondaryTests.class, DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class SecondaryTests {
 
     @Test
@@ -314,7 +318,7 @@ public class SecondaryTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testMultiLocationRetriesBlob() throws URISyntaxException, StorageException {
         List<RetryInfo> retryInfoList = new ArrayList<RetryInfo>();
         List<RetryContext> retryContextList = new ArrayList<RetryContext>();
@@ -423,7 +427,7 @@ public class SecondaryTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testMultiLocationRetriesQueue() throws URISyntaxException, StorageException {
         List<RetryInfo> retryInfoList = new ArrayList<RetryInfo>();
         List<RetryContext> retryContextList = new ArrayList<RetryContext>();
@@ -532,7 +536,7 @@ public class SecondaryTests {
     }
 
     @Test
-    @Category(TestRunners.SlowTests.class)
+    @Category(SlowTests.class)
     public void testMultiLocationRetriesTable() throws URISyntaxException, StorageException {
         List<RetryInfo> retryInfoList = new ArrayList<RetryInfo>();
         List<RetryContext> retryContextList = new ArrayList<RetryContext>();

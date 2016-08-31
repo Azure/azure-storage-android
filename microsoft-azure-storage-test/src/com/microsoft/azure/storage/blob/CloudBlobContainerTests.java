@@ -26,7 +26,10 @@ import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.core.SR;
 
 import org.junit.After;
@@ -57,7 +60,7 @@ import static org.junit.Assert.fail;
 /**
  * Blob Container Tests
  */
-@Category({ TestRunners.CloudTests.class })
+@Category({ CloudTests.class })
 public class CloudBlobContainerTests {
     protected static CloudBlobClient client;
     protected CloudBlobContainer container;
@@ -116,7 +119,7 @@ public class CloudBlobContainerTests {
      * @throws URISyntaxException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerReference() throws StorageException, URISyntaxException{
         CloudBlobClient client = BlobTestHelper.createCloudBlobClient();
         CloudBlobContainer container = client.getContainerReference("container");
@@ -138,7 +141,7 @@ public class CloudBlobContainerTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerReferenceFromServer() throws StorageException, URISyntaxException, IOException {
         this.container.create();
 
@@ -165,7 +168,7 @@ public class CloudBlobContainerTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerReferenceFromServerSnapshot() throws StorageException, URISyntaxException,
             IOException {
         this.container.create();
@@ -181,7 +184,7 @@ public class CloudBlobContainerTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerReferenceFromServerSAS() throws StorageException, URISyntaxException,
             IOException, InvalidKeyException {
         this.container.create();
@@ -202,7 +205,7 @@ public class CloudBlobContainerTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerReferenceFromServerMissingBlob() throws StorageException, URISyntaxException,
             IOException {
         this.container.create();
@@ -224,7 +227,7 @@ public class CloudBlobContainerTests {
      * @throws URISyntaxException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerCreate() throws StorageException {
         this.container.create();
         try {
@@ -245,7 +248,7 @@ public class CloudBlobContainerTests {
      * @throws URISyntaxException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerCreateIfNotExists() throws StorageException {
         assertTrue(this.container.createIfNotExists());
         assertTrue(this.container.exists());
@@ -258,7 +261,7 @@ public class CloudBlobContainerTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerDeleteIfExists() throws  StorageException {
         assertFalse(container.deleteIfExists());
         container.create();
@@ -306,7 +309,7 @@ public class CloudBlobContainerTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerExists() throws StorageException {
         assertFalse(this.container.exists());
 
@@ -326,7 +329,7 @@ public class CloudBlobContainerTests {
      * @throws InterruptedException
      */
     @Test
-    @Category({ TestRunners.SlowTests.class, TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ SlowTests.class, DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerSetPermissions() throws  StorageException,
             InterruptedException, URISyntaxException {
         CloudBlobClient client = BlobTestHelper.createCloudBlobClient();
@@ -370,7 +373,7 @@ public class CloudBlobContainerTests {
      *
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerPermissionsFromString() {
         SharedAccessBlobPolicy policy = new SharedAccessBlobPolicy();
 
@@ -405,7 +408,7 @@ public class CloudBlobContainerTests {
      * Write permission to string
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerPermissionsToString() {
         SharedAccessBlobPolicy policy = new SharedAccessBlobPolicy();
 
@@ -434,7 +437,7 @@ public class CloudBlobContainerTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerUploadMetadata() throws StorageException, URISyntaxException {
         this.container.create();
 
@@ -466,7 +469,7 @@ public class CloudBlobContainerTests {
     }
 
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerInvalidMetadata() throws StorageException{
         // test client-side fails correctly
         testMetadataFailures(this.container, null, "value1", true);
@@ -525,7 +528,7 @@ public class CloudBlobContainerTests {
      * @throws InterruptedException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerListBlobs() throws StorageException, IOException, URISyntaxException {
         this.container.create();
         int numBlobs = 200;
@@ -564,7 +567,7 @@ public class CloudBlobContainerTests {
      * @throws IOException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerListBlobsPrefix() throws StorageException, IOException, URISyntaxException {
         this.container.create();
         int numBlobs = 2;
@@ -606,7 +609,7 @@ public class CloudBlobContainerTests {
      * @throws IOException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerListBlobsNext() throws StorageException, IOException, URISyntaxException {
         this.container.create();
 
@@ -634,7 +637,7 @@ public class CloudBlobContainerTests {
      * @throws IOException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerListBlobsMaxResultsValidation()
             throws StorageException, IOException, URISyntaxException {
         this.container.create();
@@ -663,7 +666,7 @@ public class CloudBlobContainerTests {
      * @throws InterruptedException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerListBlobsOptions() throws StorageException, IOException, InterruptedException,
             URISyntaxException {
         this.container.create();
@@ -726,7 +729,7 @@ public class CloudBlobContainerTests {
      * @throws InterruptedException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudBlobContainerSharedKey() throws StorageException, InterruptedException {
         BlobContainerPermissions expectedPermissions;
         BlobContainerPermissions testPermissions;

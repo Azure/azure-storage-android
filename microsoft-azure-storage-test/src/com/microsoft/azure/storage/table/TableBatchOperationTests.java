@@ -19,7 +19,9 @@ import com.microsoft.azure.storage.RetryNoRetry;
 import com.microsoft.azure.storage.SecondaryTests;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.core.SR;
 import com.microsoft.azure.storage.table.TableTestHelper.Class1;
 import com.microsoft.azure.storage.table.TableTestHelper.Class2;
@@ -44,19 +46,19 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class TableBatchOperationTests {
 
     private CloudTable table;
 
     @Before
-    public void tableTestMethodSetUp() throws URISyntaxException, StorageException {
+    public void tableBatchOperationTestMethodSetUp() throws URISyntaxException, StorageException {
         this.table = TableTestHelper.getRandomTableReference();
         this.table.createIfNotExists();
     }
 
     @After
-    public void tableTestMethodTearDown() throws StorageException {
+    public void tableBatchOperationTestMethodTearDown() throws StorageException {
         this.table.deleteIfExists();
     }
 

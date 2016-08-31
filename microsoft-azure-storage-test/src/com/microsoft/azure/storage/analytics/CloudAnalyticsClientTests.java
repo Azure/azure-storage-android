@@ -17,7 +17,9 @@ package com.microsoft.azure.storage.analytics;
 import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.StorageLocation;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import com.microsoft.azure.storage.blob.ListBlobItem;
@@ -49,7 +51,7 @@ import static org.junit.Assert.fail;
 /**
  * Analytics Client Tests
  */
-@Category({TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class})
+@Category({DevFabricTests.class, DevStoreTests.class, CloudTests.class})
 public class CloudAnalyticsClientTests {
 
     protected CloudAnalyticsClient client;

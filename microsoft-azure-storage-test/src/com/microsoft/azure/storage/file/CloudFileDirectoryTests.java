@@ -21,7 +21,9 @@ import com.microsoft.azure.storage.SendingRequestEvent;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.core.PathUtility;
 import com.microsoft.azure.storage.core.SR;
 
@@ -48,7 +50,7 @@ import static org.junit.Assert.fail;
 /**
  * File Directory Tests
  */
-@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class CloudFileDirectoryTests {
 
     private CloudFileShare share;
@@ -144,7 +146,7 @@ public class CloudFileDirectoryTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryConstructor() throws URISyntaxException, StorageException {
         CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference("directory1");
         CloudFileDirectory directory2 = new CloudFileDirectory(directory.getStorageUri(), 
@@ -163,7 +165,7 @@ public class CloudFileDirectoryTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryCreateAndDelete() throws URISyntaxException, StorageException {
         CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference("directory1");
         directory.create();
@@ -179,7 +181,7 @@ public class CloudFileDirectoryTests {
      * @throws URISyntaxException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryCreateIfNotExists() throws StorageException, URISyntaxException {
         CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference("directory1");
         assertTrue(directory.createIfNotExists());
@@ -195,7 +197,7 @@ public class CloudFileDirectoryTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryDeleteIfExists() throws URISyntaxException, StorageException {
         CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference("directory1");
         assertFalse(directory.deleteIfExists());
@@ -211,7 +213,7 @@ public class CloudFileDirectoryTests {
      * @throws URISyntaxException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryListFilesAndDirectories() throws StorageException, URISyntaxException {
         if (doCloudFileDirectorySetup(this.share)) {
             CloudFileDirectory topDir1 = this.share.getRootDirectoryReference().getDirectoryReference("TopDir1");
@@ -270,7 +272,7 @@ public class CloudFileDirectoryTests {
      * @throws URISyntaxException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryListFilesAndDirectoriesMaxResultsValidation()
             throws StorageException, URISyntaxException {
         if (doCloudFileDirectorySetup(this.share)) {
@@ -301,7 +303,7 @@ public class CloudFileDirectoryTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryWithFilesDelete() throws URISyntaxException, StorageException {
         if (doCloudFileDirectorySetup(this.share)) {
             CloudFileDirectory dir1 = this.share.getRootDirectoryReference().getDirectoryReference(
@@ -525,7 +527,7 @@ public class CloudFileDirectoryTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryCreateDirectoryWithoutParent() throws URISyntaxException, StorageException {
         CloudFileDirectory dir1 = this.share.getRootDirectoryReference().getDirectoryReference("Dir1");
         CloudFileDirectory dir2 = this.share.getRootDirectoryReference().getDirectoryReference("Dir1/Dir2");
@@ -550,7 +552,7 @@ public class CloudFileDirectoryTests {
      * @throws URISyntaxException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryGetParent() throws StorageException, URISyntaxException {
         CloudFile file = this.share.getRootDirectoryReference().getDirectoryReference("Dir1")
                 .getFileReference("File1");
@@ -585,7 +587,7 @@ public class CloudFileDirectoryTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryGetSubdirectoryAndTraverseBackToParent() throws URISyntaxException, StorageException {
         CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference("TopDir1");
         CloudFileDirectory subDirectory = directory.getDirectoryReference("MidDir1");
@@ -601,7 +603,7 @@ public class CloudFileDirectoryTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryGetParentOnRoot() throws URISyntaxException, StorageException {
         CloudFileDirectory root = this.share.getRootDirectoryReference().getDirectoryReference("TopDir1");
         CloudFileDirectory parent = root.getParent();
@@ -618,7 +620,7 @@ public class CloudFileDirectoryTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryHierarchicalTraversal() throws URISyntaxException, StorageException {
         // Traverse hierarchically starting with length 1
         CloudFileDirectory directory1 = this.share.getRootDirectoryReference().getDirectoryReference("Dir1");
@@ -660,7 +662,7 @@ public class CloudFileDirectoryTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryGetEmptySubDirectory() throws URISyntaxException, StorageException {
         CloudFileDirectory root = this.share.getRootDirectoryReference().getDirectoryReference("TopDir1");
         try {
@@ -679,7 +681,7 @@ public class CloudFileDirectoryTests {
      * @throws StorageException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testCloudFileDirectoryAbsoluteUriAppended() throws URISyntaxException, StorageException {
         CloudFileDirectory dir = this.share.getRootDirectoryReference().getDirectoryReference(
                 this.share.getUri().toString());
@@ -700,7 +702,7 @@ public class CloudFileDirectoryTests {
      * @throws IOException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudFileDirectoryDeleteIfExistsErrorCode() throws URISyntaxException, StorageException, IOException {
         final CloudFileDirectory directory = this.share.getRootDirectoryReference().getDirectoryReference(
                 "directory");

@@ -17,7 +17,9 @@ package com.microsoft.azure.storage.file;
 import com.microsoft.azure.storage.ResultContinuation;
 import com.microsoft.azure.storage.ResultSegment;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.core.SR;
 
 import org.junit.Test;
@@ -43,7 +45,7 @@ public class CloudFileClientTests {
      * @throws URISyntaxException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListSharesTest() throws StorageException, URISyntaxException {
         CloudFileClient fileClient = FileTestHelper.createCloudFileClient();
         ArrayList<String> shareList = new ArrayList<String>();
@@ -93,7 +95,7 @@ public class CloudFileClientTests {
      * @throws URISyntaxException
      */
     @Test
-    @Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListSharesMaxResultsValidationTest() throws StorageException, URISyntaxException {
         CloudFileClient fileClient = FileTestHelper.createCloudFileClient();
         String prefix = UUID.randomUUID().toString();

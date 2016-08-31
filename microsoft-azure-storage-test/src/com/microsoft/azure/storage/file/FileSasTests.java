@@ -28,7 +28,10 @@ import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.StorageUri;
 import com.microsoft.azure.storage.TestHelper;
-import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.core.PathUtility;
 import com.microsoft.azure.storage.core.SR;
 
@@ -59,7 +62,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category({ TestRunners.DevFabricTests.class, TestRunners.DevStoreTests.class, TestRunners.CloudTests.class })
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class FileSasTests {
 
     protected static CloudFileClient fileClient = null;
@@ -256,7 +259,7 @@ public class FileSasTests {
     }
 
     @Test
-    @Category({ SecondaryTests.class, TestRunners.SlowTests.class })
+    @Category({ SecondaryTests.class, SlowTests.class })
     public void testShareSAS() throws IllegalArgumentException, StorageException, URISyntaxException,
             InvalidKeyException, InterruptedException {
         SharedAccessFilePolicy policy1 = createSharedAccessPolicy(
@@ -299,7 +302,7 @@ public class FileSasTests {
     }
 
     @Test
-    @Category({ TestRunners.SlowTests.class })
+    @Category({ SlowTests.class })
     public void testShareUpdateSAS()
             throws InvalidKeyException, StorageException, IOException, URISyntaxException, InterruptedException {
         // Create a policy with read/write access and get SAS.
@@ -339,7 +342,7 @@ public class FileSasTests {
     }
 
     @Test
-    @Category({ TestRunners.SlowTests.class })
+    @Category({ SlowTests.class })
     public void testShareSASCombinations()
             throws StorageException, URISyntaxException, IOException, InvalidKeyException, InterruptedException {
         EnumSet<SharedAccessFilePermissions> permissionSet = null;
