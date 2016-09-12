@@ -35,8 +35,7 @@ import org.junit.experimental.categories.Category;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * Table Serializer Tests

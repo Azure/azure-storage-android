@@ -51,11 +51,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @Category({DevFabricTests.class, DevStoreTests.class, CloudTests.class})
 public class GenericTests {

@@ -31,7 +31,7 @@ import org.junit.experimental.categories.Category;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @Category({ CloudTests.class, DevFabricTests.class, DevStoreTests.class })
 @Ignore

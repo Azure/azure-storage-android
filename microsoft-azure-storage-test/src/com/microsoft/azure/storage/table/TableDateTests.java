@@ -27,8 +27,7 @@ import org.junit.experimental.categories.Category;
 import java.net.URISyntaxException;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Table Operation Tests

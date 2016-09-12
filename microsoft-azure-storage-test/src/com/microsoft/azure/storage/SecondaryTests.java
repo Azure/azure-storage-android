@@ -45,8 +45,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @Category({ SecondaryTests.class, DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class SecondaryTests {
