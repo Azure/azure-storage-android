@@ -18,10 +18,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class CloudBlobDirectoryTests {

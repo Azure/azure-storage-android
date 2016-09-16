@@ -29,9 +29,7 @@ import org.junit.experimental.categories.Category;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class TableODataTests {

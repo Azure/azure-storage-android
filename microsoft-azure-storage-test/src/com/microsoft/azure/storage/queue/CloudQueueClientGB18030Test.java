@@ -27,7 +27,7 @@ import org.junit.experimental.categories.Category;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
 public class CloudQueueClientGB18030Test {
