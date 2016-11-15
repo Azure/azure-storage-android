@@ -11,6 +11,13 @@ BLOB
 QUEUE
  * For addMessage() the CloudQueueMessage message passed in will be populated with the pop receipt, insertion/expiration time, and message ID.
 
+TABLE
+ * Removed deprecated table AtomPub support.
+
+OTHER
+ * Removed deprecated constructors which take service clients in favor of constructors which take credentials.
+ * Removed deprecated Credentials and StorageKey classes. Please use the appropriate methods on StorageCredentialsAccountAndKey instead.
+
 Changes in 0.7.0
 
 BLOB

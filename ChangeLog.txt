@@ -12,6 +12,7 @@
  * Fixed a bug where copying from a blob that included a SAS token and a snapshot ommitted the SAS token.
 
 2016.07.14 Version 0.8.0
+ * Fixed a bug in client-side encryption for tables that was preventing the Java client from decrypting entities encrypted with the .NET client, and vice versa.
  * Added support for server-side encryption.
  * Fixed a bug in the retry policies where 300 status codes were being retried when they shouldn't be.
  * Added support for getBlobReferenceFromServer methods on CloudBlobContainer to support retrieving a blob without knowing its type.
