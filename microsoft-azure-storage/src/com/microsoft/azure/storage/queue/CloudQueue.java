@@ -201,7 +201,9 @@ public final class CloudQueue {
      * 
      * @param message
      *            A {@link CloudQueueMessage} object that specifies the message to add.
-     * 
+     *            The message object is modified to include the message ID and pop receipt,
+     *            and can be used in subsequent calls to updateMessage and deleteMessage.
+     *
      * @throws StorageException
      *             If a storage service error occurred during the operation.
      */
@@ -215,6 +217,8 @@ public final class CloudQueue {
      * 
      * @param message
      *            A {@link CloudQueueMessage} object that specifies the message to add.
+     *            The message object is modified to include the message ID and pop receipt,
+     *            and can be used in subsequent calls to updateMessage and deleteMessage.
      * 
      * @param timeToLiveInSeconds
      *            The maximum time to allow the message to be in the queue. A value of zero will set the time-to-live to
@@ -234,7 +238,7 @@ public final class CloudQueue {
      *            An {@link OperationContext} object that represents the context for the current operation. This object
      *            is used to track requests to the storage service, and to provide additional runtime information about
      *            the operation.
-     * 
+     *
      * @throws StorageException
      *             If a storage service error occurred during the operation.
      */
@@ -260,8 +264,8 @@ public final class CloudQueue {
         options = QueueRequestOptions.populateAndApplyDefaults(options, this.queueServiceClient);
 
         ExecutionEngine.executeWithRetry(this.queueServiceClient, this,
-                this.addMessageImpl(message, realTimeToLiveInSeconds, initialVisibilityDelayInSeconds, options),
-                options.getRetryPolicyFactory(), opContext);
+            this.addMessageImpl(message, realTimeToLiveInSeconds, initialVisibilityDelayInSeconds, options),
+            options.getRetryPolicyFactory(), opContext);
     }
 
     private StorageRequest<CloudQueueClient, CloudQueue, Void> addMessageImpl(final CloudQueueMessage message,
@@ -272,8 +276,8 @@ public final class CloudQueue {
         try {
             final byte[] messageBytes = QueueMessageSerializer.generateMessageRequestBody(stringToSend);
 
-            final StorageRequest<CloudQueueClient, CloudQueue, Void> putRequest = new StorageRequest<CloudQueueClient, CloudQueue, Void>(
-                    options, this.getStorageUri()) {
+            final StorageRequest<CloudQueueClient, CloudQueue, Void> putRequest =
+                    new StorageRequest<CloudQueueClient, CloudQueue, Void>(options, this.getStorageUri()) {
 
                 @Override
                 public HttpURLConnection buildRequest(CloudQueueClient client, CloudQueue queue,
@@ -292,12 +296,22 @@ public final class CloudQueue {
                 }
 
                 @Override
-                public Void preProcessResponse(CloudQueue parentObject, CloudQueueClient client,
+                public Void preProcessResponse(CloudQueue queue, CloudQueueClient client,
                         OperationContext context) throws Exception {
                     if (this.getResult().getStatusCode() != HttpURLConnection.HTTP_CREATED) {
                         this.setNonExceptionedRetryableFailure(true);
                         return null;
                     }
+
+                    // Parse the returned messages
+                    CloudQueueMessage returnedMessage = QueueMessageHandler.readMessages(
+                            this.getConnection().getInputStream(), queue.shouldEncodeMessage).get(0);
+
+                    message.setInsertionTime(returnedMessage.getInsertionTime());
+                    message.setExpirationTime(returnedMessage.getExpirationTime());
+                    message.setNextVisibleTime(returnedMessage.getNextVisibleTime());
+                    message.setMessageId(returnedMessage.getMessageId());
+                    message.setPopReceipt(returnedMessage.getPopReceipt());
 
                     return null;
                 }

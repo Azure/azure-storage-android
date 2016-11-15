@@ -565,7 +565,7 @@ public final class Constants {
         /**
          * The current storage version header value.
          */
-        public static final String TARGET_STORAGE_VERSION = "2015-12-11";
+        public static final String TARGET_STORAGE_VERSION = "2016-05-31";
 
         /**
          * The header that specifies the next visible time for a queue message.
@@ -1103,6 +1103,11 @@ public final class Constants {
      * XML element for properties.
      */
     public static final String PROPERTIES = "Properties";
+
+    /**
+     * XML element for  public access
+     */
+    public static final String PUBLIC_ACCESS_ELEMENT = "PublicAccess";
 
     /**
      * XML element for the server encryption status.

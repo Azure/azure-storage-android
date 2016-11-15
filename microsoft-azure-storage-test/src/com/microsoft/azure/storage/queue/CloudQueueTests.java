@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright Microsoft Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,26 +14,7 @@
  */
 package com.microsoft.azure.storage.queue;
 
-import com.microsoft.azure.storage.LocationMode;
-import com.microsoft.azure.storage.NameValidator;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.RetryNoRetry;
-import com.microsoft.azure.storage.SendingRequestEvent;
-import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
-import com.microsoft.azure.storage.StorageErrorCodeStrings;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestHelper;
-import com.microsoft.azure.storage.TestRunners.CloudTests;
-import com.microsoft.azure.storage.TestRunners.DevFabricTests;
-import com.microsoft.azure.storage.TestRunners.DevStoreTests;
-import com.microsoft.azure.storage.TestRunners.SlowTests;
-import com.microsoft.azure.storage.core.PathUtility;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import static org.junit.Assert.*;
 
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -49,7 +30,27 @@ import java.util.Random;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import com.microsoft.azure.keyvault.extensions.Strings;
+import com.microsoft.azure.storage.LocationMode;
+import com.microsoft.azure.storage.NameValidator;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.RetryNoRetry;
+import com.microsoft.azure.storage.SendingRequestEvent;
+import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
+import com.microsoft.azure.storage.StorageErrorCodeStrings;
+import com.microsoft.azure.storage.StorageEvent;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestHelper;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
+import com.microsoft.azure.storage.core.PathUtility;
 
 /**
  * Queue Tests
@@ -663,12 +664,40 @@ public class CloudQueueTests {
 
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
-    public void testClearMessages() throws  StorageException {
+    public void testAddMessageVerifyPopReceipt() throws StorageException
+    {
+        CloudQueueMessage message1 = new CloudQueueMessage("firstmessagetest1");
+        message1.setNextVisibleTime(null);
+        this.queue.addMessage(message1);
+
+        VerifyAddMessageResult(message1, "firstmessagetest1");
+    }
+
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
+    public void testDeleteMessageWithAddMessagePopReceipt() throws StorageException
+    {
+        CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
+        message1.setNextVisibleTime(null);
+        this.queue.addMessage(message1);
+
+        VerifyAddMessageResult(message1, "messagetest1");
+
+        queue.deleteMessage(message1);
+
+        assertNull(queue.retrieveMessage());
+    }
+
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
+    public void testClearMessages() throws StorageException {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
         this.queue.addMessage(message1);
+        VerifyAddMessageResult(message1, "messagetest1");
 
         CloudQueueMessage message2 = new CloudQueueMessage("messagetest2");
         this.queue.addMessage(message2);
+        VerifyAddMessageResult(message2, "messagetest2");
 
         int count = 0;
         for (CloudQueueMessage m : this.queue.peekMessages(32)) {
@@ -713,6 +742,7 @@ public class CloudQueueTests {
         String msgContent = UUID.randomUUID().toString();
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
         this.queue.addMessage(message);
+        VerifyAddMessageResult(message, msgContent);
         CloudQueueMessage msgFromRetrieve1 = this.queue.retrieveMessage();
         assertEquals(message.getMessageContentAsString(), msgContent);
         assertEquals(msgFromRetrieve1.getMessageContentAsString(), msgContent);
@@ -1445,5 +1475,16 @@ public class CloudQueueTests {
                 new StorageCredentialsSharedAccessSignature(sasString));
         CloudQueue queue2 = new CloudQueue(queueUri, queueClient2.getCredentials());
         queue2.getName();
+    }
+
+    private void VerifyAddMessageResult(CloudQueueMessage originalMessage, String expectedMessageContent)
+    {
+        assertFalse(Strings.isNullOrEmpty(originalMessage.getId()));
+        assertNotNull(originalMessage.getInsertionTime());
+        assertNotNull(originalMessage.getExpirationTime());
+        assertFalse(Strings.isNullOrEmpty(originalMessage.getPopReceipt()));
+
+        assertTrue(originalMessage.messageContent.equals(expectedMessageContent));
+        assertNotNull(originalMessage.getNextVisibleTime());
     }
 }
