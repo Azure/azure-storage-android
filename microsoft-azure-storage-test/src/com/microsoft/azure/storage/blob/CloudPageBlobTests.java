@@ -14,24 +14,7 @@
  */
 package com.microsoft.azure.storage.blob;
 
-import com.microsoft.azure.storage.AccessCondition;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.RetryNoRetry;
-import com.microsoft.azure.storage.SendingRequestEvent;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestRunners.CloudTests;
-import com.microsoft.azure.storage.TestRunners.DevFabricTests;
-import com.microsoft.azure.storage.TestRunners.DevStoreTests;
-import com.microsoft.azure.storage.core.SR;
-import com.microsoft.azure.storage.core.Utility;
-
 import junit.framework.Assert;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -69,9 +52,11 @@ import com.microsoft.azure.storage.SharedAccessAccountPermissions;
 import com.microsoft.azure.storage.SharedAccessAccountPolicy;
 import com.microsoft.azure.storage.SharedAccessAccountResourceType;
 import com.microsoft.azure.storage.SharedAccessAccountService;
+import com.microsoft.azure.storage.StorageCredentials;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.TestHelper;
+import com.microsoft.azure.storage.TestRunners;
 import com.microsoft.azure.storage.TestRunners.CloudTests;
 import com.microsoft.azure.storage.TestRunners.DevFabricTests;
 import com.microsoft.azure.storage.TestRunners.DevStoreTests;
@@ -1163,7 +1148,11 @@ public class CloudPageBlobTests {
         final UriQueryBuilder builder = new UriQueryBuilder();
         builder.add(Constants.QueryConstants.SNAPSHOT, sasSnapshotBlob.snapshotID);
         URI sourceUri = TestHelper.defiddler(builder.addToURI(sasSnapshotBlob.getTransformedAddress(null).getPrimaryUri()));
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> c147bde... Incremental Copy Support
         String copyId = null;
         if (overload == 0) {
             copyId = copy.startIncrementalCopy(BlobTestHelper.defiddler(sasSnapshotBlob));

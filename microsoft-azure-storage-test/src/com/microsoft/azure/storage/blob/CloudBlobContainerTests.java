@@ -42,6 +42,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.microsoft.azure.storage.Constants;
+import com.microsoft.azure.storage.core.SR;
+import com.microsoft.azure.storage.core.UriQueryBuilder;
 import com.microsoft.azure.storage.NameValidator;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.ResultContinuation;
@@ -60,8 +62,6 @@ import com.microsoft.azure.storage.TestRunners.CloudTests;
 import com.microsoft.azure.storage.TestRunners.DevFabricTests;
 import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.TestRunners.SlowTests;
-import com.microsoft.azure.storage.core.SR;
-import com.microsoft.azure.storage.core.UriQueryBuilder;
 
 /**
  * Blob Container Tests
