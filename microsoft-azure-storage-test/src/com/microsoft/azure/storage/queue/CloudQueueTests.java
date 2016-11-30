@@ -35,7 +35,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.microsoft.azure.keyvault.extensions.Strings;
 import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.NameValidator;
 import com.microsoft.azure.storage.OperationContext;
@@ -1479,10 +1478,10 @@ public class CloudQueueTests {
 
     private void VerifyAddMessageResult(CloudQueueMessage originalMessage, String expectedMessageContent)
     {
-        assertFalse(Strings.isNullOrEmpty(originalMessage.getId()));
+        assertFalse(originalMessage.getId() == null || originalMessage.getId().isEmpty());
         assertNotNull(originalMessage.getInsertionTime());
         assertNotNull(originalMessage.getExpirationTime());
-        assertFalse(Strings.isNullOrEmpty(originalMessage.getPopReceipt()));
+        assertFalse(originalMessage.getPopReceipt() == null || originalMessage.getPopReceipt().isEmpty());
 
         assertTrue(originalMessage.messageContent.equals(expectedMessageContent));
         assertNotNull(originalMessage.getNextVisibleTime());
