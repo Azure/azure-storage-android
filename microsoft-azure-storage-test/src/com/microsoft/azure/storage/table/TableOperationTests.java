@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,16 +14,10 @@
  */
 package com.microsoft.azure.storage.table;
 
-import java.net.HttpURLConnection;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.UUID;
-
-import junit.framework.TestCase;
-
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.core.SR;
 import com.microsoft.azure.storage.table.TableRequestOptions.PropertyResolver;
 import com.microsoft.azure.storage.table.TableTestHelper.Class1;
@@ -32,24 +26,40 @@ import com.microsoft.azure.storage.table.TableTestHelper.EmptyClass;
 import com.microsoft.azure.storage.table.TableTestHelper.EmptyClassDynamic;
 import com.microsoft.azure.storage.table.TableTestHelper.class1class2PropertyResolver;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.UUID;
+
+import static org.junit.Assert.*;
+
 /**
  * Table Operation Tests
  */
-public class TableOperationTests extends TestCase {
+@Category({DevFabricTests.class, DevStoreTests.class, CloudTests.class})
+public class TableOperationTests {
 
     private CloudTable table;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException {
+    @Before
+    public void tableOperationTestMethodSetUp() throws URISyntaxException, StorageException {
         this.table = TableTestHelper.getRandomTableReference();
         this.table.createIfNotExists();
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void tableOperationTestMethodTearDown() throws StorageException {
         this.table.deleteIfExists();
     }
 
+    @Test
     public void testPropertyCacheDisable() {
         try {
             TableServiceEntity.getReflectedEntityCache().put(this.getClass(), new HashMap<String, PropertyPair>());
@@ -60,40 +70,41 @@ public class TableOperationTests extends TestCase {
 
             TableServiceEntity.setReflectedEntityCacheDisabled(false);
             assertEquals(false, TableServiceEntity.isReflectedEntityCacheDisabled());
-        }
-        finally {
+        } finally {
 
             TableServiceEntity.setReflectedEntityCacheDisabled(false);
         }
     }
 
+    @Test
     public void testRetrieveWithNullResolver() {
         try {
             TableOperation.retrieve("foo", "blah", (EntityResolver<?>) null);
-        }
-        catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ex) {
             assertEquals(ex.getMessage(),
                     String.format(SR.ARGUMENT_NULL_OR_EMPTY, SR.QUERY_REQUIRES_VALID_CLASSTYPE_OR_RESOLVER));
         }
     }
-    
-	public void testEntityWithSingleQuote() throws StorageException {
-		TableRequestOptions options = new TableRequestOptions();
-		options.setTablePayloadFormat(TablePayloadFormat.Json);
 
-		EmptyClass ref = new EmptyClass();
-		ref.setPartitionKey("partition'key");
-		ref.setRowKey("row'key");
+    @Test
+    public void testEntityWithSingleQuote() throws StorageException {
+        TableRequestOptions options = new TableRequestOptions();
+        options.setTablePayloadFormat(TablePayloadFormat.Json);
 
-		this.table.execute(TableOperation.insert(ref), options, null);
-		this.table.execute(TableOperation.merge(ref), options, null);
-		this.table.execute(TableOperation.insertOrReplace(ref), options, null);
-		this.table.execute(TableOperation.insertOrMerge(ref), options, null);
-		this.table.execute(TableOperation.replace(ref), options, null);
-		this.table.execute(TableOperation.retrieve(ref.getPartitionKey(), ref.getRowKey(), EmptyClass.class), options, null);
-		this.table.execute(TableOperation.delete(ref), options, null);
-	}
+        EmptyClass ref = new EmptyClass();
+        ref.setPartitionKey("partition'key");
+        ref.setRowKey("row'key");
 
+        this.table.execute(TableOperation.insert(ref), options, null);
+        this.table.execute(TableOperation.merge(ref), options, null);
+        this.table.execute(TableOperation.insertOrReplace(ref), options, null);
+        this.table.execute(TableOperation.insertOrMerge(ref), options, null);
+        this.table.execute(TableOperation.replace(ref), options, null);
+        this.table.execute(TableOperation.retrieve(ref.getPartitionKey(), ref.getRowKey(), EmptyClass.class), options, null);
+        this.table.execute(TableOperation.delete(ref), options, null);
+    }
+
+    @Test
     public void testInsertEntityWithoutPartitionKeyRowKey() {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -104,11 +115,9 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(TableOperation.insert(ref), options, null);
             fail("Inserts should not allow null row keys.");
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             // continue, this is appropriate
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             fail("Inserts with null row key should fail with an IllegalArgumentException thrown by assert not null.");
         }
 
@@ -117,15 +126,14 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(TableOperation.insert(ref), options, null);
             fail("Inserts should not allow null partition keys.");
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             // continue, this is appropriate
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             fail("Inserts with null partition key should fail with an IllegalArgumentException thrown by assert not null.");
         }
     }
 
+    @Test
     public void testInsertEntityWithPropertyMoreThan255chars() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -144,8 +152,7 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(TableOperation.insert(ref), options, null);
             fail();
-        }
-        catch (TableServiceException ex) {
+        } catch (TableServiceException ex) {
             assertEquals(ex.getMessage(), "Bad Request");
             assertTrue(ex.getExtendedErrorInformation().getErrorMessage()
                     .startsWith("The property name exceeds the maximum allowed length (255)."));
@@ -153,6 +160,7 @@ public class TableOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testInsertEntityOver1MB() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -169,8 +177,7 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(TableOperation.insert(ref), options, null);
             fail();
-        }
-        catch (TableServiceException ex) {
+        } catch (TableServiceException ex) {
             assertEquals(ex.getMessage(), "Bad Request");
             assertTrue(ex.getExtendedErrorInformation().getErrorMessage()
                     .startsWith("The entity is larger than the maximum allowed size (1MB)."));
@@ -178,6 +185,7 @@ public class TableOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testInsertEntityWithNumericProperty() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -196,14 +204,14 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(TableOperation.insert(ref), options, null);
             fail();
-        }
-        catch (TableServiceException ex) {
+        } catch (TableServiceException ex) {
             assertEquals(ex.getMessage(), "Bad Request");
             assertTrue(ex.getExtendedErrorInformation().getErrorMessage().startsWith("The property name is invalid."));
             assertEquals(ex.getExtendedErrorInformation().getErrorCode(), "PropertyNameInvalid");
         }
     }
 
+    @Test
     public void testDeleteFail() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -212,7 +220,7 @@ public class TableOperationTests extends TestCase {
         ref.setA("foo_A");
         ref.setB("foo_B");
         ref.setC("foo_C");
-        ref.setD(new byte[] { 0, 1, 2 });
+        ref.setD(new byte[]{0, 1, 2});
         ref.setPartitionKey("jxscl_odata");
         ref.setRowKey(UUID.randomUUID().toString());
 
@@ -228,8 +236,7 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(TableOperation.delete(ref), options, null);
             fail();
-        }
-        catch (TableServiceException ex) {
+        } catch (TableServiceException ex) {
             assertEquals(ex.getMessage(), "Precondition Failed");
             assertTrue(ex.getExtendedErrorInformation().getErrorMessage()
                     .startsWith("The update condition specified in the request was not satisfied."));
@@ -247,8 +254,7 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(TableOperation.delete(ref), options, null);
             fail();
-        }
-        catch (TableServiceException ex) {
+        } catch (TableServiceException ex) {
             assertEquals(ex.getMessage(), "Not Found");
             assertTrue(ex.getExtendedErrorInformation().getErrorMessage()
                     .startsWith("The specified resource does not exist."));
@@ -256,6 +262,7 @@ public class TableOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testMergeFail() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -265,7 +272,7 @@ public class TableOperationTests extends TestCase {
         baseEntity.setA("foo_A");
         baseEntity.setB("foo_B");
         baseEntity.setC("foo_C");
-        baseEntity.setD(new byte[] { 0, 1, 2 });
+        baseEntity.setD(new byte[]{0, 1, 2});
         baseEntity.setPartitionKey("jxscl_odata");
         baseEntity.setRowKey(UUID.randomUUID().toString());
 
@@ -288,8 +295,7 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(TableOperation.merge(secondEntity), options, null);
             fail();
-        }
-        catch (TableServiceException ex) {
+        } catch (TableServiceException ex) {
             assertEquals(ex.getMessage(), "Precondition Failed");
             assertTrue(ex.getExtendedErrorInformation().getErrorMessage()
                     .startsWith("The update condition specified in the request was not satisfied."));
@@ -307,8 +313,7 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(TableOperation.merge(secondEntity), options, null);
             fail();
-        }
-        catch (TableServiceException ex) {
+        } catch (TableServiceException ex) {
             assertEquals(ex.getMessage(), "Not Found");
             assertTrue(ex.getExtendedErrorInformation().getErrorMessage()
                     .startsWith("The specified resource does not exist."));
@@ -316,6 +321,7 @@ public class TableOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testInsertFail() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -324,7 +330,7 @@ public class TableOperationTests extends TestCase {
         ref.setA("foo_A");
         ref.setB("foo_B");
         ref.setC("foo_C");
-        ref.setD(new byte[] { 0, 1, 2 });
+        ref.setD(new byte[]{0, 1, 2});
         ref.setPartitionKey("jxscl_odata");
         ref.setRowKey(UUID.randomUUID().toString());
 
@@ -334,8 +340,7 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(op, options, null);
             fail();
-        }
-        catch (TableServiceException ex) {
+        } catch (TableServiceException ex) {
             assertEquals(ex.getMessage(), "Conflict");
             assertTrue(ex.getExtendedErrorInformation().getErrorMessage()
                     .startsWith("The specified entity already exists"));
@@ -343,6 +348,7 @@ public class TableOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testReplaceFail() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -351,7 +357,7 @@ public class TableOperationTests extends TestCase {
         baseEntity.setA("foo_A");
         baseEntity.setB("foo_B");
         baseEntity.setC("foo_C");
-        baseEntity.setD(new byte[] { 0, 1, 2 });
+        baseEntity.setD(new byte[]{0, 1, 2});
         baseEntity.setPartitionKey("jxscl_odata");
         baseEntity.setRowKey(UUID.randomUUID().toString());
 
@@ -365,7 +371,7 @@ public class TableOperationTests extends TestCase {
                         DynamicTableEntity.class), options, null);
 
         // Retrieve entity
-        DynamicTableEntity retrievedEntity = queryResult.<DynamicTableEntity> getResultAsType();
+        DynamicTableEntity retrievedEntity = queryResult.<DynamicTableEntity>getResultAsType();
         assertNotNull("Property D", retrievedEntity.getProperties().get("D"));
         assertTrue(Arrays.equals(baseEntity.getD(), retrievedEntity.getProperties().get("D").getValueAsByteArray()));
 
@@ -379,8 +385,7 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(TableOperation.replace(retrievedEntity), options, null);
             fail();
-        }
-        catch (TableServiceException ex) {
+        } catch (TableServiceException ex) {
             assertEquals(ex.getMessage(), "Precondition Failed");
             assertTrue(ex.getExtendedErrorInformation().getErrorMessage()
                     .startsWith("The update condition specified in the request was not satisfied."));
@@ -397,8 +402,7 @@ public class TableOperationTests extends TestCase {
         try {
             this.table.execute(TableOperation.replace(retrievedEntity), options, null);
             fail();
-        }
-        catch (TableServiceException ex) {
+        } catch (TableServiceException ex) {
             assertEquals(ex.getMessage(), "Not Found");
             assertTrue(ex.getExtendedErrorInformation().getErrorMessage()
                     .startsWith("The specified resource does not exist."));
@@ -406,6 +410,7 @@ public class TableOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testEmptyRetrieve() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -414,7 +419,7 @@ public class TableOperationTests extends TestCase {
         ref.setA("foo_A");
         ref.setB("foo_B");
         ref.setC("foo_C");
-        ref.setD(new byte[] { 0, 1, 2 });
+        ref.setD(new byte[]{0, 1, 2});
         ref.setPartitionKey("jxscl_odata");
         ref.setRowKey(UUID.randomUUID().toString());
 
@@ -425,6 +430,7 @@ public class TableOperationTests extends TestCase {
         assertEquals(res.getHttpStatusCode(), HttpURLConnection.HTTP_NOT_FOUND);
     }
 
+    @Test
     public void testInsertEmptyEntity() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -444,6 +450,7 @@ public class TableOperationTests extends TestCase {
         assertEquals(HttpURLConnection.HTTP_NO_CONTENT, res.getHttpStatusCode());
     }
 
+    @Test
     public void testDelete() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -462,7 +469,7 @@ public class TableOperationTests extends TestCase {
         ref.setA("foo_A");
         ref.setB("foo_B");
         ref.setC("foo_C");
-        ref.setD(new byte[] { 0, 1, 2 });
+        ref.setD(new byte[]{0, 1, 2});
         ref.setPartitionKey("jxscl_odata");
         ref.setRowKey(UUID.randomUUID().toString());
 
@@ -477,6 +484,7 @@ public class TableOperationTests extends TestCase {
         assertTrue(res2.getResult() == null);
     }
 
+    @Test
     public void testInsertOrMerge() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -498,7 +506,7 @@ public class TableOperationTests extends TestCase {
         baseEntity.setA("foo_A");
         baseEntity.setB("foo_B");
         baseEntity.setC("foo_C");
-        baseEntity.setD(new byte[] { 0, 1, 2 });
+        baseEntity.setD(new byte[]{0, 1, 2});
         baseEntity.setPartitionKey("jxscl_odata");
         baseEntity.setRowKey(UUID.randomUUID().toString());
 
@@ -530,7 +538,7 @@ public class TableOperationTests extends TestCase {
                 .execute(TableOperation.retrieve(baseEntity.getPartitionKey(), baseEntity.getRowKey(),
                         DynamicTableEntity.class), options, null);
 
-        DynamicTableEntity retrievedEntity = queryResult.<DynamicTableEntity> getResultAsType();
+        DynamicTableEntity retrievedEntity = queryResult.<DynamicTableEntity>getResultAsType();
 
         assertNotNull("Property A", retrievedEntity.getProperties().get("A"));
         assertEquals(baseEntity.getA(), retrievedEntity.getProperties().get("A").getValueAsString());
@@ -558,6 +566,7 @@ public class TableOperationTests extends TestCase {
         assertEquals(secondEntity.getO(), retrievedEntity.getProperties().get("O").getValueAsString());
     }
 
+    @Test
     public void testInsertOrReplace() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -576,7 +585,7 @@ public class TableOperationTests extends TestCase {
         baseEntity.setA("foo_A");
         baseEntity.setB("foo_B");
         baseEntity.setC("foo_C");
-        baseEntity.setD(new byte[] { 0, 1, 2 });
+        baseEntity.setD(new byte[]{0, 1, 2});
         baseEntity.setPartitionKey("jxscl_odata");
         baseEntity.setRowKey(UUID.randomUUID().toString());
 
@@ -625,6 +634,7 @@ public class TableOperationTests extends TestCase {
         assertEquals(secondEntity.getO(), retrievedEntity.getProperties().get("O").getValueAsString());
     }
 
+    @Test
     public void testMerge() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -647,7 +657,7 @@ public class TableOperationTests extends TestCase {
         baseEntity.setA("foo_A");
         baseEntity.setB("foo_B");
         baseEntity.setC("foo_C");
-        baseEntity.setD(new byte[] { 0, 1, 2 });
+        baseEntity.setD(new byte[]{0, 1, 2});
         baseEntity.setPartitionKey("jxscl_odata");
         baseEntity.setRowKey(UUID.randomUUID().toString());
 
@@ -702,6 +712,7 @@ public class TableOperationTests extends TestCase {
         assertEquals(secondEntity.getO(), mergedEntity.getProperties().get("O").getValueAsString());
     }
 
+    @Test
     public void testReplace() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -720,7 +731,7 @@ public class TableOperationTests extends TestCase {
         baseEntity.setA("foo_A");
         baseEntity.setB("foo_B");
         baseEntity.setC("foo_C");
-        baseEntity.setD(new byte[] { 0, 1, 2 });
+        baseEntity.setD(new byte[]{0, 1, 2});
         baseEntity.setPartitionKey("jxscl_odata");
         baseEntity.setRowKey(UUID.randomUUID().toString());
 
@@ -731,7 +742,7 @@ public class TableOperationTests extends TestCase {
                 .execute(TableOperation.retrieve(baseEntity.getPartitionKey(), baseEntity.getRowKey(),
                         DynamicTableEntity.class), options, null);
         // Retrieve entity
-        DynamicTableEntity retrievedEntity = queryResult.<DynamicTableEntity> getResultAsType();
+        DynamicTableEntity retrievedEntity = queryResult.<DynamicTableEntity>getResultAsType();
         assertNotNull("Property D", retrievedEntity.getProperties().get("D"));
         assertTrue(Arrays.equals(baseEntity.getD(), retrievedEntity.getProperties().get("D").getValueAsByteArray()));
 
@@ -748,7 +759,7 @@ public class TableOperationTests extends TestCase {
                 .execute(TableOperation.retrieve(baseEntity.getPartitionKey(), baseEntity.getRowKey(),
                         DynamicTableEntity.class), options, null);
 
-        retrievedEntity = queryResult.<DynamicTableEntity> getResultAsType();
+        retrievedEntity = queryResult.<DynamicTableEntity>getResultAsType();
 
         // Validate
         assertNotNull("Property A", retrievedEntity.getProperties().get("A"));
@@ -763,6 +774,7 @@ public class TableOperationTests extends TestCase {
         assertTrue(retrievedEntity.getProperties().get("D") == null);
     }
 
+    @Test
     public void testInsert() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -798,6 +810,7 @@ public class TableOperationTests extends TestCase {
         assertEquals(HttpURLConnection.HTTP_NO_CONTENT, res.getHttpStatusCode());
     }
 
+    @Test
     public void testRetrieveWithoutEntityResolver() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -820,7 +833,7 @@ public class TableOperationTests extends TestCase {
         ref.setA("foo_A");
         ref.setB("foo_B");
         ref.setC("foo_C");
-        ref.setD(new byte[] { 0, 1, 2 });
+        ref.setD(new byte[]{0, 1, 2});
         ref.setPartitionKey("jxscl_odata");
         ref.setRowKey(UUID.randomUUID().toString());
 
@@ -849,12 +862,12 @@ public class TableOperationTests extends TestCase {
 
             assertEquals(ref.getA(), retrievedEnt.getA());
             assertTrue(Arrays.equals(ref.getD(), retrievedEnt.getD()));
-        }
-        finally {
+        } finally {
             TableServiceEntity.setReflectedEntityCacheDisabled(false);
         }
     }
 
+    @Test
     public void testRetrieveWithEntityResolver() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -877,7 +890,7 @@ public class TableOperationTests extends TestCase {
         ref.setA("foo_A");
         ref.setB("foo_B");
         ref.setC("foo_C");
-        ref.setD(new byte[] { 0, 1, 2 });
+        ref.setD(new byte[]{0, 1, 2});
         ref.setPartitionKey("jxscl_odata");
         ref.setRowKey(UUID.randomUUID().toString());
 
@@ -890,7 +903,7 @@ public class TableOperationTests extends TestCase {
                 TableOperation.retrieve(ref.getPartitionKey(), ref.getRowKey(), new EntityResolver<Class1>() {
                     @Override
                     public Class1 resolve(String partitionKey, String rowKey, Date timeStamp,
-                            HashMap<String, EntityProperty> properties, String etag) {
+                                          HashMap<String, EntityProperty> properties, String etag) {
                         Class1 result = new Class1();
                         result.setA(properties.get("A").getValueAsString());
                         result.setD(properties.get("D").getValueAsByteArray());
@@ -909,7 +922,7 @@ public class TableOperationTests extends TestCase {
                     TableOperation.retrieve(ref.getPartitionKey(), ref.getRowKey(), new EntityResolver<Class1>() {
                         @Override
                         public Class1 resolve(String partitionKey, String rowKey, Date timeStamp,
-                                HashMap<String, EntityProperty> properties, String etag) {
+                                              HashMap<String, EntityProperty> properties, String etag) {
                             Class1 result = new Class1();
                             result.setA(properties.get("A").getValueAsString());
                             result.setD(properties.get("D").getValueAsByteArray());
@@ -920,8 +933,7 @@ public class TableOperationTests extends TestCase {
             retrievedEnt = (Class1) res4.getResult();
             assertEquals(ref.getA(), retrievedEnt.getA());
             assertTrue(Arrays.equals(ref.getD(), retrievedEnt.getD()));
-        }
-        finally {
+        } finally {
             TableServiceEntity.setReflectedEntityCacheDisabled(false);
         }
     }

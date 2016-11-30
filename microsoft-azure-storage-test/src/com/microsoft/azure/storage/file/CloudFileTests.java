@@ -14,6 +14,35 @@
  */
 package com.microsoft.azure.storage.file;
 
+import com.microsoft.azure.storage.Constants;
+import com.microsoft.azure.storage.NameValidator;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.RetryNoRetry;
+import com.microsoft.azure.storage.SendingRequestEvent;
+import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
+import com.microsoft.azure.storage.StorageErrorCodeStrings;
+import com.microsoft.azure.storage.StorageEvent;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
+import com.microsoft.azure.storage.blob.BlobProperties;
+import com.microsoft.azure.storage.blob.BlobTestHelper;
+import com.microsoft.azure.storage.blob.CloudBlob;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import com.microsoft.azure.storage.blob.CloudPageBlob;
+import com.microsoft.azure.storage.blob.SharedAccessBlobPermissions;
+import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
+import com.microsoft.azure.storage.core.Base64;
+import com.microsoft.azure.storage.core.Utility;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -35,48 +64,30 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.TimeZone;
 
-import junit.framework.TestCase;
-
-import com.microsoft.azure.storage.Constants;
-import com.microsoft.azure.storage.NameValidator;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.RetryNoRetry;
-import com.microsoft.azure.storage.SendingRequestEvent;
-import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
-import com.microsoft.azure.storage.StorageErrorCodeStrings;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.BlobProperties;
-import com.microsoft.azure.storage.blob.BlobTestHelper;
-import com.microsoft.azure.storage.blob.CloudBlob;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import com.microsoft.azure.storage.blob.CloudBlockBlob;
-import com.microsoft.azure.storage.blob.CloudPageBlob;
-import com.microsoft.azure.storage.blob.SharedAccessBlobPermissions;
-import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
-import com.microsoft.azure.storage.core.Base64;
-import com.microsoft.azure.storage.core.Utility;
+import static org.junit.Assert.*;
 
 /**
  * File Tests
  */
-public class CloudFileTests extends TestCase {
+@Category({ CloudTests.class })
+public class CloudFileTests {
     protected CloudFileShare share;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException {
+    @Before
+    public void fileTestMethodSetUp() throws URISyntaxException, StorageException {
         this.share = FileTestHelper.getRandomShareReference();
         this.share.create();
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void fileTestMethodTearDown() throws StorageException {
         this.share.deleteIfExists();
     }
 
     /**
      * Test file name validation.
      */
+    @Test
     public void CloudFileNameValidation()
     {
         NameValidator.validateFileName("alpha");
@@ -115,13 +126,15 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileCreateAndDelete() throws URISyntaxException, StorageException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference("file1");
         file.create(0);
         assertTrue(file.exists());
         file.delete();
     }
-    
+
+    @Test
     public void testCloudFileCreate() throws StorageException, URISyntaxException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference("file1");
 
@@ -142,6 +155,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileConstructor() throws URISyntaxException, StorageException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference("file1");
         CloudFile file2 = new CloudFile(file.getStorageUri(), file.getServiceClient().getCredentials());
@@ -165,6 +179,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileResize() throws URISyntaxException, StorageException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference("file1");
         CloudFile file2 = this.share.getRootDirectoryReference().getFileReference("file1");
@@ -225,6 +240,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileDeleteIfExists() throws URISyntaxException, StorageException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference("file1");
         assertFalse(file.deleteIfExists());
@@ -240,6 +256,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileExists() throws URISyntaxException, StorageException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference("file1");
         CloudFile file2 = this.share.getRootDirectoryReference().getFileReference("file1");
@@ -262,6 +279,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileDownloadAttributes() throws URISyntaxException, StorageException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference("file29");
         file.create(1024);
@@ -296,6 +314,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileSetProperties() throws StorageException, URISyntaxException, InterruptedException {
 
         CloudFile file = this.share.getRootDirectoryReference().getFileReference("file1");
@@ -349,6 +368,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileCreateWithMetadata() throws URISyntaxException, StorageException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference("file1");
         HashMap<String, String> meta = new HashMap<String, String>();
@@ -366,7 +386,9 @@ public class CloudFileTests extends TestCase {
         file.downloadAttributes();
         assertEquals(0, file.getMetadata().size());
     }
-    
+
+    @Test
+    @Category(SlowTests.class)
     public void testCopyBlockBlobSas() throws Exception {
         // Create source on server.
         final CloudBlobContainer container = BlobTestHelper.getRandomContainerReference();
@@ -388,6 +410,8 @@ public class CloudFileTests extends TestCase {
         }
     }
 
+    @Test
+    @Category(SlowTests.class)
     public void testCopyPageBlobSas() throws Exception {
         // Create source on server.
         final CloudBlobContainer container = BlobTestHelper.getRandomContainerReference();
@@ -411,6 +435,8 @@ public class CloudFileTests extends TestCase {
         }
     }
 
+    @Test
+    @Category(SlowTests.class)
     public void testCopyFileSasToSas() throws InvalidKeyException, URISyntaxException, StorageException,
             IOException, InterruptedException {
         this.doCloudFileCopy(true, true);
@@ -418,11 +444,15 @@ public class CloudFileTests extends TestCase {
 
     // There is no testCopyFileToSas() because there is no way for the SAS destination to access a shared key source.
     // This means it would require the source to have public access, which files do not support.
+    @Test
+    @Category(SlowTests.class)
     public void testCopyFileSas() throws InvalidKeyException, URISyntaxException, StorageException,
             IOException, InterruptedException {
         this.doCloudFileCopy(true, false);
     }
 
+    @Test
+    @Category(SlowTests.class)
     public void testCopyFile() throws InvalidKeyException, URISyntaxException, StorageException, IOException,
             InterruptedException {
         // This works because we use Shared Key for source and destination.
@@ -430,6 +460,7 @@ public class CloudFileTests extends TestCase {
         this.doCloudFileCopy(false, false);
     }
 
+    @Test
     public void testCopyWithChineseChars() throws StorageException, IOException, URISyntaxException
     {
         String data = "sample data chinese chars 阿䶵";
@@ -473,6 +504,8 @@ public class CloudFileTests extends TestCase {
         copyDestination.startCopy(copySource, null, null, null, ctx);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testCopyFileWithMetadataOverride() throws URISyntaxException, StorageException, IOException,
             InterruptedException {
         Calendar calendar = Calendar.getInstance(Utility.UTC_ZONE);
@@ -531,6 +564,8 @@ public class CloudFileTests extends TestCase {
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCopyFileAbort() throws StorageException, URISyntaxException, IOException {
         final int length = 128;
         CloudFile originalFile = FileTestHelper.uploadNewFile(this.share, length, null);
@@ -554,6 +589,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testFileUploadFromStreamTest1() throws URISyntaxException, StorageException, IOException {
         final String fileName = FileTestHelper.generateRandomFileName();
         final CloudFile fileRef = this.share.getRootDirectoryReference().getFileReference(fileName);
@@ -581,6 +617,7 @@ public class CloudFileTests extends TestCase {
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
     public void testFileDownloadRangeValidationTest() throws StorageException, URISyntaxException, IOException {
         final int length = 5 * 1024 * 1024;
 
@@ -600,6 +637,7 @@ public class CloudFileTests extends TestCase {
         assertEquals(100, downloadLength);
     }
 
+    @Test
     public void testFileUploadFromStreamTest() throws URISyntaxException, StorageException, IOException {
         final String fileName = FileTestHelper.generateRandomFileName();
         final CloudFile fileRef = this.share.getRootDirectoryReference().getFileReference(fileName);
@@ -619,6 +657,7 @@ public class CloudFileTests extends TestCase {
         FileTestHelper.assertStreamsAreEqual(srcStream, new ByteArrayInputStream(dstStream.toByteArray()));
     }
 
+    @Test
     public void testFileUploadMD5Validation() throws URISyntaxException, StorageException, IOException,
             NoSuchAlgorithmException {
         final String fileName = FileTestHelper.generateRandomFileName();
@@ -676,6 +715,7 @@ public class CloudFileTests extends TestCase {
         }
     }
 
+    @Test
     public void testFileEmptyHeaderSigningTest() throws URISyntaxException, StorageException, IOException {
         final String fileName = FileTestHelper.generateRandomFileName();
         final CloudFile fileRef = this.share.getRootDirectoryReference().getFileReference(fileName);
@@ -712,6 +752,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testFileDownloadRangeTest() throws URISyntaxException, StorageException, IOException {
         byte[] buffer = FileTestHelper.getRandomBuffer(2 * 1024);
 
@@ -748,6 +789,7 @@ public class CloudFileTests extends TestCase {
         FileTestHelper.assertAreEqual(file, file2);
     }
 
+    @Test
     public void testCloudFileDownloadToByteArray() throws URISyntaxException, StorageException, IOException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference("file1");
         FileTestHelper.doDownloadTest(file, 1 * 512, 2 * 512, 0);
@@ -757,6 +799,7 @@ public class CloudFileTests extends TestCase {
         FileTestHelper.doDownloadTest(file, 5 * 1024 * 1024, 6 * 1024 * 1024, 512);
     }
 
+    @Test
     public void testCloudFileDownloadRangeToByteArray() throws URISyntaxException, StorageException, IOException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference(
                 FileTestHelper.generateRandomFileName());
@@ -785,6 +828,7 @@ public class CloudFileTests extends TestCase {
         FileTestHelper.doDownloadRangeToByteArrayTest(file, 1024, 1024, 512, new Long(1023), new Long(1));
     }
 
+    @Test
     public void testCloudFileDownloadRangeToByteArrayNegativeTest() throws URISyntaxException, StorageException,
             IOException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference(
@@ -840,6 +884,7 @@ public class CloudFileTests extends TestCase {
      * @throws StorageException
      * @throws IOException
      */
+    @Test
     public void testCloudFileInputStream() throws URISyntaxException, StorageException, IOException {
         final int fileLength = 16 * 1024;
         final Random randGenerator = new Random();
@@ -877,6 +922,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileUploadFromByteArray() throws Exception {
         String fileName = FileTestHelper.generateRandomFileName();
         final CloudFile file = this.share.getRootDirectoryReference().getFileReference(fileName);
@@ -893,6 +939,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileUploadDownloadFromText() throws IOException, StorageException, URISyntaxException {
         String fileName = FileTestHelper.generateRandomFileName();
         final CloudFile file = this.share.getRootDirectoryReference().getFileReference(fileName);
@@ -908,6 +955,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileUploadDownloadFromFile() throws IOException, StorageException, URISyntaxException {
         String fileName = FileTestHelper.generateRandomFileName();
         final CloudFile file = this.share.getRootDirectoryReference().getFileReference(fileName);
@@ -977,6 +1025,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileUploadRange() throws URISyntaxException, StorageException, IOException {
         int fileLengthToUse = 8 * 512;
         byte[] buffer = FileTestHelper.getRandomBuffer(8 * 512);
@@ -1029,6 +1078,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileClearRange() throws URISyntaxException, StorageException, IOException {
         int fileLengthToUse = 8 * 512;
         byte[] buffer = FileTestHelper.getRandomBuffer(8 * 512);
@@ -1067,6 +1117,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileResize2() throws StorageException, URISyntaxException {
         CloudFile file = this.share.getRootDirectoryReference().getFileReference("file1");
         CloudFile file2 = this.share.getRootDirectoryReference().getFileReference("file1");
@@ -1096,6 +1147,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileDownloadRange() throws StorageException, URISyntaxException, IOException {
         int fileLengthToUse = 8 * 512;
         byte[] buffer = FileTestHelper.getRandomBuffer(8 * 512);
@@ -1135,6 +1187,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileUploadDownloadFileProperties() throws URISyntaxException, StorageException, IOException {
         final int length = 512;
 
@@ -1178,6 +1231,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileOpenOutputStream() throws URISyntaxException, StorageException, IOException {
         int fileLengthToUse = 8 * 512;
         byte[] buffer = FileTestHelper.getRandomBuffer(8 * 512);
@@ -1217,6 +1271,7 @@ public class CloudFileTests extends TestCase {
      * @throws URISyntaxException
      * @throws StorageException
      */
+    @Test
     public void testCloudFileOpenOutputStreamNoArgs() throws URISyntaxException, StorageException {
         String fileName = FileTestHelper.generateRandomFileName();
         CloudFile file = this.share.getRootDirectoryReference().getFileReference(fileName);
@@ -1244,6 +1299,8 @@ public class CloudFileTests extends TestCase {
      * @throws StorageException
      * @throws IOException
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudFileDeleteIfExistsErrorCode() throws URISyntaxException, StorageException, IOException {
         CloudFileClient client = FileTestHelper.createCloudFileClient();
         CloudFileShare share = client.getShareReference(FileTestHelper.generateRandomShareName());
@@ -1298,6 +1355,8 @@ public class CloudFileTests extends TestCase {
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testFileNamePlusEncoding() throws StorageException, URISyntaxException, IOException,
             InterruptedException {
         CloudFile originalFile = FileTestHelper.uploadNewFile(this.share, 1024 /* length */, null);

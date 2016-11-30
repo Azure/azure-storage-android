@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,26 +15,9 @@
 
 package com.microsoft.azure.storage;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.security.InvalidKeyException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.NoSuchElementException;
-import java.util.TimeZone;
-
-import junit.framework.TestCase;
-
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.TestHelper;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.blob.BlobTestHelper;
 import com.microsoft.azure.storage.blob.BlobType;
 import com.microsoft.azure.storage.blob.CloudAppendBlob;
@@ -57,7 +40,31 @@ import com.microsoft.azure.storage.table.EntityProperty;
 import com.microsoft.azure.storage.table.TableOperation;
 import com.microsoft.azure.storage.table.TableTestHelper;
 
-public class AccountSasTests extends TestCase {
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.NoSuchElementException;
+import java.util.TimeZone;
+
+import static org.junit.Assert.*;
+
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
+public class AccountSasTests {
     private static final String DOES_NOT_EXIST_ERROR_MESSAGE = "The specified resource does not exist.";
     private static final String ENUMERATION_ERROR_MESSAGE =
             "An error occurred while enumerating the result, check the original exception for details.";
@@ -67,9 +74,9 @@ public class AccountSasTests extends TestCase {
             "This request is not authorized to perform this operation using this resource type.";
     private static final String INVALID_SERVICE_MESSAGE =
             "This request is not authorized to perform this operation using this service.";
-    private static final String QUERY_PARAM_MISSING_MESSAGE = 
+    private static final String QUERY_PARAM_MISSING_MESSAGE =
             "Server failed to authenticate the request. Make sure the value of Authorization header is formed correctly including the signature.";
-    
+
     private static final int ADD_CODE =         0x1;
     private static final int CREATE_CODE =      0x2;
     private static final int DELETE_CODE =      0x4;
@@ -81,48 +88,50 @@ public class AccountSasTests extends TestCase {
     private static final int OBJECT_CODE =    0x100;
     private static final int CONTAINER_CODE = 0x200;
     private static final int SERVICE_CODE =   0x400;
-    
+
     // 0x7ff
     private static final int FULL_PERMS_CODE =
             ADD_CODE | CREATE_CODE | DELETE_CODE | LIST_CODE | PROCESS_CODE | READ_CODE |
             UPDATE_CODE | WRITE_CODE | OBJECT_CODE | CONTAINER_CODE | SERVICE_CODE;
     private static final int EMPTY_PERMS_CODE = 0x0;
-    
+
     private CloudBlobClient blobClient;
     private CloudBlobContainer blobContainer;
-    
+
     private CloudFileClient fileClient;
     private CloudFileShare fileShare;
-    
+
     private CloudQueueClient queueClient;
     private CloudQueue queueQueue;
-    
+
     private CloudTableClient tableClient;
     private CloudTable tableTable;
-    
-    @Override
-    public void setUp() throws URISyntaxException, StorageException, IOException {
+
+    @Before
+    public void accountSasTestMethodSetUp() throws URISyntaxException, StorageException, IOException {
         this.blobClient = TestHelper.createCloudBlobClient();
         this.blobContainer = BlobTestHelper.getRandomContainerReference();
-        
+
         this.fileClient = TestHelper.createCloudFileClient();
         this.fileShare = FileTestHelper.getRandomShareReference();
-        
+
         this.queueClient = TestHelper.createCloudQueueClient();
         this.queueQueue = QueueTestHelper.getRandomQueueReference();
-        
+
         this.tableClient = TestHelper.createCloudTableClient();
         this.tableTable = TableTestHelper.getRandomTableReference();
     }
 
-    @Override
-    public void tearDown() throws StorageException, URISyntaxException {
+    @After
+    public void accountSasTestMethodTearDown() throws StorageException, URISyntaxException {
         this.blobContainer.deleteIfExists();
         this.fileShare.deleteIfExists();
         this.queueQueue.deleteIfExists();
         this.tableTable.deleteIfExists();
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testInvalidIP() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         // Arbitrary non-IP string
         String ip = "not an IP";
@@ -134,7 +143,7 @@ public class AccountSasTests extends TestCase {
             assertEquals(UnknownHostException.class, ex.getCause().getClass());
             assertEquals(String.format(SR.INVALID_IP_ADDRESS, ip), ex.getMessage());
         }
-        
+
         // IPv6 Address
         ip = "2001:0db8:85a3:0000:0000:8a2e:0370:7334";
         try {
@@ -147,8 +156,10 @@ public class AccountSasTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testBlobServiceAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
-        // A file policy should not work on blobs or containers 
+        // A file policy should not work on blobs or containers
         try {
             testBlobAccountSas(this.blobContainer, false,
                     generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.FILE, null, null));
@@ -179,11 +190,13 @@ public class AccountSasTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testBlobIPAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
 
         IPRange allIP = new IPRange("0.0.0.0", "255.255.255.255");
         IPRange noneIP = new IPRange("0.0.0.0");
-        
+
         // Ensure access attempt from invalid IP fails
         IPRange sourceIP = null;
         try {
@@ -193,33 +206,35 @@ public class AccountSasTests extends TestCase {
         }
         catch (StorageException ex) {
             assertEquals(HttpURLConnection.HTTP_FORBIDDEN, ex.getHttpStatusCode());
-            
+
             final String[] words = ex.getMessage().split(" ");
             // final word
             String lastWord = words[words.length - 1];
             // strip trailing period
             lastWord = lastWord.substring(0, lastWord.length() - 1);
-            
+
             sourceIP = new IPRange(lastWord);
         }
         finally {
             this.blobContainer.deleteIfExists();
         }
-     
+
         // Ensure access attempt from the single allowed IP succeeds
         this.blobContainer = BlobTestHelper.getRandomContainerReference();
         testBlobAccountSas(this.blobContainer, false,
                 generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.BLOB, sourceIP, null));
-    
+
         // Ensure access attempt from one of many valid IPs succeeds
         this.blobContainer = BlobTestHelper.getRandomContainerReference();
         testBlobAccountSas(this.blobContainer, false,
             generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.BLOB, allIP, null));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testBlobProtocolAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
-        
+
         // Ensure attempt from http fails against HTTPS_ONLY
         try {
             testBlobAccountSas(this.blobContainer, false, generatePolicy(
@@ -237,23 +252,25 @@ public class AccountSasTests extends TestCase {
         this.blobContainer = BlobTestHelper.getRandomContainerReference();
         testBlobAccountSas(this.blobContainer, true, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.BLOB, null, SharedAccessProtocols.HTTPS_ONLY));
-    
+
         // Ensure attempts from both https and http succeed against HTTPS_HTTP
         this.blobContainer = BlobTestHelper.getRandomContainerReference();
         testBlobAccountSas(this.blobContainer, true, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.BLOB, null, SharedAccessProtocols.HTTPS_HTTP));
-    
+
         this.blobContainer = BlobTestHelper.getRandomContainerReference();
         testBlobAccountSas(this.blobContainer, false, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.BLOB, null, SharedAccessProtocols.HTTPS_HTTP));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testBlobAccountSasCombinations()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         // Test full and empty permissions
         testBlobAccountSas(false, AccountSasTests.FULL_PERMS_CODE);
         testBlobAccountSas(false, AccountSasTests.EMPTY_PERMS_CODE);
-        
+
         // Test each individual permission
         testBlobAccountSas(false, AccountSasTests.ADD_CODE);
         testBlobAccountSas(false, AccountSasTests.CREATE_CODE);
@@ -264,15 +281,17 @@ public class AccountSasTests extends TestCase {
         testBlobAccountSas(false, AccountSasTests.OBJECT_CODE);
         testBlobAccountSas(false, AccountSasTests.CONTAINER_CODE);
         testBlobAccountSas(false, AccountSasTests.SERVICE_CODE);
-        
+
         // Test an arbitrary combination of permissions.
         final int bits = AccountSasTests.OBJECT_CODE | AccountSasTests.SERVICE_CODE | AccountSasTests.READ_CODE |
                 AccountSasTests.CREATE_CODE | AccountSasTests.DELETE_CODE;
         testBlobAccountSas(false, bits);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testFileServiceAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
-        // A blob policy should not work on files or shares 
+        // A blob policy should not work on files or shares
         try {
             testFileAccountSas(this.fileShare, false,
                     generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.BLOB, null, null));
@@ -303,11 +322,13 @@ public class AccountSasTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testFileIPAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
-    
+
         IPRange allIP = new IPRange("0.0.0.0", "255.255.255.255");
         IPRange noneIP = new IPRange("0.0.0.0");
-        
+
         // Ensure access attempt from invalid IP fails
         IPRange sourceIP = null;
         try {
@@ -317,33 +338,35 @@ public class AccountSasTests extends TestCase {
         }
         catch (StorageException ex) {
             assertEquals(HttpURLConnection.HTTP_FORBIDDEN, ex.getHttpStatusCode());
-            
+
             final String[] words = ex.getMessage().split(" ");
             // final word
             String lastWord = words[words.length - 1];
             // strip trailing period
             lastWord = lastWord.substring(0, lastWord.length() - 1);
-            
+
             sourceIP = new IPRange(lastWord);
         }
         finally {
             this.fileShare.deleteIfExists();
         }
-    
+
         // Ensure access attempt from the single allowed IP succeeds
         this.fileShare = FileTestHelper.getRandomShareReference();
         testFileAccountSas(this.fileShare, false,
                 generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.FILE, sourceIP, null));
-    
+
         // Ensure access attempt from one of many valid IPs succeeds
         this.fileShare = FileTestHelper.getRandomShareReference();
         testFileAccountSas(this.fileShare, false,
             generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.FILE, allIP, null));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testFileProtocolAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
-        
+
         // Ensure attempt from http fails against HTTPS_ONLY
         try {
             testFileAccountSas(this.fileShare, false, generatePolicy(
@@ -356,28 +379,30 @@ public class AccountSasTests extends TestCase {
         finally {
             this.fileShare.deleteIfExists();
         }
-    
+
         // Ensure attempt from https succeeds against HTTPS_ONLY
         this.fileShare = FileTestHelper.getRandomShareReference();
         testFileAccountSas(this.fileShare, true, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.FILE, null, SharedAccessProtocols.HTTPS_ONLY));
-    
+
         // Ensure attempts from both https and http succeed against HTTPS_HTTP
         this.fileShare = FileTestHelper.getRandomShareReference();
         testFileAccountSas(this.fileShare, true, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.FILE, null, SharedAccessProtocols.HTTPS_HTTP));
-    
+
         this.fileShare = FileTestHelper.getRandomShareReference();
         testFileAccountSas(this.fileShare, false, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.FILE, null, SharedAccessProtocols.HTTPS_HTTP));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testFileAccountSasCombinations()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         // Test full and empty permissions
         testFileAccountSas(false, AccountSasTests.FULL_PERMS_CODE);
         testFileAccountSas(false, AccountSasTests.EMPTY_PERMS_CODE);
-        
+
         // Test each individual permission
         testFileAccountSas(false, AccountSasTests.CREATE_CODE);
         testFileAccountSas(false, AccountSasTests.DELETE_CODE);
@@ -387,17 +412,19 @@ public class AccountSasTests extends TestCase {
         testFileAccountSas(false, AccountSasTests.OBJECT_CODE);
         testFileAccountSas(false, AccountSasTests.CONTAINER_CODE);
         testFileAccountSas(false, AccountSasTests.SERVICE_CODE);
-        
+
         // Test an arbitrary combination of permissions.
         final int bits = AccountSasTests.OBJECT_CODE | AccountSasTests.SERVICE_CODE | AccountSasTests.READ_CODE |
                 AccountSasTests.CREATE_CODE | AccountSasTests.DELETE_CODE;
         testFileAccountSas(false, bits);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testQueueServiceAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException, InterruptedException {
-        
-        // A blob policy should not work on queues 
+
+        // A blob policy should not work on queues
         try {
             testQueueAccountSas(this.queueQueue, false,
                     generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.BLOB, null, null));
@@ -428,12 +455,14 @@ public class AccountSasTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testQueueIPAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException, InterruptedException {
-    
+
         IPRange allIP = new IPRange("0.0.0.0", "255.255.255.255");
         IPRange noneIP = new IPRange("0.0.0.0");
-        
+
         // Ensure access attempt from invalid IP fails
         IPRange sourceIP = null;
         try {
@@ -443,33 +472,35 @@ public class AccountSasTests extends TestCase {
         }
         catch (StorageException ex) {
             assertEquals(HttpURLConnection.HTTP_FORBIDDEN, ex.getHttpStatusCode());
-            
+
             final String[] words = ex.getMessage().split(" ");
             // final word
             String lastWord = words[words.length - 1];
             // strip trailing period
             lastWord = lastWord.substring(0, lastWord.length() - 1);
-            
+
             sourceIP = new IPRange(lastWord);
         }
         finally {
             this.queueQueue.deleteIfExists();
         }
-    
+
         // Ensure access attempt from the single allowed IP succeeds
         this.queueQueue = QueueTestHelper.getRandomQueueReference();
         testQueueAccountSas(this.queueQueue, false,
                 generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.QUEUE, sourceIP, null));
-    
+
         // Ensure access attempt from one of many valid IPs succeeds
         this.queueQueue = QueueTestHelper.getRandomQueueReference();
         testQueueAccountSas(this.queueQueue, false,
             generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.QUEUE, allIP, null));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testQueueProtocolAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException, InterruptedException {
-        
+
         // Ensure attempt from http fails against HTTPS_ONLY
         try {
             testQueueAccountSas(this.queueQueue, false, generatePolicy(
@@ -482,28 +513,30 @@ public class AccountSasTests extends TestCase {
         finally {
             this.queueQueue.deleteIfExists();
         }
-    
+
         // Ensure attempt from https succeeds against HTTPS_ONLY
         this.queueQueue = QueueTestHelper.getRandomQueueReference();
         testQueueAccountSas(this.queueQueue, true, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.QUEUE, null, SharedAccessProtocols.HTTPS_ONLY));
-    
+
         // Ensure attempts from both https and http succeed against HTTPS_HTTP
         this.queueQueue = QueueTestHelper.getRandomQueueReference();
         testQueueAccountSas(this.queueQueue, true, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.QUEUE, null, SharedAccessProtocols.HTTPS_HTTP));
-    
+
         this.queueQueue = QueueTestHelper.getRandomQueueReference();
         testQueueAccountSas(this.queueQueue, false, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.QUEUE, null, SharedAccessProtocols.HTTPS_HTTP));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testQueueAccountSasCombinations()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException, InterruptedException {
         // Test full and empty permissions
         testQueueAccountSas(false, AccountSasTests.FULL_PERMS_CODE);
         testQueueAccountSas(false, AccountSasTests.EMPTY_PERMS_CODE);
-        
+
         // Test each individual permission
         testQueueAccountSas(false, AccountSasTests.ADD_CODE);
         testQueueAccountSas(false, AccountSasTests.CREATE_CODE);
@@ -516,15 +549,17 @@ public class AccountSasTests extends TestCase {
         testQueueAccountSas(false, AccountSasTests.OBJECT_CODE);
         testQueueAccountSas(false, AccountSasTests.CONTAINER_CODE);
         testQueueAccountSas(false, AccountSasTests.SERVICE_CODE);
-        
+
         // Test an arbitrary combination of permissions.
         final int bits = AccountSasTests.OBJECT_CODE | AccountSasTests.SERVICE_CODE | AccountSasTests.READ_CODE |
                 AccountSasTests.CREATE_CODE | AccountSasTests.DELETE_CODE;
         testQueueAccountSas(false, bits);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testTableServiceAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
-        // A blob policy should not work on tables 
+        // A blob policy should not work on tables
         try {
             testTableAccountSas(this.tableTable, false,
                     generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.BLOB, null, null));
@@ -533,7 +568,7 @@ public class AccountSasTests extends TestCase {
         catch (StorageException ex) {
             assertEquals(AccountSasTests.INVALID_SERVICE_MESSAGE, ex.getMessage());
         }
-    
+
         // A file policy should not work on tables
         try {
             testTableAccountSas(this.tableTable, false,
@@ -543,7 +578,7 @@ public class AccountSasTests extends TestCase {
         catch (StorageException ex) {
             assertEquals(AccountSasTests.INVALID_SERVICE_MESSAGE, ex.getMessage());
         }
-    
+
         // A queue policy should not work on tables
         try {
             testTableAccountSas(this.tableTable, false,
@@ -555,11 +590,13 @@ public class AccountSasTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testTableIPAccountSas() throws InvalidKeyException, StorageException, URISyntaxException, IOException {
-    
+
         IPRange allIP = new IPRange("0.0.0.0", "255.255.255.255");
         IPRange noneIP = new IPRange("0.0.0.0");
-        
+
         // Ensure access attempt from invalid IP fails
         IPRange sourceIP = null;
         try {
@@ -569,33 +606,35 @@ public class AccountSasTests extends TestCase {
         }
         catch (StorageException ex) {
             assertEquals(HttpURLConnection.HTTP_FORBIDDEN, ex.getHttpStatusCode());
-            
+
             final String[] words = ex.getMessage().split(" ");
             // final word
             String lastWord = words[words.length - 1];
             // strip trailing period
             lastWord = lastWord.substring(0, lastWord.length() - 1);
-            
+
             sourceIP = new IPRange(lastWord);
         }
         finally {
             this.tableTable.deleteIfExists();
         }
-    
+
         // Ensure access attempt from the single allowed IP succeeds
         this.tableTable = TableTestHelper.getRandomTableReference();
         testTableAccountSas(this.tableTable, false,
                 generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.TABLE, sourceIP, null));
-    
+
         // Ensure access attempt from one of many valid IPs succeeds
         this.tableTable = TableTestHelper.getRandomTableReference();
         testTableAccountSas(this.tableTable, false,
             generatePolicy(AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.TABLE, allIP, null));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testTableProtocolAccountSas()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
-        
+
         // Ensure attempt from http fails against HTTPS_ONLY
         try {
             testTableAccountSas(this.tableTable, false, generatePolicy(
@@ -608,28 +647,30 @@ public class AccountSasTests extends TestCase {
         finally {
             this.tableTable.deleteIfExists();
         }
-    
+
         // Ensure attempt from https succeeds against HTTPS_ONLY
         this.tableTable = TableTestHelper.getRandomTableReference();
         testTableAccountSas(this.tableTable, true, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.TABLE, null, SharedAccessProtocols.HTTPS_ONLY));
-    
+
         // Ensure attempts from both https and http succeed against HTTPS_HTTP
         this.tableTable = TableTestHelper.getRandomTableReference();
         testTableAccountSas(this.tableTable, true, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.TABLE, null, SharedAccessProtocols.HTTPS_HTTP));
-    
+
         this.tableTable = TableTestHelper.getRandomTableReference();
         testTableAccountSas(this.tableTable, false, generatePolicy(
                 AccountSasTests.FULL_PERMS_CODE, SharedAccessAccountService.TABLE, null, SharedAccessProtocols.HTTPS_HTTP));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testTableAccountSasCombinations()
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         // Test full and empty permissions
         testTableAccountSas(false, AccountSasTests.FULL_PERMS_CODE);
         testTableAccountSas(false, AccountSasTests.EMPTY_PERMS_CODE);
-        
+
         // Test each individual permission
         testTableAccountSas(false, AccountSasTests.ADD_CODE);
         testTableAccountSas(false, AccountSasTests.CREATE_CODE);
@@ -641,7 +682,7 @@ public class AccountSasTests extends TestCase {
         testTableAccountSas(false, AccountSasTests.OBJECT_CODE);
         testTableAccountSas(false, AccountSasTests.CONTAINER_CODE);
         testTableAccountSas(false, AccountSasTests.SERVICE_CODE);
-        
+
         // Test an arbitrary combination of permissions.
         final int bits = AccountSasTests.OBJECT_CODE | AccountSasTests.SERVICE_CODE | AccountSasTests.READ_CODE |
                 AccountSasTests.CREATE_CODE | AccountSasTests.DELETE_CODE;
@@ -652,7 +693,7 @@ public class AccountSasTests extends TestCase {
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         SharedAccessAccountPolicy policy = generatePolicy(bits, SharedAccessAccountService.BLOB, null, null);
         this.blobContainer = this.blobClient.getContainerReference("blobtest" + bits);
-        
+
         try {
             testBlobAccountSas(this.blobContainer, useHttps, policy);
         }
@@ -673,21 +714,21 @@ public class AccountSasTests extends TestCase {
 
     private void testBlobAccountSas(CloudBlobContainer container, boolean useHttps, SharedAccessAccountPolicy policy)
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
-        
+
         assertNotNull(container);
         assertNotNull(policy);
         assertFalse(container.exists());
-        
+
         final CloudBlobClient sasClient = TestHelper.createCloudBlobClient(policy, useHttps);
         URI sasUri = sasClient.getContainerReference(container.getName()).getUri();
         sasUri = sasClient.getCredentials().transformUri(sasUri);
         final CloudBlobContainer sasContainer = new CloudBlobContainer(sasUri);
-        
-        // Test creating the container 
+
+        // Test creating the container
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER) &&
                 (policy.getPermissions().contains(SharedAccessAccountPermissions.CREATE) ||
                  policy.getPermissions().contains(SharedAccessAccountPermissions.WRITE))) {
-            
+
             sasContainer.create();
         }
         else {
@@ -699,7 +740,7 @@ public class AccountSasTests extends TestCase {
                 if (AccountSasTests.QUERY_PARAM_MISSING_MESSAGE.equals(ex.getMessage())) {
                     throw ex;
                 }
-                
+
                 if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER)) {
                     assertMessagesMatch(AccountSasTests.INVALID_PERMISSION_MESSAGE, ex);
                 }
@@ -709,13 +750,13 @@ public class AccountSasTests extends TestCase {
                 container.create();
             }
         }
-        
+
         assertTrue(container.exists());
-            
+
         // Test listing the containers on the client
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.SERVICE) &&
                 (policy.getPermissions().contains(SharedAccessAccountPermissions.LIST))) {
-            
+
             assertEquals(sasContainer.getName(),
                     sasClient.listContainers(sasContainer.getName()).iterator().next().getName());
         }
@@ -732,13 +773,13 @@ public class AccountSasTests extends TestCase {
         }
 
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.OBJECT)) {
-            
+
             // Test creating a new blob
             CloudAppendBlob blob = null;
             CloudAppendBlob sasBlob = null;
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.CREATE) ||
                     policy.getPermissions().contains(SharedAccessAccountPermissions.WRITE)) {
-                
+
                 sasBlob = (CloudAppendBlob) BlobTestHelper.uploadNewBlob(
                         sasContainer, BlobType.APPEND_BLOB, null, 0, null);
                 blob = container.getAppendBlobReference(sasBlob.getName());
@@ -757,15 +798,15 @@ public class AccountSasTests extends TestCase {
                             BlobType.APPEND_BLOB, sasContainer, blob.getName());
                 }
             }
-            
+
             assertTrue(blob.exists());
-            
+
             // Test uploading data to the blob
             final int length = 512;
             ByteArrayInputStream sourceStream = BlobTestHelper.getRandomDataStream(length);
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.ADD) ||
                     policy.getPermissions().contains(SharedAccessAccountPermissions.WRITE)) {
-                
+
                 sasBlob.appendBlock(sourceStream, length);
             }
             else {
@@ -795,9 +836,9 @@ public class AccountSasTests extends TestCase {
                     blob.download(outStream);
                 }
             }
-            
+
             TestHelper.assertStreamsAreEqual(sourceStream, new ByteArrayInputStream(outStream.toByteArray()));
-            
+
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.DELETE)) {
                 sasBlob.delete();
             }
@@ -811,7 +852,7 @@ public class AccountSasTests extends TestCase {
                     blob.delete();
                 }
             }
-            
+
             assertFalse(blob.exists());
         }
         else {
@@ -824,11 +865,11 @@ public class AccountSasTests extends TestCase {
                 BlobTestHelper.uploadNewBlob(container, BlobType.APPEND_BLOB, null, 0, null);
             }
         }
-        
-        // Test deleting the container 
+
+        // Test deleting the container
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER) &&
                  policy.getPermissions().contains(SharedAccessAccountPermissions.DELETE)) {
-            
+
             sasContainer.delete();
         }
         else {
@@ -847,12 +888,12 @@ public class AccountSasTests extends TestCase {
             }
         }
     }
-    
+
     private void testFileAccountSas(final boolean useHttps, final int bits)
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         SharedAccessAccountPolicy policy = generatePolicy(bits, SharedAccessAccountService.FILE, null, null);
         this.fileShare = this.fileClient.getShareReference("filetest" + bits);
-        
+
         try {
             testFileAccountSas(this.fileShare, useHttps, policy);
         }
@@ -870,24 +911,24 @@ public class AccountSasTests extends TestCase {
             this.fileShare.deleteIfExists();
         }
     }
-    
+
     private void testFileAccountSas(CloudFileShare share, boolean useHttps, SharedAccessAccountPolicy policy)
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
 
         assertNotNull(share);
         assertNotNull(policy);
         assertFalse(share.exists());
-        
+
         final CloudFileClient sasClient = TestHelper.createCloudFileClient(policy, useHttps);
         URI sasUri = sasClient.getShareReference(share.getName()).getUri();
         sasUri = sasClient.getCredentials().transformUri(sasUri);
         final CloudFileShare sasShare = new CloudFileShare(sasUri);
-        
-        // Test creating the share 
+
+        // Test creating the share
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER) &&
                 (policy.getPermissions().contains(SharedAccessAccountPermissions.CREATE) ||
                  policy.getPermissions().contains(SharedAccessAccountPermissions.WRITE))) {
-            
+
             sasShare.create();
         }
         else {
@@ -899,7 +940,7 @@ public class AccountSasTests extends TestCase {
                 if (AccountSasTests.QUERY_PARAM_MISSING_MESSAGE.equals(ex.getMessage())) {
                     throw ex;
                 }
-                
+
                 if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER)) {
                     assertMessagesMatch(AccountSasTests.INVALID_PERMISSION_MESSAGE, ex);
                 }
@@ -909,13 +950,13 @@ public class AccountSasTests extends TestCase {
                 share.create();
             }
         }
-        
+
         assertTrue(share.exists());
-            
+
         // Test listing the shares on the client
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.SERVICE) &&
                 (policy.getPermissions().contains(SharedAccessAccountPermissions.LIST))) {
-            
+
             assertEquals(sasShare.getName(), sasClient.listShares(sasShare.getName()).iterator().next().getName());
         }
         else {
@@ -929,18 +970,18 @@ public class AccountSasTests extends TestCase {
                         this.fileClient.listShares(sasShare.getName()).iterator().next().getName());
             }
         }
-        
+
         final int length = 512;
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.OBJECT)) {
-            
+
             // Test creating a new file
             CloudFile file = null;
             CloudFile sasFile = null;
-            
+
             sasFile = sasShare.getRootDirectoryReference().getFileReference(FileTestHelper.generateRandomFileName());
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.CREATE) ||
                     policy.getPermissions().contains(SharedAccessAccountPermissions.WRITE)) {
-                
+
                 sasFile.create(length);
                 file = share.getRootDirectoryReference().getFileReference(sasFile.getName());
             }
@@ -955,9 +996,9 @@ public class AccountSasTests extends TestCase {
                     sasFile = sasShare.getRootDirectoryReference().getFileReference(file.getName());
                 }
             }
-            
+
             assertTrue(file.exists());
-            
+
             //Test writing data to  a file
             final ByteArrayInputStream sourcestream = FileTestHelper.getRandomDataStream(length);
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.WRITE)) {
@@ -973,7 +1014,7 @@ public class AccountSasTests extends TestCase {
                     file.upload(sourcestream, length);
                 }
             }
-            
+
             // Test downloading data from the file
             final ByteArrayOutputStream outStream = new ByteArrayOutputStream();
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.READ)) {
@@ -989,9 +1030,9 @@ public class AccountSasTests extends TestCase {
                     file.download(outStream);
                 }
             }
-            
+
             TestHelper.assertStreamsAreEqual(sourcestream, new ByteArrayInputStream(outStream.toByteArray()));
-            
+
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.DELETE)) {
                 sasFile.delete();
             }
@@ -1005,7 +1046,7 @@ public class AccountSasTests extends TestCase {
                     file.delete();
                 }
             }
-            
+
             assertFalse(file.exists());
         }
         else {
@@ -1018,11 +1059,11 @@ public class AccountSasTests extends TestCase {
                 FileTestHelper.uploadNewFile(share, FileTestHelper.getRandomDataStream(0), length, null);
             }
         }
-        
-        // Test deleting the share 
+
+        // Test deleting the share
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER) &&
                  policy.getPermissions().contains(SharedAccessAccountPermissions.DELETE)) {
-            
+
             sasShare.delete();
         }
         else {
@@ -1041,12 +1082,12 @@ public class AccountSasTests extends TestCase {
             }
         }
     }
-    
+
     private void testQueueAccountSas(final boolean useHttps, final int bits)
             throws InvalidKeyException, StorageException, URISyntaxException, IOException, InterruptedException {
         SharedAccessAccountPolicy policy = generatePolicy(bits, SharedAccessAccountService.QUEUE, null, null);
         this.queueQueue = this.queueClient.getQueueReference("queuetest" + bits);
-        
+
         try {
             testQueueAccountSas(this.queueQueue, useHttps, policy);
         }
@@ -1071,20 +1112,20 @@ public class AccountSasTests extends TestCase {
         assertNotNull(policy);
         assertNotNull(queue);
         assertFalse(queue.exists());
-        
+
         final CloudQueueClient sasClient = TestHelper.createCloudQueueClient(policy, useHttps);
         URI  sasUri = sasClient.getQueueReference(queue.getName()).getUri();
         sasUri = sasClient.getCredentials().transformUri(sasUri);
         final CloudQueue sasQueue = new CloudQueue(sasUri);
-        
+
         final String key = "testkey";
         final String value = "testvalue";
-        
+
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER)) {
-            // Test creating the queue 
+            // Test creating the queue
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.CREATE) ||
                     policy.getPermissions().contains(SharedAccessAccountPermissions.WRITE)) {
-                
+
                 sasQueue.create();
             }
             else {
@@ -1096,7 +1137,7 @@ public class AccountSasTests extends TestCase {
                     if (AccountSasTests.QUERY_PARAM_MISSING_MESSAGE.equals(ex.getMessage())) {
                         throw ex;
                     }
-                    
+
                     if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER)) {
                         assertMessagesMatch(AccountSasTests.INVALID_PERMISSION_MESSAGE, ex);
                     }
@@ -1106,12 +1147,12 @@ public class AccountSasTests extends TestCase {
                     queue.create();
                 }
             }
-            
+
             // Test queue metadata
             queue.setMetadata(new HashMap<String, String>());
             queue.getMetadata().put(key, Constants.ID);
             queue.uploadMetadata();
-            
+
             sasQueue.setMetadata(new HashMap<String, String>());
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.WRITE)) {
                 sasQueue.getMetadata().put(key, value);
@@ -1125,12 +1166,12 @@ public class AccountSasTests extends TestCase {
                 }
                 catch (StorageException ex) {
                     assertMessagesMatch(AccountSasTests.INVALID_PERMISSION_MESSAGE, ex);
-                    
+
                     queue.getMetadata().put(key, value);
                     queue.uploadMetadata();
                 }
             }
-            
+
             queue.downloadAttributes();
             assertEquals(value, queue.getMetadata().get(key));
         }
@@ -1143,7 +1184,7 @@ public class AccountSasTests extends TestCase {
                 if (AccountSasTests.QUERY_PARAM_MISSING_MESSAGE.equals(ex.getMessage())) {
                     throw ex;
                 }
-                
+
                 if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER)) {
                     assertMessagesMatch(AccountSasTests.INVALID_PERMISSION_MESSAGE, ex);
                 }
@@ -1153,13 +1194,13 @@ public class AccountSasTests extends TestCase {
                 queue.create();
             }
         }
-        
+
         assertTrue(queue.exists());
-            
+
         // Test listing the queues on the client
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.SERVICE) &&
                 (policy.getPermissions().contains(SharedAccessAccountPermissions.LIST))) {
-            
+
             assertEquals(sasQueue.getName(), sasClient.listQueues(sasQueue.getName()).iterator().next().getName());
         }
         else {
@@ -1173,7 +1214,7 @@ public class AccountSasTests extends TestCase {
                         this.queueClient.listQueues(sasQueue.getName()).iterator().next().getName());
             }
         }
-        
+
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.OBJECT)) {
             // Test inserting a message into a queue
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.ADD)) {
@@ -1205,9 +1246,9 @@ public class AccountSasTests extends TestCase {
                     message = queue.peekMessage();
                 }
             }
-            
+
             assertEquals(value, message.getMessageContentAsString());
-            
+
             // Test getting a message from the queue
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.PROCESS_MESSAGES)) {
                 message = sasQueue.retrieveMessage();
@@ -1244,7 +1285,7 @@ public class AccountSasTests extends TestCase {
             Thread.sleep(1000);
             message = queue.peekMessage();
             assertEquals(key, message.getMessageContentAsString());
-            
+
             // Test clearing all messages from the queue.
             queue.addMessage(new CloudQueueMessage(key));
             queue.addMessage(new CloudQueueMessage(value));
@@ -1261,7 +1302,7 @@ public class AccountSasTests extends TestCase {
                     queue.clear();
                 }
             }
-            
+
             assertEquals(null, queue.peekMessage());
         }
         else {
@@ -1274,11 +1315,11 @@ public class AccountSasTests extends TestCase {
                 queue.peekMessage();
             }
         }
-        
-        // Test deleting the queue 
+
+        // Test deleting the queue
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER) &&
                  policy.getPermissions().contains(SharedAccessAccountPermissions.DELETE)) {
-            
+
             sasQueue.delete();
         }
         else {
@@ -1297,12 +1338,12 @@ public class AccountSasTests extends TestCase {
             }
         }
     }
-    
+
     private void testTableAccountSas(final boolean useHttps, final int bits)
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
         SharedAccessAccountPolicy policy = generatePolicy(bits, SharedAccessAccountService.TABLE, null, null);
         this.tableTable = this.tableClient.getTableReference("tabletest" + bits);
-        
+
         try {
             testTableAccountSas(this.tableTable, useHttps, policy);
         }
@@ -1323,16 +1364,16 @@ public class AccountSasTests extends TestCase {
 
     private void testTableAccountSas(CloudTable table, boolean useHttps, SharedAccessAccountPolicy policy)
             throws InvalidKeyException, StorageException, URISyntaxException, IOException {
-    
+
         assertNotNull(null, policy);
         assertNotNull(table);
         assertFalse(table.exists());
-        
+
         final CloudTableClient sasClient = TestHelper.createCloudTableClient(policy, useHttps);
         URI sasUri = sasClient.getTableReference(table.getName()).getUri();
         sasUri = sasClient.getCredentials().transformUri(sasUri);
         final CloudTable sasTable = new CloudTable(sasUri);
-        
+
         final String key = "testkey";
         final String value = "testvalue";
         final String value2 = "testvalue2";
@@ -1341,11 +1382,11 @@ public class AccountSasTests extends TestCase {
         final String row1 = "testrow1";
         final String row2 = "testrow2";
 
-        // Test creating the table 
+        // Test creating the table
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER) &&
                 (policy.getPermissions().contains(SharedAccessAccountPermissions.CREATE) ||
                 policy.getPermissions().contains(SharedAccessAccountPermissions.WRITE))) {
-            
+
             sasTable.create();
         }
         else {
@@ -1357,7 +1398,7 @@ public class AccountSasTests extends TestCase {
                 if (AccountSasTests.QUERY_PARAM_MISSING_MESSAGE.equals(ex.getMessage())) {
                     throw ex;
                 }
-                
+
                 if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER)) {
                     assertMessagesMatch(AccountSasTests.INVALID_PERMISSION_MESSAGE, ex);
                 }
@@ -1367,13 +1408,13 @@ public class AccountSasTests extends TestCase {
                 table.create();
             }
         }
-        
+
         assertTrue(table.exists());
-    
+
         // Test listing the tables on the client
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER) &&
                 policy.getPermissions().contains(SharedAccessAccountPermissions.LIST)) {
-            
+
             assertEquals(sasTable.getName(), sasClient.listTables(sasTable.getName()).iterator().next());
         }
         else {
@@ -1387,14 +1428,14 @@ public class AccountSasTests extends TestCase {
                         this.tableClient.listTables(sasTable.getName()).iterator().next());
             }
         }
-        
+
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.OBJECT)) {
             // Test inserting an entity into a table
             final HashMap<String, EntityProperty> columns = new HashMap<String, EntityProperty>();
             columns.put(key, new EntityProperty(value));
             final DynamicTableEntity entity = new DynamicTableEntity(partition1, row1, columns);
             TableOperation op = TableOperation.insert(entity);
-            
+
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.ADD)) {
                 sasTable.execute(op);
             }
@@ -1408,11 +1449,11 @@ public class AccountSasTests extends TestCase {
                     table.execute(op);
                 }
             }
-            
+
             op = TableOperation.retrieve(partition1, row1, DynamicTableEntity.class);
             DynamicTableEntity result = (DynamicTableEntity) table.execute(op).getResultAsType();
             assertEquals(value, result.getProperties().get(key).getValueAsString());
-            
+
             // Test merging an entity in a table
             entity.getProperties().put(key, new EntityProperty(value2));
             op = TableOperation.merge(entity);
@@ -1446,18 +1487,18 @@ public class AccountSasTests extends TestCase {
                     result = (DynamicTableEntity) table.execute(op).getResultAsType();
                 }
             }
-            
+
             assertEquals(value2, result.getProperties().get(key).getValueAsString());
-            
+
             // Test insert or merge on two entities
             entity.getProperties().put(key, new EntityProperty(value));
             op = TableOperation.insertOrMerge(entity);
-            
+
             final HashMap<String, EntityProperty> columns2 = new HashMap<String, EntityProperty>();
             columns2.put(key, new EntityProperty(value2));
             final DynamicTableEntity entity2 = new DynamicTableEntity(partition2, row2, columns2);
             TableOperation op2 = TableOperation.insertOrMerge(entity2);
-            
+
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.ADD) &&
                     policy.getPermissions().contains(SharedAccessAccountPermissions.UPDATE)) {
                 sasTable.execute(op);
@@ -1485,11 +1526,11 @@ public class AccountSasTests extends TestCase {
             TableOperation retrieveOp = TableOperation.retrieve(partition2, row2, DynamicTableEntity.class);
             result = (DynamicTableEntity) table.execute(retrieveOp).getResultAsType();
             assertEquals(value2, result.getProperties().get(key).getValueAsString());
-            
+
             retrieveOp = TableOperation.retrieve(partition1, row1, DynamicTableEntity.class);
             result = (DynamicTableEntity) table.execute(retrieveOp).getResultAsType();
             assertEquals(value, result.getProperties().get(key).getValueAsString());
-            
+
             // Test deleting an entity from a table.
             op = TableOperation.delete(entity);
             if (policy.getPermissions().contains(SharedAccessAccountPermissions.DELETE)) {
@@ -1505,7 +1546,7 @@ public class AccountSasTests extends TestCase {
                     table.execute(op);
                 }
             }
-            
+
             try {
                 table.execute(op);
             }
@@ -1524,11 +1565,11 @@ public class AccountSasTests extends TestCase {
                 table.execute(op);
             }
         }
-        
-        // Test deleting the share 
+
+        // Test deleting the share
         if (policy.getResourceTypes().contains(SharedAccessAccountResourceType.CONTAINER) &&
                  policy.getPermissions().contains(SharedAccessAccountPermissions.DELETE)) {
-            
+
             sasTable.delete();
         }
         else {
@@ -1547,7 +1588,7 @@ public class AccountSasTests extends TestCase {
             }
         }
     }
-    
+
     private static void assertMessagesMatch(String expectedMessage, StorageException ex) {
         final String message = ex.getExtendedErrorInformation().getErrorMessage().split("\n")[0];
         assertEquals(expectedMessage, message);
@@ -1555,57 +1596,57 @@ public class AccountSasTests extends TestCase {
 
     private static SharedAccessAccountPolicy generatePolicy(
             final int bits, final SharedAccessAccountService service, IPRange ipRange, SharedAccessProtocols protocols) {
-        
+
         EnumSet<SharedAccessAccountService> services = EnumSet.noneOf(SharedAccessAccountService.class);
         EnumSet<SharedAccessAccountPermissions> permissions = EnumSet.noneOf(SharedAccessAccountPermissions.class);
         EnumSet<SharedAccessAccountResourceType> resourceTypes = EnumSet.noneOf(SharedAccessAccountResourceType.class);
-        
+
         services.add(service);
-        
+
         if ((bits & AccountSasTests.ADD_CODE) == AccountSasTests.ADD_CODE) {
             permissions.add(SharedAccessAccountPermissions.ADD);
         }
-        
+
         if ((bits & AccountSasTests.CREATE_CODE) == AccountSasTests.CREATE_CODE) {
             permissions.add(SharedAccessAccountPermissions.CREATE);
         }
-        
+
         if ((bits & AccountSasTests.DELETE_CODE) ==  AccountSasTests.DELETE_CODE) {
             permissions.add(SharedAccessAccountPermissions.DELETE);
         }
-        
+
         if ((bits & AccountSasTests.LIST_CODE) ==  AccountSasTests.LIST_CODE) {
             permissions.add(SharedAccessAccountPermissions.LIST);
         }
-        
+
         if ((bits & AccountSasTests.PROCESS_CODE) == AccountSasTests.PROCESS_CODE) {
             permissions.add(SharedAccessAccountPermissions.PROCESS_MESSAGES);
         }
-        
+
         if ((bits & AccountSasTests.READ_CODE) == AccountSasTests.READ_CODE) {
             permissions.add(SharedAccessAccountPermissions.READ);
         }
-        
+
         if ((bits & AccountSasTests.UPDATE_CODE) == AccountSasTests.UPDATE_CODE) {
             permissions.add(SharedAccessAccountPermissions.UPDATE);
         }
-        
+
         if ((bits & AccountSasTests.WRITE_CODE) == AccountSasTests.WRITE_CODE) {
             permissions.add(SharedAccessAccountPermissions.WRITE);
         }
-        
+
         if ((bits & AccountSasTests.OBJECT_CODE) == AccountSasTests.OBJECT_CODE) {
             resourceTypes.add(SharedAccessAccountResourceType.OBJECT);
         }
-        
+
         if ((bits & AccountSasTests.CONTAINER_CODE) == AccountSasTests.CONTAINER_CODE) {
             resourceTypes.add(SharedAccessAccountResourceType.CONTAINER);
         }
-        
+
         if ((bits & AccountSasTests.SERVICE_CODE) == AccountSasTests.SERVICE_CODE) {
             resourceTypes.add(SharedAccessAccountResourceType.SERVICE);
         }
-        
+
         Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
         cal.setTime(new Date());
         cal.add(Calendar.SECOND, 300);
@@ -1617,7 +1658,7 @@ public class AccountSasTests extends TestCase {
         policy.setRange(ipRange);
         policy.setProtocols(protocols);
         policy.setSharedAccessExpiryTime(cal.getTime());
-        
+
         return policy;
     }
 }

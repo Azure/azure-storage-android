@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,6 +13,25 @@
  * limitations under the License.
  */
 package com.microsoft.azure.storage.blob;
+
+import com.microsoft.azure.storage.AccessCondition;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.RetryNoRetry;
+import com.microsoft.azure.storage.SendingRequestEvent;
+import com.microsoft.azure.storage.StorageEvent;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.core.SR;
+import com.microsoft.azure.storage.core.Utility;
+
+import junit.framework.Assert;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,42 +49,32 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
 
-import org.junit.Test;
+import static org.junit.Assert.*;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import com.microsoft.azure.storage.AccessCondition;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.RetryNoRetry;
-import com.microsoft.azure.storage.SendingRequestEvent;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.core.SR;
-import com.microsoft.azure.storage.core.Utility;
-
-public class CloudPageBlobTests extends TestCase {
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
+public class CloudPageBlobTests {
     protected CloudBlobContainer container;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException {
+    @Before
+    public void pageBlobTestMethodSetUp() throws URISyntaxException, StorageException {
         this.container = BlobTestHelper.getRandomContainerReference();
         this.container.create();
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void pageBlobTestMethodTearDown() throws StorageException {
         this.container.deleteIfExists();
     }
 
     /**
      * Start copying a blob and then abort
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
     public void testCopyFromPageBlobAbortTest() throws StorageException, URISyntaxException, IOException {
         final int length = 512;
         CloudPageBlob originalBlob = (CloudPageBlob) BlobTestHelper.uploadNewBlob(
@@ -85,12 +94,13 @@ public class CloudPageBlobTests extends TestCase {
 
     /**
      * Create a snapshot
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
     public void testPageBlobSnapshotValidationTest() throws StorageException, URISyntaxException, IOException{
         final int length = 1024;
         CloudPageBlob blockBlobRef = (CloudPageBlob) BlobTestHelper.uploadNewBlob(this.container, BlobType.PAGE_BLOB,
@@ -163,12 +173,13 @@ public class CloudPageBlobTests extends TestCase {
 
     /**
      * Create a blob and try to download a range of its contents
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
     public void testPageBlobDownloadRangeValidationTest() throws StorageException, URISyntaxException, IOException{
         final int length = 5 * 1024 * 1024;
 
@@ -188,6 +199,7 @@ public class CloudPageBlobTests extends TestCase {
         assertEquals(100, downloadLength);
     }
 
+    @Test
     public void testPageBlobUploadFromStreamTest() throws URISyntaxException, StorageException, IOException {
         final String pageBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testPageBlob");
         final CloudPageBlob pageBlobRef = this.container.getPageBlobReference(pageBlobName);
@@ -207,6 +219,7 @@ public class CloudPageBlobTests extends TestCase {
         BlobTestHelper.assertStreamsAreEqual(srcStream, new ByteArrayInputStream(dstStream.toByteArray()));
     }
 
+    @Test
     public void testBlobUploadWithoutMD5Validation() throws URISyntaxException, StorageException, IOException {
         final String pageBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testPageBlob");
         final CloudPageBlob pageBlobRef = this.container.getPageBlobReference(pageBlobName);
@@ -235,6 +248,7 @@ public class CloudPageBlobTests extends TestCase {
         pageBlobRef.download(new ByteArrayOutputStream(), null, options, null);
     }
 
+    @Test
     public void testBlobEmptyHeaderSigningTest() throws URISyntaxException, StorageException, IOException {
         final String pageBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testPageBlob");
         final CloudPageBlob pageBlobRef = this.container.getPageBlobReference(pageBlobName);
@@ -256,6 +270,7 @@ public class CloudPageBlobTests extends TestCase {
         pageBlobRef.download(new ByteArrayOutputStream(), null, null, context);
     }
 
+    @Test
     public void testPageBlobDownloadRangeTest() throws URISyntaxException, StorageException, IOException {
         byte[] buffer = BlobTestHelper.getRandomBuffer(2 * 1024);
 
@@ -292,6 +307,7 @@ public class CloudPageBlobTests extends TestCase {
         BlobTestHelper.assertAreEqual(blob, blob2);
     }
 
+    @Test
     public void testCloudPageBlobDownloadToByteArray() throws URISyntaxException, StorageException, IOException {
         CloudPageBlob blob = this.container.getPageBlobReference("blob1");
         BlobTestHelper.doDownloadTest(blob, 1 * 512, 2 * 512, 0);
@@ -301,6 +317,7 @@ public class CloudPageBlobTests extends TestCase {
         BlobTestHelper.doDownloadTest(blob, 5 * 1024 * 1024, 6 * 1024 * 1024, 512);
     }
 
+    @Test
     public void testCloudPageBlobDownloadRangeToByteArray() throws URISyntaxException, StorageException, IOException {
         CloudPageBlob blob = this.container.getPageBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("downloadrange"));
@@ -329,6 +346,7 @@ public class CloudPageBlobTests extends TestCase {
         BlobTestHelper.doDownloadRangeToByteArrayTest(blob, 1024, 1024, 512, new Long(1023), new Long(1));
     }
 
+    @Test
     public void testCloudPageBlobDownloadRangeToByteArrayNegativeTest() throws URISyntaxException, StorageException,
             IOException {
         CloudPageBlob blob = this.container.getPageBlobReference(BlobTestHelper
@@ -336,6 +354,7 @@ public class CloudPageBlobTests extends TestCase {
         BlobTestHelper.doDownloadRangeToByteArrayNegativeTests(blob);
     }
 
+    @Test
     public void testCloudPageBlobUploadFromStreamWithAccessCondition() throws URISyntaxException, StorageException,
             IOException {
         CloudPageBlob blob1 = this.container.getPageBlobReference("blob1");
@@ -380,7 +399,7 @@ public class CloudPageBlobTests extends TestCase {
      * @throws IOException
      * @throws InterruptedException
      */
-
+    @Test
     public void testPageBlobNamePlusEncodingTest() throws StorageException, URISyntaxException, IOException,
             InterruptedException {
         final int length = 1 * 1024;
@@ -399,7 +418,7 @@ public class CloudPageBlobTests extends TestCase {
      * @throws StorageException
      * @throws IOException
      */
-
+    @Test
     public void testPageBlobInputStream() throws URISyntaxException, StorageException, IOException {
         final int blobLength = 16 * 1024;
         final Random randGenerator = new Random();
@@ -431,6 +450,7 @@ public class CloudPageBlobTests extends TestCase {
         blobRef.delete();
     }
 
+    @Test
     public void testUploadFromByteArray() throws Exception {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
         final CloudPageBlob blob = this.container.getPageBlobReference(blobName);
@@ -441,6 +461,7 @@ public class CloudPageBlobTests extends TestCase {
         this.doUploadFromByteArrayTest(blob, 4 * 512, 2 * 512, 2 * 512);
     }
 
+    @Test
     public void testUploadDownloadFromFile() throws IOException, StorageException, URISyntaxException {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
         final CloudPageBlob blob = this.container.getPageBlobReference(blobName);
@@ -451,6 +472,7 @@ public class CloudPageBlobTests extends TestCase {
         this.doUploadDownloadFileTest(blob, 11 * 1024 * 1024);
     }
 
+    @Test
     public void testPageBlobCopyTest() throws URISyntaxException, StorageException, InterruptedException, IOException {
         Calendar calendar = Calendar.getInstance(Utility.UTC_ZONE);
 
@@ -505,6 +527,7 @@ public class CloudPageBlobTests extends TestCase {
         copy.delete();
     }
 
+    @Test
     public void testPageBlobCopyWithMetadataOverride() throws URISyntaxException, StorageException, IOException,
             InterruptedException {
         Calendar calendar = Calendar.getInstance(Utility.UTC_ZONE);
@@ -552,6 +575,7 @@ public class CloudPageBlobTests extends TestCase {
         copy.delete();
     }
 
+    @Test
     public void testPageBlobCopyFromSnapshot() throws StorageException, IOException, URISyntaxException,
             InterruptedException {
         CloudPageBlob source = this.container.getPageBlobReference("source");
@@ -667,6 +691,7 @@ public class CloudPageBlobTests extends TestCase {
         }
     }
 
+    @Test
     public void testUploadPages() throws URISyntaxException, StorageException, IOException {
         int blobLengthToUse = 8 * 512;
         byte[] buffer = BlobTestHelper.getRandomBuffer(8 * 512);
@@ -729,6 +754,7 @@ public class CloudPageBlobTests extends TestCase {
         }
     }
 
+    @Test
     public void testClearPages() throws URISyntaxException, StorageException, IOException {
         int blobLengthToUse = 8 * 512;
         byte[] buffer = BlobTestHelper.getRandomBuffer(8 * 512);
@@ -780,6 +806,7 @@ public class CloudPageBlobTests extends TestCase {
         }
     }
 
+    @Test
     public void testResize() throws StorageException, URISyntaxException {
         CloudPageBlob blob = this.container.getPageBlobReference("blob1");
         CloudPageBlob blob2 = this.container.getPageBlobReference("blob1");
@@ -823,7 +850,7 @@ public class CloudPageBlobTests extends TestCase {
         // Upload pages 2-4
         inputStream = new ByteArrayInputStream(buffer, 512, 3 * 512);
         blobRef.uploadPages(inputStream, 2 * 512, 3 * 512);
-        
+
         // Upload page 6
         inputStream = new ByteArrayInputStream(buffer, 3 * 512, 512);
         blobRef.uploadPages(inputStream, 6 * 512, 512);
@@ -836,7 +863,7 @@ public class CloudPageBlobTests extends TestCase {
         // Page7-8: 2 * 512 bytes should be 0
         return blobRef;
     }
-    
+
     @Test
     public void testDownloadPages() throws StorageException, URISyntaxException, IOException {
         final CloudPageBlob blobRef = setUpPageRanges();
@@ -858,12 +885,12 @@ public class CloudPageBlobTests extends TestCase {
     public void testDownloadPageRangeDiff() throws StorageException, URISyntaxException, IOException {
         final CloudPageBlob blobRef = setUpPageRanges();
         final CloudPageBlob snapshot = (CloudPageBlob) blobRef.createSnapshot();
-        
+
         // Add page 1
-        InputStream inputStream = new ByteArrayInputStream(BlobTestHelper.getRandomBuffer(512));        
+        InputStream inputStream = new ByteArrayInputStream(BlobTestHelper.getRandomBuffer(512));
         inputStream = new ByteArrayInputStream(BlobTestHelper.getRandomBuffer(512));
-        blobRef.uploadPages(inputStream, 0, 512);        
-        
+        blobRef.uploadPages(inputStream, 0, 512);
+
         // Clear page 6
         blobRef.clearPages(6 * 512, 512);
 
@@ -883,7 +910,7 @@ public class CloudPageBlobTests extends TestCase {
     @Test
     public void testDownloadPageRangesWithOffsetAndLength() throws StorageException, URISyntaxException, IOException {
         final CloudPageBlob blobRef = setUpPageRanges();
-        
+
         List<PageRange> actualPageRanges = blobRef.downloadPageRanges((long)1*512, (long)5*512);
         List<PageRange> expectedPageRanges = new ArrayList<PageRange>();
         expectedPageRanges.add(new PageRange(2 * 512, 5 * 512 - 1));
@@ -898,7 +925,7 @@ public class CloudPageBlobTests extends TestCase {
     @Test
     public void testDownloadPageRangesWithOffset() throws StorageException, URISyntaxException, IOException {
         final CloudPageBlob blobRef = setUpPageRanges();
-        
+
         List<PageRange> actualPageRanges = blobRef.downloadPageRanges((long)1*512, null);
         List<PageRange> expectedPageRanges = new ArrayList<PageRange>();
         expectedPageRanges.add(new PageRange(2 * 512, 5 * 512 - 1));
@@ -915,7 +942,7 @@ public class CloudPageBlobTests extends TestCase {
     public void testDownloadPageRangeDiffWithOffsetAndLength() throws StorageException, URISyntaxException, IOException {
         final CloudPageBlob blobRef = setUpPageRanges();
         final CloudPageBlob snapshot = (CloudPageBlob) blobRef.createSnapshot();
-        
+
         // Add page 1
         InputStream inputStream = new ByteArrayInputStream(BlobTestHelper.getRandomBuffer(512));
         blobRef.uploadPages(inputStream, 0, 512);
@@ -942,7 +969,7 @@ public class CloudPageBlobTests extends TestCase {
         BlobRequestOptions options = new BlobRequestOptions();
         options.setDisableContentMD5Validation(true);
 
-        // with explicit upload/download of properties 
+        // with explicit upload/download of properties
         String pageBlobName1 = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         CloudPageBlob pageBlobRef1 = this.container.getPageBlobReference(pageBlobName1);
 
@@ -957,7 +984,7 @@ public class CloudPageBlobTests extends TestCase {
 
         BlobTestHelper.assertAreEqual(props1, props2);
 
-        // by uploading/downloading the blob   
+        // by uploading/downloading the blob
         pageBlobName1 = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         pageBlobRef1 = this.container.getPageBlobReference(pageBlobName1);
 
@@ -972,6 +999,7 @@ public class CloudPageBlobTests extends TestCase {
         BlobTestHelper.assertAreEqual(props1, props2);
     }
 
+    @Test
     public void testOpenOutputStreamNotAligned() throws StorageException, URISyntaxException {
         int blobLengthToUse = 8 * 512;
         byte[] buffer = BlobTestHelper.getRandomBuffer(8 * 512);
@@ -1002,6 +1030,7 @@ public class CloudPageBlobTests extends TestCase {
         }
     }
 
+    @Test
     public void testOpenOutputStream() throws URISyntaxException, StorageException, IOException {
         int blobLengthToUse = 8 * 512;
         byte[] buffer = BlobTestHelper.getRandomBuffer(8 * 512);
@@ -1035,6 +1064,7 @@ public class CloudPageBlobTests extends TestCase {
         }
     }
 
+    @Test
     public void testOpenOutputStreamNoArgs() throws URISyntaxException, StorageException {
         String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
         CloudPageBlob pageBlob = this.container.getPageBlobReference(blobName);

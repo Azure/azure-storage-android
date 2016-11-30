@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,6 +13,23 @@
  * limitations under the License.
  */
 package com.microsoft.azure.storage.table;
+
+import com.microsoft.azure.storage.LocationMode;
+import com.microsoft.azure.storage.RetryNoRetry;
+import com.microsoft.azure.storage.SecondaryTests;
+import com.microsoft.azure.storage.StorageErrorCodeStrings;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.core.SR;
+import com.microsoft.azure.storage.table.TableTestHelper.Class1;
+import com.microsoft.azure.storage.table.TableTestHelper.Class2;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
@@ -24,31 +41,25 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.UUID;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
-import com.microsoft.azure.storage.LocationMode;
-import com.microsoft.azure.storage.RetryNoRetry;
-import com.microsoft.azure.storage.StorageErrorCodeStrings;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.core.SR;
-import com.microsoft.azure.storage.table.TableTestHelper.Class1;
-import com.microsoft.azure.storage.table.TableTestHelper.Class2;
-
-public class TableBatchOperationTests extends TestCase {
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
+public class TableBatchOperationTests {
 
     private CloudTable table;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException {
+    @Before
+    public void tableBatchOperationTestMethodSetUp() throws URISyntaxException, StorageException {
         this.table = TableTestHelper.getRandomTableReference();
         this.table.createIfNotExists();
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void tableBatchOperationTestMethodTearDown() throws StorageException {
         this.table.deleteIfExists();
     }
 
+    @Test
     public void testBatchAddAll() throws StorageException {
         ArrayList<TableOperation> ops = allOpsList();
 
@@ -90,6 +101,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchAddAllIndex() throws StorageException {
         ArrayList<TableOperation> ops = allOpsList();
 
@@ -131,6 +143,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchAddAllWithRetrieveShouldThrow() throws StorageException {
         ArrayList<TableOperation> ops = allOpsList();
 
@@ -150,6 +163,8 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
+    @Category(SecondaryTests.class)
     public void testBatchAddIndex() {
         TableBatchOperation batch = new TableBatchOperation();
 
@@ -177,6 +192,7 @@ public class TableBatchOperationTests extends TestCase {
         batch.add(0, queryOp);
     }
 
+    @Test
     public void testBatchRemoveAll() throws StorageException {
         ArrayList<TableOperation> ops = allOpsList();
 
@@ -192,6 +208,8 @@ public class TableBatchOperationTests extends TestCase {
         batch.insert(baseEntity);
     }
 
+    @Test
+    @Category(SecondaryTests.class)
     public void testBatchRemoveRange() throws StorageException {
         ArrayList<TableOperation> ops = allOpsList();
 
@@ -229,6 +247,8 @@ public class TableBatchOperationTests extends TestCase {
         batch.add(queryOp);
     }
 
+    @Test
+    @Category(SecondaryTests.class)
     public void testBatchRemove() {
         TableBatchOperation batch = new TableBatchOperation();
 
@@ -256,6 +276,7 @@ public class TableBatchOperationTests extends TestCase {
         batch.add(queryOp);
     }
 
+    @Test
     public void testBatchLockToPartitionKey() {
         try {
             TableBatchOperation batch = new TableBatchOperation();
@@ -267,6 +288,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchRetrieveAndOneMoreOperationShouldThrow() {
         Class1 ref2 = TableTestHelper.generateRandomEntity("jxscl_odata");
 
@@ -291,6 +313,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchAddNullShouldThrow() {
         try {
             TableBatchOperation batch = new TableBatchOperation();
@@ -302,6 +325,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchRetrieveWithNullResolverShouldThrow() {
         try {
             TableBatchOperation batch = new TableBatchOperation();
@@ -314,6 +338,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testEmptyBatchShouldThrow() throws StorageException {
         TableBatchOperation batch = new TableBatchOperation();
 
@@ -326,6 +351,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchMultiQueryShouldThrow() {
         Class1 ref = TableTestHelper.generateRandomEntity("jxscl_odata");
         Class1 ref2 = TableTestHelper.generateRandomEntity("jxscl_odata");
@@ -341,6 +367,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     // don't need the category secondary as the request will fail before being sent
     public void testBatchSecondaryWriteShouldThrow() {
         // create batch with an insert
@@ -364,6 +391,8 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
+    @Category(SecondaryTests.class)
     public void testBatchSecondaryNoWrite() throws StorageException {
         // create and insert an entity
         Class1 ref = TableTestHelper.generateRandomEntity("jxscl_odata");
@@ -381,6 +410,7 @@ public class TableBatchOperationTests extends TestCase {
         this.table.execute(batch, options, null);
     }
 
+    @Test
     public void testBatchOver100Entities() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -403,6 +433,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchInsertEntityOver1MB() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -443,6 +474,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchInsertEntityWithPropertyMoreThan255chars() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -484,6 +516,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchSizeOver4mb() {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -518,6 +551,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchDeleteFail() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -549,6 +583,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchInsertFail() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -570,6 +605,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchReplaceFail() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -601,6 +637,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchMergeFail() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -635,6 +672,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchEmptyQuery() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -652,6 +690,7 @@ public class TableBatchOperationTests extends TestCase {
         assertEquals(results.get(0).getHttpStatusCode(), HttpURLConnection.HTTP_NOT_FOUND);
     }
 
+    @Test
     public void testBatchWithAllOperations() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -730,6 +769,7 @@ public class TableBatchOperationTests extends TestCase {
 
     }
 
+    @Test
     public void testBatchDelete() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -746,7 +786,7 @@ public class TableBatchOperationTests extends TestCase {
     private void testBatchDelete(TableRequestOptions options) throws StorageException {
         Class1 ref = TableTestHelper.generateRandomEntity("jxscl_odata");
 
-        // insert entity  
+        // insert entity
         this.table.execute(TableOperation.insert(ref), options, null);
 
         TableBatchOperation batch = new TableBatchOperation();
@@ -766,6 +806,7 @@ public class TableBatchOperationTests extends TestCase {
         }
     }
 
+    @Test
     public void testBatchRetrieve() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -805,6 +846,7 @@ public class TableBatchOperationTests extends TestCase {
         this.table.execute(TableOperation.delete(ref), options, null);
     }
 
+    @Test
     public void tableBatchRetrieveWithEntityResolver() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -854,6 +896,7 @@ public class TableBatchOperationTests extends TestCase {
         assertTrue(Arrays.equals(ent.getD(), randEnt.getD()));
     }
 
+    @Test
     public void testBatchInsert() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -898,6 +941,7 @@ public class TableBatchOperationTests extends TestCase {
         assertEquals(iter.next().getHttpStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
     }
 
+    @Test
     public void testBatchMerge() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -940,6 +984,7 @@ public class TableBatchOperationTests extends TestCase {
         assertEquals(iter.next().getHttpStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
     }
 
+    @Test
     public void testBatchReplace() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -982,6 +1027,7 @@ public class TableBatchOperationTests extends TestCase {
         assertEquals(iter.next().getHttpStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
     }
 
+    @Test
     public void testBatchInsertOrMerge() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -1024,6 +1070,7 @@ public class TableBatchOperationTests extends TestCase {
         assertEquals(iter.next().getHttpStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
     }
 
+    @Test
     public void testBatchInsertOrReplace() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -1066,6 +1113,7 @@ public class TableBatchOperationTests extends TestCase {
         assertEquals(iter.next().getHttpStatusCode(), HttpURLConnection.HTTP_NO_CONTENT);
     }
 
+    @Test
     public void testInsertBatch1() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -1079,6 +1127,7 @@ public class TableBatchOperationTests extends TestCase {
         insertAndDeleteBatchWithX(1, options);
     }
 
+    @Test
     public void testInsertBatch10() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -1092,6 +1141,7 @@ public class TableBatchOperationTests extends TestCase {
         insertAndDeleteBatchWithX(10, options);
     }
 
+    @Test
     public void testInsertBatch100() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -1105,6 +1155,7 @@ public class TableBatchOperationTests extends TestCase {
         insertAndDeleteBatchWithX(100, options);
     }
 
+    @Test
     public void testUpsertBatch1() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -1118,6 +1169,7 @@ public class TableBatchOperationTests extends TestCase {
         upsertAndDeleteBatchWithX(1, options);
     }
 
+    @Test
     public void testUpsertBatch10() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -1131,6 +1183,7 @@ public class TableBatchOperationTests extends TestCase {
         upsertAndDeleteBatchWithX(10, options);
     }
 
+    @Test
     public void testUpsertBatch100() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 

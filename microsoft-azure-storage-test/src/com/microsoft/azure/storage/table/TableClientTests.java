@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,20 +13,6 @@
  * limitations under the License.
  */
 package com.microsoft.azure.storage.table;
-
-import java.net.HttpURLConnection;
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.GregorianCalendar;
-import java.util.UUID;
-
-import junit.framework.TestCase;
 
 import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.OperationContext;
@@ -40,21 +26,45 @@ import com.microsoft.azure.storage.RetryPolicy;
 import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.StorageLocation;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.core.PathUtility;
 import com.microsoft.azure.storage.core.SR;
 import com.microsoft.azure.storage.table.TableTestHelper.Class1;
 import com.microsoft.azure.storage.table.TableTestHelper.Class2;
 
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.GregorianCalendar;
+import java.util.UUID;
+
+import static org.junit.Assert.*;
+
 /**
  * Table Client Tests
  */
-public class TableClientTests extends TestCase {
+public class TableClientTests {
+
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListTablesSegmented() throws URISyntaxException, StorageException {
         TableRequestOptions options = new TableRequestOptions();
         TablePayloadFormat[] formats =
                 {TablePayloadFormat.JsonFullMetadata,
                 TablePayloadFormat.Json,
-                TablePayloadFormat.JsonNoMetadata}; 
+                TablePayloadFormat.JsonNoMetadata};
 
         for (TablePayloadFormat format : formats) {
             options.setTablePayloadFormat(format);
@@ -107,7 +117,9 @@ public class TableClientTests extends TestCase {
             }
         }
     }
-    
+
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListTablesSegmentedMaxResultsValidation()
             throws URISyntaxException, StorageException {
         final CloudTableClient tClient = TableTestHelper.createCloudTableClient();
@@ -123,9 +135,12 @@ public class TableClientTests extends TestCase {
                         .equals(e.getMessage()));
             }
         }
+
         assertNotNull(tClient.listTablesSegmented("thereshouldntbeanytableswiththisprefix"));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListTablesSegmentedNoPrefix() throws URISyntaxException, StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -181,6 +196,8 @@ public class TableClientTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListTablesWithIterator() throws URISyntaxException, StorageException {
         TableRequestOptions options = new TableRequestOptions();
         options.setTablePayloadFormat(TablePayloadFormat.Json);
@@ -241,6 +258,8 @@ public class TableClientTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({SlowTests.class, DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testTableSASFromIdentifier() throws StorageException, URISyntaxException, InvalidKeyException,
             InterruptedException {
         CloudTable table = TableTestHelper.getRandomTableReference();
@@ -363,6 +382,8 @@ public class TableClientTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ SlowTests.class, DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testTableSASFromPermission() throws StorageException, URISyntaxException, InvalidKeyException {
         CloudTable table = TableTestHelper.getRandomTableReference();
         try {
@@ -508,6 +529,8 @@ public class TableClientTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ SlowTests.class, DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testTableSASPkRk() throws StorageException, URISyntaxException, InvalidKeyException {
         CloudTable table = TableTestHelper.getRandomTableReference();
         try {
@@ -563,6 +586,8 @@ public class TableClientTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ SlowTests.class, DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testBackoffTimeOverflow() {
         RetryExponentialRetry exponentialRetry = new RetryExponentialRetry(4000, 100000);
         testBackoffTimeOverflow(exponentialRetry, 100000);
@@ -593,6 +618,8 @@ public class TableClientTests extends TestCase {
         assertNull(retryPolicy.evaluate(retryContext, context));
     }
 
+    @Test
+    @Category( {CloudTests.class })
     public void testGetServiceStats() throws StorageException {
         CloudTableClient tClient = TableTestHelper.createCloudTableClient();
         tClient.getDefaultRequestOptions().setLocationMode(LocationMode.SECONDARY_ONLY);

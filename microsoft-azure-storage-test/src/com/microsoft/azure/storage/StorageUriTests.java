@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,12 +14,9 @@
  */
 package com.microsoft.azure.storage;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
-
-import junit.framework.TestCase;
-
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlobDirectory;
@@ -31,7 +28,17 @@ import com.microsoft.azure.storage.queue.CloudQueueClient;
 import com.microsoft.azure.storage.table.CloudTable;
 import com.microsoft.azure.storage.table.CloudTableClient;
 
-public class StorageUriTests extends TestCase {
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+
+import static org.junit.Assert.*;
+
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
+public class StorageUriTests {
 
     private static final String ACCOUNT_NAME = "account";
     private static final String SECONDARY_SUFFIX = "-secondary";
@@ -40,6 +47,7 @@ public class StorageUriTests extends TestCase {
     private static final String QUEUE_SERVICE = ".queue";
     private static final String TABLE_SERVICE = ".table";
 
+    @Test
     public void testStorageUriWithTwoUris() throws URISyntaxException {
         URI primaryClientUri = new URI("http://" + ACCOUNT_NAME + BLOB_SERVICE + ENDPOINT_SUFFIX);
         URI primaryContainerUri = new URI(primaryClientUri + "/container");
@@ -104,6 +112,7 @@ public class StorageUriTests extends TestCase {
         assertFalse(multiUri.equals(multiUri5));
     }
 
+    @Test
     public void testDevelopmentStorageWithTwoUris() throws URISyntaxException {
         CloudStorageAccount account = CloudStorageAccount.getDevelopmentStorageAccount();
         URI primaryClientURI = account.getBlobStorageUri().getPrimaryUri();
@@ -140,6 +149,7 @@ public class StorageUriTests extends TestCase {
         assertFalse(multiURI.equals(multiURI3));
     }
 
+    @Test
     public void testCloudStorageAccountWithStorageUri() throws URISyntaxException, InvalidKeyException {
         StorageUri blobEndpoint = new StorageUri(new URI("http://" + ACCOUNT_NAME + BLOB_SERVICE + ENDPOINT_SUFFIX),
                 new URI("http://" + ACCOUNT_NAME + SECONDARY_SUFFIX + BLOB_SERVICE + ENDPOINT_SUFFIX));
@@ -165,6 +175,7 @@ public class StorageUriTests extends TestCase {
         assertEquals(tableEndpoint.getPrimaryUri(), account.getTableEndpoint());
     }
 
+    @Test
     public void testBlobTypesWithStorageUri() throws StorageException, URISyntaxException {
         CloudBlobClient blobClient = TestHelper.createCloudBlobClient();
         StorageUri endpoint = new StorageUri(new URI("http://" + ACCOUNT_NAME + BLOB_SERVICE + ENDPOINT_SUFFIX),
@@ -239,6 +250,7 @@ public class StorageUriTests extends TestCase {
         assertEquals(endpoint, pageBlob.getServiceClient().getStorageUri());
     }
 
+    @Test
     public void testQueueTypesWithStorageUri() throws URISyntaxException, StorageException {
         CloudQueueClient queueClient = TestHelper.createCloudQueueClient();
         StorageUri endpoint = new StorageUri(new URI("http://" + ACCOUNT_NAME + QUEUE_SERVICE + ENDPOINT_SUFFIX),
@@ -262,6 +274,7 @@ public class StorageUriTests extends TestCase {
         assertEquals(endpoint, queue.getServiceClient().getStorageUri());
     }
 
+    @Test
     public void testTableTypesWithStorageUri() throws URISyntaxException, StorageException {
         CloudTableClient tableClient = TestHelper.createCloudTableClient();
         StorageUri endpoint = new StorageUri(new URI("http://" + ACCOUNT_NAME + TABLE_SERVICE + ENDPOINT_SUFFIX),

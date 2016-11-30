@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,12 +14,10 @@
  */
 package com.microsoft.azure.storage.table;
 
-import java.net.URISyntaxException;
-import java.util.UUID;
-
-import junit.framework.TestCase;
-
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.table.TableTestHelper.Class1;
 import com.microsoft.azure.storage.table.TableTestHelper.ComplexEntity;
 import com.microsoft.azure.storage.table.TableTestHelper.IgnoreOnGetter;
@@ -29,24 +27,36 @@ import com.microsoft.azure.storage.table.TableTestHelper.InvalidStoreAsEntity;
 import com.microsoft.azure.storage.table.TableTestHelper.StoreAsEntity;
 import com.microsoft.azure.storage.table.TableTestHelper.StrangeDoubles;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.net.URISyntaxException;
+import java.util.UUID;
+
+import static org.junit.Assert.*;
+
 /**
  * Table Serializer Tests
  */
-public class TableSerializerTests extends TestCase {
+@Category({DevFabricTests.class, DevStoreTests.class, CloudTests.class})
+public class TableSerializerTests {
 
     private CloudTable table;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException {
+    @Before
+    public void tableSerializerTestMethodSetUp() throws URISyntaxException, StorageException {
         this.table = TableTestHelper.getRandomTableReference();
         this.table.createIfNotExists();
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void tableSerializerTestMethodTearDown() throws StorageException {
         this.table.deleteIfExists();
     }
 
+    @Test
     public void testIgnoreAnnotation() throws StorageException {
         // Ignore On Getter
         IgnoreOnGetter ignoreGetter = new IgnoreOnGetter();
@@ -91,6 +101,7 @@ public class TableSerializerTests extends TestCase {
         assertEquals(retrievedIgnoreGS.getIgnoreString(), null);
     }
 
+    @Test
     public void testStoreAsAnnotation() throws StorageException {
         StoreAsEntity ref = new StoreAsEntity();
         ref.setPartitionKey("jxscl_odata");
@@ -115,6 +126,7 @@ public class TableSerializerTests extends TestCase {
         this.table.execute(TableOperation.delete(retrievedComplexRef));
     }
 
+    @Test
     public void testInvalidStoreAsAnnotation() throws StorageException {
         InvalidStoreAsEntity ref = new InvalidStoreAsEntity();
         ref.setPartitionKey("jxscl_odata");
@@ -131,6 +143,7 @@ public class TableSerializerTests extends TestCase {
         assertEquals(retrievedStoreAsRef.getStoreAsString(), null);
     }
 
+    @Test
     public void testComplexEntityInsert() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -166,6 +179,7 @@ public class TableSerializerTests extends TestCase {
         ref.assertEquality(retrievedComplexRef);
     }
 
+    @Test
     public void testDoubles() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -202,6 +216,7 @@ public class TableSerializerTests extends TestCase {
         ref.assertEquality(retrievedComplexRef);
     }
 
+    @Test
     public void testWhitespaceTest() throws StorageException  {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -240,6 +255,7 @@ public class TableSerializerTests extends TestCase {
         assertEquals(((Class1) res.getResult()).getA(), ref.getA());
     }
 
+    @Test
     public void testWhitespaceOnEmptyKeysTest() throws StorageException{
         TableRequestOptions options = new TableRequestOptions();
 
@@ -281,6 +297,7 @@ public class TableSerializerTests extends TestCase {
         this.table.execute(TableOperation.delete(ref), options, null);
     }
 
+    @Test
     public void testNewLineTest() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 
@@ -319,6 +336,7 @@ public class TableSerializerTests extends TestCase {
         assertEquals(((Class1) res.getResult()).getA(), ref.getA());
     }
 
+    @Test
     public void testNulls() throws StorageException {
         TableRequestOptions options = new TableRequestOptions();
 

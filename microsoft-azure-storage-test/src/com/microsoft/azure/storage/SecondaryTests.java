@@ -14,17 +14,10 @@
  */
 package com.microsoft.azure.storage;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Test;
-
-import junit.framework.TestCase;
-
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.BlobTestHelper;
 import com.microsoft.azure.storage.blob.BlobType;
@@ -42,8 +35,22 @@ import com.microsoft.azure.storage.table.CloudTableClient;
 import com.microsoft.azure.storage.table.TableRequestOptions;
 import com.microsoft.azure.storage.table.TableTestHelper;
 
-public class SecondaryTests extends TestCase {
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
+@Category({ SecondaryTests.class, DevFabricTests.class, DevStoreTests.class, CloudTests.class })
+public class SecondaryTests {
+
+    @Test
     public void testLocationModeWithMissingUri() throws URISyntaxException, StorageException {
         CloudBlobClient client = TestHelper.createCloudBlobClient();
         CloudBlobClient primaryOnlyClient = new CloudBlobClient(client.getEndpoint(), client.getCredentials());
@@ -82,6 +89,7 @@ public class SecondaryTests extends TestCase {
         }
     }
 
+    @Test
     public void testBlobIfExistsShouldNotHitSecondary() throws StorageException, URISyntaxException {
         CloudBlobContainer container = BlobTestHelper.getRandomContainerReference();
 
@@ -190,6 +198,7 @@ public class SecondaryTests extends TestCase {
         }
     }
 
+    @Test
     public void testQueueIfExistsShouldNotHitSecondary() throws StorageException, URISyntaxException {
 
         CloudQueueClient client = TestHelper.createCloudQueueClient();
@@ -249,6 +258,7 @@ public class SecondaryTests extends TestCase {
         }
     }
 
+    @Test
     public void testTableIfExistsShouldNotHitSecondary() throws StorageException, URISyntaxException {
         CloudTableClient client = TestHelper.createCloudTableClient();
         CloudTable table = client.getTableReference("nonexistanttable");
@@ -306,6 +316,8 @@ public class SecondaryTests extends TestCase {
         }
     }
 
+    @Test
+    @Category(SlowTests.class)
     public void testMultiLocationRetriesBlob() throws URISyntaxException, StorageException {
         List<RetryInfo> retryInfoList = new ArrayList<RetryInfo>();
         List<RetryContext> retryContextList = new ArrayList<RetryContext>();
@@ -413,6 +425,8 @@ public class SecondaryTests extends TestCase {
                 retryContextList, retryInfoList);
     }
 
+    @Test
+    @Category(SlowTests.class)
     public void testMultiLocationRetriesQueue() throws URISyntaxException, StorageException {
         List<RetryInfo> retryInfoList = new ArrayList<RetryInfo>();
         List<RetryContext> retryContextList = new ArrayList<RetryContext>();
@@ -520,6 +534,8 @@ public class SecondaryTests extends TestCase {
                 retryContextList, retryInfoList);
     }
 
+    @Test
+    @Category(SlowTests.class)
     public void testMultiLocationRetriesTable() throws URISyntaxException, StorageException {
         List<RetryInfo> retryInfoList = new ArrayList<RetryInfo>();
         List<RetryContext> retryContextList = new ArrayList<RetryContext>();

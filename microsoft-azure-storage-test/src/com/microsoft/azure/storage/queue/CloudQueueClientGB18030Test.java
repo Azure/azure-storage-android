@@ -14,14 +14,23 @@
  */
 package com.microsoft.azure.storage.queue;
 
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.net.URISyntaxException;
 import java.util.EnumSet;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
-import com.microsoft.azure.storage.StorageException;
-
-public class CloudQueueClientGB18030Test extends TestCase {
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
+public class CloudQueueClientGB18030Test {
 
     // GB18030CharSet is "Ã¥â€¢Å Ã©Â½â€žÃ¤Â¸â€šÃ§â€¹â€ºÃ§â€¹Å“Ã¯Â§Â±Ã¯Â¤Â¬Ã¯Â§Â±Ã¯Â¨Å’Ã¯Â¨Â©Ã‹Å Ã¢â€“â€¡Ã¢â€“Ë†Ã£â‚¬Å¾Ã£â‚¬Â¡Ã¯Â¿Â¤Ã¢â€žÂ¡Ã£Ë†Â±Ã¢â‚¬ï¿½Ã£Æ’Â¼Ã¯Â¹Â¡Ã¯Â¹Â¢Ã¯Â¹Â«Ã£â‚¬ï¿½Ã£â‚¬â€œÃ¢â€¦Â°Ã¢â€¦Â¹Ã¢â€™Ë†Ã¢â€šÂ¬Ã£Ë†Â Ã£Ë†Â©Ã¢â€¦Â Ã¢â€¦Â«Ã¯Â¼ï¿½Ã¯Â¿Â£Ã£ï¿½ï¿½Ã£â€šâ€œÃ£â€šÂ¡Ã£Æ’Â¶ÃŽâ€˜Ã¯Â¸Â´Ã�ï¿½Ã�Â¯Ã�Â°Ã‘ï¿½Ã„ï¿½Ã‰Â¡Ã£â€žâ€¦Ã£â€žÂ©Ã¢â€�â‚¬Ã¢â€¢â€¹Ã¯Â¸ÂµÃ¯Â¹â€žÃ¯Â¸Â»Ã¯Â¸Â±Ã¯Â¸Â³Ã¯Â¸Â´Ã¢â€¦Â°Ã¢â€¦Â¹Ã‰â€˜Ã®Å¸â€¡Ã‰Â¡Ã£â‚¬â€¡Ã£â‚¬Â¾Ã¢Â¿Â»Ã¢Âºï¿½Ã®Â¡Æ’Ã¤Å“Â£Ã®Â¡Â¤Ã¢â€šÂ¬Ã£ï¿½â‚¬Ã£â€™Â£Ã£â€¢Â´Ã£â€¢ÂµÃ£â„¢â€°Ã£â„¢Å Ã¤ÂµÂ¯Ã¤ÂµÂ°Ã¤Â¶Â´Ã¤Â¶Âµ".
     private static final String GB18030CharSet = new String(new char[] { 0x554A, 0x9F44, 0x4E02, 0x72DB, 0x72DC,
@@ -34,17 +43,18 @@ public class CloudQueueClientGB18030Test extends TestCase {
 
     private CloudQueue queue;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException {
+    @Before
+    public void queueClientGBTestMethodSetUp() throws URISyntaxException, StorageException {
         this.queue = QueueTestHelper.getRandomQueueReference();
         this.queue.createIfNotExists();
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void queueClientGBTestMethodTearDown() throws StorageException {
         this.queue.deleteIfExists();
     }
 
+    @Test
     public void testGB18030TestForSingleMessage() throws  StorageException {
         String messageContent = GB18030CharSet;
         CloudQueueMessage cqm = new CloudQueueMessage(messageContent);
@@ -74,6 +84,7 @@ public class CloudQueueClientGB18030Test extends TestCase {
         this.queue.deleteMessage(messageFromRetrieveMessage);
     }
 
+    @Test
     public void testGB18030TestForMultipleMessages() throws  StorageException {
         int messageLength = 2;
         String[] messageContents = new String[messageLength];

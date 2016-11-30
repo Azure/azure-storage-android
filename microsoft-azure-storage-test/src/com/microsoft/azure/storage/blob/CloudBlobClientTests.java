@@ -14,13 +14,6 @@
  */
 package com.microsoft.azure.storage.blob;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.UUID;
-
-import junit.framework.TestCase;
-
 import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.OperationContext;
@@ -29,12 +22,25 @@ import com.microsoft.azure.storage.ResultSegment;
 import com.microsoft.azure.storage.SendingRequestEvent;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.core.SR;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.UUID;
+
+import static org.junit.Assert.*;
 
 /**
  * Blob Client Tests
  */
-public class CloudBlobClientTests extends TestCase {
+public class CloudBlobClientTests {
     /**
      * 
      * @throws StorageException
@@ -42,6 +48,8 @@ public class CloudBlobClientTests extends TestCase {
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListContainers() throws StorageException, URISyntaxException {
         CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
         ArrayList<String> containerList = new ArrayList<String>();
@@ -82,6 +90,8 @@ public class CloudBlobClientTests extends TestCase {
      * @throws StorageException
      * @throws URISyntaxException
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListContainersMaxResultsValidation()
             throws StorageException, URISyntaxException {
         CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
@@ -108,6 +118,8 @@ public class CloudBlobClientTests extends TestCase {
      * @throws StorageException
      * @throws URISyntaxException
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListContainersResultSegment()
             throws StorageException, URISyntaxException {
         CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
@@ -123,12 +135,16 @@ public class CloudBlobClientTests extends TestCase {
         assertEquals(5000, segment2.getPageSize().intValue());
     }
 
+    @Test
+    @Category({ CloudTests.class })
     public void testGetServiceStats() throws StorageException {
         CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
         bClient.getDefaultRequestOptions().setLocationMode(LocationMode.SECONDARY_ONLY);
         BlobTestHelper.verifyServiceStats(bClient.getServiceStats());
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testSingleBlobPutThresholdInBytes() throws URISyntaxException, StorageException, IOException {
         CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
 
