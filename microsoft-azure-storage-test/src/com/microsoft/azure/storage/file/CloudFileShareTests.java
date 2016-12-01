@@ -289,37 +289,37 @@ public class CloudFileShareTests {
     public void testCloudFileShareUploadMetadata() throws StorageException, URISyntaxException {
         this.share.getMetadata().put("key1", "value1");
         this.share.create();
-        Assert.assertEquals(1, this.share.getMetadata().size());
-        Assert.assertEquals("value1", this.share.getMetadata().get("key1"));
+        assertEquals(1, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
 
         CloudFileShare share2 = this.share.getServiceClient().getShareReference(this.share.getName());
         share2.downloadAttributes();
-        Assert.assertEquals(1, share2.getMetadata().size());
-        Assert.assertEquals("value1", share2.getMetadata().get("key1"));
+        assertEquals(1, share2.getMetadata().size());
+        assertEquals("value1", share2.getMetadata().get("key1"));
 
         this.share.getMetadata().put("key2", "value2");
 
-        Assert.assertEquals(2, this.share.getMetadata().size());
-        Assert.assertEquals("value1", this.share.getMetadata().get("key1"));
-        Assert.assertEquals("value2", this.share.getMetadata().get("key2"));
+        assertEquals(2, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
+        assertEquals("value2", this.share.getMetadata().get("key2"));
         this.share.uploadMetadata();
 
-        Assert.assertEquals(2, this.share.getMetadata().size());
-        Assert.assertEquals("value1", this.share.getMetadata().get("key1"));
-        Assert.assertEquals("value2", this.share.getMetadata().get("key2"));
+        assertEquals(2, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
+        assertEquals("value2", this.share.getMetadata().get("key2"));
 
         share2.downloadAttributes();
-        Assert.assertEquals(2, this.share.getMetadata().size());
-        Assert.assertEquals("value1", this.share.getMetadata().get("key1"));
-        Assert.assertEquals("value2", this.share.getMetadata().get("key2"));
+        assertEquals(2, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
+        assertEquals("value2", this.share.getMetadata().get("key2"));
 
         Iterable<CloudFileShare> shares = this.share.getServiceClient().listShares(this.share.getName(),
                 ShareListingDetails.METADATA, null, null);
 
         for (CloudFileShare share3 : shares) {
-            Assert.assertEquals(2, share3.getMetadata().size());
-            Assert.assertEquals("value1", share3.getMetadata().get("key1"));
-            Assert.assertEquals("value2", this.share.getMetadata().get("key2"));
+            assertEquals(2, share3.getMetadata().size());
+            assertEquals("value1", share3.getMetadata().get("key1"));
+            assertEquals("value2", this.share.getMetadata().get("key2"));
         }
 
         this.share.getMetadata().clear();

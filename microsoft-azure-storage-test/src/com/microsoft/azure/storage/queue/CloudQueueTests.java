@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright Microsoft Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -751,11 +751,11 @@ public class CloudQueueTests {
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessageUnicode() throws StorageException {
         ArrayList<String> messages = new ArrayList<String>();
-        messages.add("Le dÃƒÂ©bat sur l'identitÃƒÂ© nationale, l'idÃƒÂ©e du prÃƒÂ©sident Nicolas Sarkozy de dÃƒÂ©choir des personnes d'origine ÃƒÂ©trangÃƒÂ¨re de la nationalitÃƒÂ© franÃƒÂ§aise ... certains cas et les rÃƒÂ©centes mesures prises contre les Roms ont choquÃƒÂ© les experts, qui rendront leurs conclusions le 27 aoÃƒÂ»t.");
-        messages.add("Ã�â€™Ã�Â°Ã‘Ë† Ã�Â»Ã�Â¾Ã�Â³Ã�Â¸Ã�Â½ Yahoo! Ã�Â´Ã�Â°Ã�ÂµÃ‘â€š Ã�Â´Ã�Â¾Ã‘ï¿½Ã‘â€šÃ‘Æ’Ã�Â¿ Ã�Âº Ã‘â€šÃ�Â°Ã�ÂºÃ�Â¸Ã�Â¼ Ã�Â¼Ã�Â¾Ã‘â€°Ã�Â½Ã‘â€¹Ã�Â¼ Ã�Â¸Ã�Â½Ã‘ï¿½Ã‘â€šÃ‘â‚¬Ã‘Æ’Ã�Â¼Ã�ÂµÃ�Â½Ã‘â€šÃ�Â°Ã�Â¼ Ã‘ï¿½Ã�Â²Ã‘ï¿½Ã�Â·Ã�Â¸, Ã�ÂºÃ�Â°Ã�Âº Ã‘ï¿½Ã�Â»Ã�ÂµÃ�ÂºÃ‘â€šÃ‘â‚¬Ã�Â¾Ã�Â½Ã�Â½Ã�Â°Ã‘ï¿½ Ã�Â¿Ã�Â¾Ã‘â€¡Ã‘â€šÃ�Â°, Ã�Â¾Ã‘â€šÃ�Â¿Ã‘â‚¬Ã�Â°Ã�Â²Ã�ÂºÃ�Â° Ã�Â¼Ã�Â³Ã�Â½Ã�Â¾Ã�Â²Ã�ÂµÃ�Â½Ã�Â½Ã‘â€¹Ã‘â€¦ Ã‘ï¿½Ã�Â¾Ã�Â¾Ã�Â±Ã‘â€°Ã�ÂµÃ�Â½Ã�Â¸Ã�Â¹, Ã‘â€žÃ‘Æ’Ã�Â½Ã�ÂºÃ‘â€ Ã�Â¸Ã�Â¸ Ã�Â±Ã�ÂµÃ�Â·Ã�Â¾Ã�Â¿Ã�Â°Ã‘ï¿½Ã�Â½Ã�Â¾Ã‘ï¿½Ã‘â€šÃ�Â¸, Ã�Â² Ã‘â€¡Ã�Â°Ã‘ï¿½Ã‘â€šÃ�Â½Ã�Â¾Ã‘ï¿½Ã‘â€šÃ�Â¸, Ã�Â°Ã�Â½Ã‘â€šÃ�Â¸Ã�Â²Ã�Â¸Ã‘â‚¬Ã‘Æ’Ã‘ï¿½Ã�Â½Ã‘â€¹Ã�Âµ Ã‘ï¿½Ã‘â‚¬Ã�ÂµÃ�Â´Ã‘ï¿½Ã‘â€šÃ�Â²Ã�Â° Ã�Â¸ Ã�Â±Ã�Â»Ã�Â¾Ã�ÂºÃ�Â¸Ã‘â‚¬Ã�Â¾Ã�Â²Ã‘â€°Ã�Â¸Ã�Âº Ã�Â²Ã‘ï¿½Ã�Â¿Ã�Â»Ã‘â€¹Ã�Â²Ã�Â°Ã‘Å½Ã‘â€°Ã�ÂµÃ�Â¹ Ã‘â‚¬Ã�ÂµÃ�ÂºÃ�Â»Ã�Â°Ã�Â¼Ã‘â€¹, Ã�Â¸ Ã�Â¸Ã�Â·Ã�Â±Ã‘â‚¬Ã�Â°Ã�Â½Ã�Â½Ã�Â¾Ã�Âµ, Ã�Â½Ã�Â°Ã�Â¿Ã‘â‚¬Ã�Â¸Ã�Â¼Ã�ÂµÃ‘â‚¬, Ã‘â€žÃ�Â¾Ã‘â€šÃ�Â¾ Ã�Â¸ Ã�Â¼Ã‘Æ’Ã�Â·Ã‘â€¹Ã�ÂºÃ�Â° Ã�Â² Ã‘ï¿½Ã�ÂµÃ‘â€šÃ�Â¸ Ã¢â‚¬â€� Ã�Â²Ã‘ï¿½Ã�Âµ Ã�Â±Ã�ÂµÃ‘ï¿½Ã�Â¿Ã�Â»Ã�Â°Ã‘â€š");
-        messages.add("Ã¦ï¿½Â®Ã¦â€“Â°Ã¥ï¿½Å½Ã§Â¤Â¾8Ã¦Å“Ë†12Ã¦â€”Â¥Ã§â€�Âµ 8Ã¦Å“Ë†11Ã¦â€”Â¥Ã¦â„¢Å¡Ã¯Â¼Å’Ã¨Ë†Å¸Ã¦â€ºÂ²Ã¥Â¢Æ’Ã¥â€ â€¦Ã¥â€ ï¿½Ã¦Â¬Â¡Ã¥â€¡ÂºÃ§Å½Â°Ã¥Â¼ÂºÃ©â„¢ï¿½Ã©â€ºÂ¨Ã¥Â¤Â©Ã¦Â°â€�Ã¯Â¼Å’Ã¤Â½Â¿Ã§â€°Â¹Ã¥Â¤Â§Ã¥Â±Â±Ã¦Â´ÂªÃ¦Â³Â¥Ã§Å¸Â³Ã¦Âµï¿½Ã§ï¿½Â¾Ã¦Æ’â€¦Ã©â€ºÂªÃ¤Â¸Å Ã¥Å Â Ã©Å“Å“Ã£â‚¬â€šÃ§â„¢Â½Ã©Â¾â„¢Ã¦Â±Å¸Ã¦Â°Â´Ã¥Å“Â¨Ã¦Â¢Â¨Ã¥ï¿½ï¿½Ã¥Â­ï¿½Ã¦ï¿½â€˜Ã§Å¡â€žÃ¤ÂºÂ¤Ã¦Â±â€¡Ã¥Å“Â°Ã¥Â¸Â¦Ã¥Â½Â¢Ã¦Ë†ï¿½Ã¤Â¸â‚¬Ã¤Â¸ÂªÃ¦â€“Â°Ã§Å¡â€žÃ¥Â Â°Ã¥Â¡Å¾Ã¦Â¹â€“Ã¯Â¼Å’Ã¦Â°Â´Ã¤Â½ï¿½Ã¦Â¯â€�Ã¥Â¹Â³Ã¦â€”Â¶Ã©Â«ËœÃ¥â€¡Âº3Ã§Â±Â³Ã£â‚¬â€šÃ§â€�ËœÃ¨â€šÆ’Ã§Å“ï¿½Ã¥â€ºÂ½Ã¥Å“Å¸Ã¨Âµâ€žÃ¦Âºï¿½Ã¥Å½â€¦Ã¥â€°Â¯Ã¥Å½â€¦Ã©â€¢Â¿Ã¥Â¼Â Ã¥â€ºÂ½Ã¥ï¿½Å½Ã¥Â½â€œÃ¦â€”Â¥22Ã¦â€”Â¶Ã¨Â®Â¸Ã¥Å“Â¨Ã¦â€“Â°Ã©â€”Â»Ã¥ï¿½â€˜Ã¥Â¸Æ’Ã¤Â¼Å¡Ã¤Â¸Å Ã¤Â»â€¹Ã§Â»ï¿½Ã¯Â¼Å’Ã¦Ë†ÂªÃ¨â€¡Â³12Ã¦â€”Â¥21Ã¦â€”Â¶50Ã¥Ë†â€ Ã¯Â¼Å’Ã¨Ë†Å¸Ã¦â€ºÂ²Ã¥Â Â°Ã¥Â¡Å¾Ã¦Â¹â€“Ã¥Â Â°Ã¥Â¡Å¾Ã¤Â½â€œÃ¥Â·Â²Ã¦Â¶Ë†Ã©â„¢Â¤Ã¯Â¼Å’Ã¦ÂºÆ’Ã¥ï¿½ï¿½Ã©â„¢Â©Ã¦Æ’â€¦Ã¥Â·Â²Ã¦Â¶Ë†Ã©â„¢Â¤Ã¯Â¼Å’Ã§â€ºÂ®Ã¥â€°ï¿½Ã©â€™Ë†Ã¥Â¯Â¹Ã¥Â Â°Ã¥Â¡Å¾Ã¦Â¹â€“Ã§Å¡â€žÃ¤Â¸Â»Ã¨Â¦ï¿½Ã¥Â·Â¥Ã¤Â½Å“Ã¦ËœÂ¯Ã§â€“ï¿½Ã©â‚¬Å¡Ã¦Â²Â³Ã©ï¿½â€œÃ£â‚¬â€š");
-        messages.add("Ã—Å“ Ã—â€ºÃ—â€¢Ã—Å“Ã—ï¿½\", Ã—â€�Ã—â€œÃ—â€�Ã—â„¢Ã—ï¿½ Ã—â„¢Ã—Â¢Ã—Å“Ã—â€¢Ã—Å¸, Ã—â€¢Ã—â„¢Ã—â„¢Ã—Â©Ã—Â¨ Ã—Â§Ã—â€¢ Ã—Â¢Ã—ï¿½ Ã—â€�Ã—Â¢Ã—â€œÃ—â€¢Ã—Âª Ã—Â©Ã—Å¾Ã—Â¡Ã—Â¨ Ã—Â¨Ã—ï¿½Ã—Â© Ã—â€�Ã—Å¾Ã—Å¾Ã—Â©Ã—Å“Ã—â€�, Ã—â€˜Ã—Â Ã—â„¢Ã—Å¾Ã—â„¢Ã—Å¸ Ã—Â Ã—ÂªÃ—Â Ã—â„¢Ã—â€�Ã—â€¢, Ã—Å“Ã—â€¢Ã—â€¢Ã—Â¢Ã—â€œÃ—Âª Ã—ËœÃ—â„¢Ã—Â¨Ã—Â§Ã—Å“. Ã—Å“Ã—â€œÃ—â€˜Ã—Â¨Ã—â„¢Ã—â€¢, Ã—ï¿½Ã—â€ºÃ—Å¸ Ã—â€�Ã—Â©Ã—Â¨Ã—â„¢Ã—ï¿½ Ã—â€œÃ—Â Ã—â€¢ Ã—Â¨Ã—Â§ Ã—â€˜Ã—â€�Ã—â„¢Ã—â€˜Ã—ËœÃ—â„¢Ã—ï¿½ Ã—â€�Ã—ÂªÃ—Â§Ã—Â©Ã—â€¢Ã—Â¨Ã—ÂªÃ—â„¢Ã—â„¢Ã—ï¿½ Ã—Â©Ã—Å“ Ã—Â¢Ã—Â¦Ã—â„¢Ã—Â¨Ã—Âª Ã—â€�Ã—Å¾Ã—Â©Ã—Ëœ: \"Ã—â€˜Ã—Â©Ã—â€˜Ã—â„¢Ã—Â¢Ã—â„¢Ã—â„¢Ã—â€� Ã—Å“Ã—ï¿½ Ã—â€�Ã—ÂªÃ—Â§Ã—â„¢Ã—â„¢Ã—ï¿½ Ã—â€œÃ—â„¢Ã—â€¢Ã—Å¸ Ã—Â¢Ã—Å“ Ã—â€�Ã—ï¿½Ã—Å“Ã—ËœÃ—Â¨Ã—Â Ã—ËœÃ—â„¢Ã—â€˜Ã—â€¢Ã—Âª. Ã—Â¢Ã—Â¡Ã—Â§Ã—Â Ã—â€¢ Ã—â€˜Ã—â€�Ã—â„¢Ã—â€˜Ã—ËœÃ—â„¢Ã—ï¿½ ");
-        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis MÃƒÂ¤rz um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprÃƒÂ¼nglich waren es hier 1,7 Prozent");
+        messages.add("Le débat sur l'identité nationale, l'idée du président Nicolas Sarkozy de déchoir des personnes d'origine étrangère de la nationalité française ... certains cas et les récentes mesures prises contre les Roms ont choqué les experts, qui rendront leurs conclusions le 27 août.");
+        messages.add("Ваш логин Yahoo! дает доступ к таким мощным инструментам связи, как электронная почта, отправка мгновенных сообщений, функции безопасности, в частности, антивирусные средства и блокировщик всплывающей рекламы, и избранное, например, фото и музыка в сети — все бесплат");
+        messages.add("据新华社8月12日电 8月11日晚，舟曲境内再次出现强降雨天气，使特大山洪泥石流灾情雪上加霜。白龙江水在梨坝子村的交汇地带形成一个新的堰塞湖，水位比平时高出3米。甘肃省国土资源厅副厅长张国华当日22时许在新闻发布会上介绍，截至12日21时50分，舟曲堰塞湖堰塞体已消除，溃坝险情已消除，目前针对堰塞湖的主要工作是疏通河道。");
+        messages.add("ל כולם\", הדהים יעלון, ויישר קו עם העדות שמסר ראש הממשלה, בנימין נתניהו, לוועדת טירקל. לדבריו, אכן השרים דנו רק בהיבטים התקשורתיים של עצירת המשט: \"בשביעייה לא התקיים דיון על האלטרנטיבות. עסקנו בהיבטים ");
+        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis März um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprünglich waren es hier 1,7 Prozent");
         messages.add("<?xml version=\"1.0\"?>\n<!DOCTYPE PARTS SYSTEM \"parts.dtd\">\n<?xml-stylesheet type=\"text/css\" href=\"xmlpartsstyle.css\"?>\n<PARTS>\n   <TITLE>Computer Parts</TITLE>\n   <PART>\n      <ITEM>Motherboard</ITEM>\n      <MANUFACTURER>ASUS</MANUFACTURER>\n      <MODEL>"
                 + "P3B-F</MODEL>\n      <COST> 123.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Video Card</ITEM>\n      <MANUFACTURER>ATI</MANUFACTURER>\n      <MODEL>All-in-Wonder Pro</MODEL>\n      <COST> 160.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Sound Card</ITEM>\n      <MANUFACTURER>"
                 + "Creative Labs</MANUFACTURER>\n      <MODEL>Sound Blaster Live</MODEL>\n      <COST> 80.00</COST>\n   </PART>\n   <PART>\n      <ITEM> inch Monitor</ITEM>\n      <MANUFACTURER>LG Electronics</MANUFACTURER>\n      <MODEL> 995E</MODEL>\n      <COST> 290.00</COST>\n   </PART>\n</PARTS>");
@@ -781,7 +781,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessageLargeVisibilityDelay() throws  StorageException
-            {
+    {
         String msgContent = UUID.randomUUID().toString();
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
         this.queue.addMessage(message, 100, 50, null, null);
@@ -792,7 +792,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testDeleteMessageWithDifferentQueueInstance() throws  StorageException, URISyntaxException
-            {
+    {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final String queueName = QueueTestHelper.generateRandomQueueName();
         final CloudQueue queue1 = qClient.getQueueReference(queueName);
@@ -815,7 +815,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessageToNonExistingQueue() throws  StorageException, URISyntaxException
-            {
+    {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final CloudQueue queue = qClient.getQueueReference(QueueTestHelper.generateRandomQueueName());
 
@@ -834,7 +834,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueUnicodeAndXmlMessageTest() throws  StorageException
-            {
+    {
         String msgContent = "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½<?xml version= 1.0  encoding= utf-8  ?>";
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
         this.queue.addMessage(message);
@@ -846,7 +846,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessageLargeMessageInput() throws  StorageException
-            {
+    {
         final Random rand = new Random();
 
         byte[] content = new byte[64 * 1024];
@@ -894,7 +894,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessageSpecialVisibilityTimeout() throws  StorageException
-            {
+    {
         CloudQueueMessage message = new CloudQueueMessage("test");
         this.queue.addMessage(message, 1, 0, null, null);
         this.queue.addMessage(message, 7 * 24 * 60 * 60, 0, null, null);
@@ -987,7 +987,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testDeleteMessageNullMessage() throws  StorageException
-            {
+    {
         try {
             this.queue.deleteMessage(null);
             fail();
@@ -1026,7 +1026,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessageNonExistingQueue() throws  StorageException, URISyntaxException
-            {
+    {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
         try {
             queue.retrieveMessage();
@@ -1041,7 +1041,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessageInvalidInput() throws  StorageException, URISyntaxException
-            {
+    {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
 
         try {
@@ -1071,7 +1071,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessagesNonFound() throws  StorageException, URISyntaxException
-            {
+    {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
         try {
             queue.retrieveMessages(1);
@@ -1101,7 +1101,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessageSpecialVisibilityTimeout() throws  StorageException
-            {
+    {
         try {
             this.queue.retrieveMessage(-1, null, null);
             fail();
@@ -1128,7 +1128,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessagesInvalidInput() throws  StorageException
-            {
+    {
         for (int i = 0; i < 33; i++) {
             this.queue.addMessage(new CloudQueueMessage("test" + i));
         }
@@ -1189,7 +1189,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testPeekMessagesInvalidInput() throws  StorageException
-            {
+    {
         for (int i = 0; i < 33; i++) {
             this.queue.addMessage(new CloudQueueMessage("test" + i));
         }
@@ -1222,7 +1222,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testPeekMessageNonExistingQueue() throws  StorageException, URISyntaxException
-            {
+    {
         CloudQueue queue = QueueTestHelper.getRandomQueueReference();
         try {
             queue.peekMessage();
@@ -1318,7 +1318,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUpdateMessageWithContentChange() throws  StorageException
-            {
+    {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
         this.queue.addMessage(message1);
 
@@ -1336,7 +1336,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUpdateMessageNullMessage() throws  StorageException
-            {
+    {
         try {
             this.queue.updateMessage(null, 0);
             fail();
@@ -1348,7 +1348,7 @@ public class CloudQueueTests {
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUpdateMessageInvalidMessage() throws  StorageException
-            {
+    {
         CloudQueueMessage message = new CloudQueueMessage("test");
         this.queue.addMessage(message, 1, 0, null, null);
 
