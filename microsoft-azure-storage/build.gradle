@@ -17,7 +17,7 @@ apply plugin: 'com.android.library'
 
 dependencies {
     compile fileTree(include: '*.jar', dir: 'libs')
-    compile files('com.fasterxml.jackson.core.jar')
+    compile 'com.fasterxml.jackson.core:jackson-core:2.8.5'
 }
 
 android {
