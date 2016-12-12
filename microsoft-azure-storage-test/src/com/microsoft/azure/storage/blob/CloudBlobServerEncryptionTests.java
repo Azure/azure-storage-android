@@ -34,7 +34,7 @@ import java.net.URISyntaxException;
 import static org.junit.Assert.*;
 
 @Category({ CloudTests.class, DevFabricTests.class, DevStoreTests.class })
-@Ignore
+//@Ignore
 /* These test only works on accounts with server-side encryption enabled. */
 public class CloudBlobServerEncryptionTests {
 
