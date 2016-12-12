@@ -1148,11 +1148,7 @@ public class CloudPageBlobTests {
         final UriQueryBuilder builder = new UriQueryBuilder();
         builder.add(Constants.QueryConstants.SNAPSHOT, sasSnapshotBlob.snapshotID);
         URI sourceUri = TestHelper.defiddler(builder.addToURI(sasSnapshotBlob.getTransformedAddress(null).getPrimaryUri()));
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> c147bde... Incremental Copy Support
         String copyId = null;
         if (overload == 0) {
             copyId = copy.startIncrementalCopy(BlobTestHelper.defiddler(sasSnapshotBlob));
