@@ -69,7 +69,6 @@ import com.microsoft.azure.storage.SharedAccessAccountPermissions;
 import com.microsoft.azure.storage.SharedAccessAccountPolicy;
 import com.microsoft.azure.storage.SharedAccessAccountResourceType;
 import com.microsoft.azure.storage.SharedAccessAccountService;
-import com.microsoft.azure.storage.StorageCredentials;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.TestHelper;
@@ -525,7 +524,7 @@ public class CloudPageBlobTests {
         BlobTestHelper.waitForCopy(copy);
 
         assertEquals(CopyStatus.SUCCESS, copy.getCopyState().getStatus());
-        assertEquals(source.getQualifiedUri().getPath(), copy.getCopyState().getSource().getPath());
+        assertEquals(source.getSnapshotQualifiedUri().getPath(), copy.getCopyState().getSource().getPath());
         assertEquals(buffer.length, copy.getCopyState().getTotalBytes().intValue());
         assertEquals(buffer.length, copy.getCopyState().getBytesCopied().intValue());
         assertEquals(copyId, copy.getCopyState().getCopyId());
@@ -583,7 +582,7 @@ public class CloudPageBlobTests {
         BlobTestHelper.waitForCopy(copy);
 
         assertEquals(CopyStatus.SUCCESS, copy.getCopyState().getStatus());
-        assertEquals(source.getQualifiedUri().getPath(), copy.getCopyState().getSource().getPath());
+        assertEquals(source.getSnapshotQualifiedUri().getPath(), copy.getCopyState().getSource().getPath());
         assertEquals(buffer.length, copy.getCopyState().getTotalBytes().intValue());
         assertEquals(buffer.length, copy.getCopyState().getBytesCopied().intValue());
         assertEquals(copyId, copy.getCopyState().getCopyId());

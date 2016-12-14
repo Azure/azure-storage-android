@@ -1,4 +1,4 @@
-2016.XX.XX Version XX
+2017.01.XX Version XX
  * Android Studio support via Gradle build system.
  * Updated tests from JUnit 3 to Android Junit 4.
  * Prefix support for listing files and directories.
@@ -7,6 +7,9 @@
  * Add Message now modifies the PopReceipt, Id, NextVisibleTime, InsertionTime, and ExpirationTime properties of its CloudQueueMessage parameter.
  * Populate content MD5 for range gets on Blobs and Files.
  * Added support in Page Blob for incremental copy.
+ * getQualifiedUri() has been deprecated for Blobs. Please use getSnapshotQualifiedUri() instead. This new function will return the blob including the snapshot (if present) and no SAS token.
+ * getQualifiedStorageUri() has been deprecated for Blobs. Please use getSnapshotQualifiedStorageUri() instead. This new function will return the blob including the snapshot (if present) and no SAS token.
+ * Fixed a bug where copying from a blob that included a SAS token and a snapshot ommitted the SAS token.
 
 2016.07.14 Version 0.8.0
  * Added support for server-side encryption.
