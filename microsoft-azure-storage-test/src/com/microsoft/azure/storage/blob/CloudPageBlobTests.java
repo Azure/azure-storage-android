@@ -52,7 +52,6 @@ import com.microsoft.azure.storage.SharedAccessAccountPermissions;
 import com.microsoft.azure.storage.SharedAccessAccountPolicy;
 import com.microsoft.azure.storage.SharedAccessAccountResourceType;
 import com.microsoft.azure.storage.SharedAccessAccountService;
-import com.microsoft.azure.storage.StorageCredentials;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.TestHelper;
