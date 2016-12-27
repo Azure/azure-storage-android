@@ -214,6 +214,13 @@ public final class ExecutionEngine {
                 if (task.isSent()) {
                     ExecutionEngine.fireRequestCompletedEvent(opContext, request, task.getResult());
                 }
+
+                try {
+                    request.getInputStream().close();
+                    }
+                catch (final IOException ex) {
+                    request.disconnect();
+                }
             }
 
             // Evaluate Retry Policy

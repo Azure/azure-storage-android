@@ -365,6 +365,16 @@ public final class Constants {
         public static final String COPY_STATUS_DESCRIPTION = PREFIX_FOR_STORAGE_HEADER + "copy-status-description";
 
         /**
+         * The header that specifies copy type.
+         */
+        public static final String INCREMENTAL_COPY = PREFIX_FOR_STORAGE_HEADER + "incremental-copy";
+
+        /**
+         * The header that specifies the snapshot ID of the last successful incremental snapshot.
+         */
+        public static final String COPY_DESTINATION_SNAPSHOT_ID = PREFIX_FOR_STORAGE_HEADER + "copy-destination-snapshot";
+
+        /**
          * The header that specifies the date.
          */
         public static final String DATE = PREFIX_FOR_STORAGE_HEADER + "date";
@@ -565,7 +575,7 @@ public final class Constants {
         /**
          * The current storage version header value.
          */
-        public static final String TARGET_STORAGE_VERSION = "2015-12-11";
+        public static final String TARGET_STORAGE_VERSION = "2016-05-31";
 
         /**
          * The header that specifies the next visible time for a queue message.
@@ -849,6 +859,16 @@ public final class Constants {
     public static final String COPY_STATUS_ELEMENT = "CopyStatus";
 
     /**
+     * XML element for the copy type.
+     */
+    public static final String INCREMENTAL_COPY_ELEMENT = "IncrementalCopy";
+
+    /**
+     * XML element for the snapshot ID for the last successful incremental copy.
+     */
+    public static final String COPY_DESTINATION_SNAPSHOT_ID_ELEMENT = "CopyDestinationSnapshot";
+
+    /**
      * Default read timeout. 5 min * 60 seconds * 1000 ms
      */
     public static final int DEFAULT_READ_TIMEOUT = 5 * 60 * 1000;
@@ -1103,6 +1123,11 @@ public final class Constants {
      * XML element for properties.
      */
     public static final String PROPERTIES = "Properties";
+
+    /**
+     * XML element for  public access
+     */
+    public static final String PUBLIC_ACCESS_ELEMENT = "PublicAccess";
 
     /**
      * XML element for the server encryption status.
