@@ -1070,11 +1070,6 @@ public final class Constants {
     public static final String LOG_TAG = "WindowsAzureStorageSDK";
 
     /**
-     * The maximum size of a single block.
-     */
-    public static int MAX_BLOCK_SIZE = 4 * MB;
-
-    /**
      * The default write size, in bytes, used by {@link BlobOutputStream} or {@link FileOutputStream}.
      */
     public static final int DEFAULT_STREAM_WRITE_IN_BYTES = Constants.MAX_BLOCK_SIZE;

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright Microsoft Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,12 +30,12 @@ import java.util.Random;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import junit.framework.TestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.microsoft.azure.keyvault.extensions.Strings;
 import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.NameValidator;
 import com.microsoft.azure.storage.OperationContext;
@@ -51,6 +51,7 @@ import com.microsoft.azure.storage.TestRunners.DevFabricTests;
 import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.core.PathUtility;
+import com.microsoft.azure.storage.core.Utility;
 
 /**
  * Queue Tests
@@ -1459,10 +1460,10 @@ public class CloudQueueTests {
 
     private void VerifyAddMessageResult(CloudQueueMessage originalMessage, String expectedMessageContent)
     {
-        assertFalse(Strings.isNullOrEmpty(originalMessage.getId()));
+        assertFalse(Utility.isNullOrEmpty(originalMessage.getId()));
         assertNotNull(originalMessage.getInsertionTime());
         assertNotNull(originalMessage.getExpirationTime());
-        assertFalse(Strings.isNullOrEmpty(originalMessage.getPopReceipt()));
+        assertFalse(Utility.isNullOrEmpty(originalMessage.getPopReceipt()));
 
         assertTrue(originalMessage.messageContent.equals(expectedMessageContent));
         assertNotNull(originalMessage.getNextVisibleTime());
