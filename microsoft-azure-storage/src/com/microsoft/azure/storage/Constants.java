@@ -1045,29 +1045,18 @@ public final class Constants {
 
     /**
      * Tag that will be used for this application if logging is enabled.
+     */
+    public static final String LOG_TAG = "WindowsAzureStorageSDK";
+
+    /**
+     * The maximum size of a single block.
+     */
+    public static int MAX_BLOCK_SIZE = 4 * MB;
+
+    /**
      * XML element for a marker.
      */
     public static final String MARKER_ELEMENT = "Marker";
-
-    /**
-     * The maximum size for Range ContentMD5.
-     */
-    public static int MAX_RANGE_CONTENT_MD5 = 4 * MB;
-
-    /**
-     * The maximum size of a BlockBlob block.
-     */
-    public static int MAX_BLOCK_SIZE = 100 * MB;
-
-    /**
-     * The maximum size of an AppendBlob block.
-     */
-    public static int MAX_APPEND_BLOCK_SIZE = 4 * MB;
-
-    /**
-     * The maximum write size that can uploaded to a PageBlob at once.
-     */
-    public static final String LOG_TAG = "WindowsAzureStorageSDK";
 
     /**
      * The default write size, in bytes, used by {@link BlobOutputStream} or {@link FileOutputStream}.
@@ -1077,7 +1066,7 @@ public final class Constants {
     /**
      * The default minimum read size, in bytes, for a {@link BlobInputStream} or {@link FileInputStream}.
      */
-    public static final int DEFAULT_MINIMUM_READ_SIZE_IN_BYTES = 4 * Constants.MB;
+    public static final int DEFAULT_MINIMUM_READ_SIZE_IN_BYTES = Constants.MAX_BLOCK_SIZE;
 
     /**
      * The maximum size, in bytes, of a given stream mark operation.
