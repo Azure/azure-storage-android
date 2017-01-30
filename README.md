@@ -46,7 +46,7 @@ First, add mavenCentral to your repositories by adding the following to your gra
 Then, add a dependency by adding the following to your gradle build file:
 
     dependencies {
-        compile 'com.microsoft.azure.android:azure-storage-android:0.7.0@aar'
+        compile 'com.microsoft.azure.android:azure-storage-android:1.0.0@aar'
     }
 
 ###Option 4: aar via Maven
@@ -57,7 +57,7 @@ To get the binaries of this library as distributed by Microsoft, ready for use w
 <dependency>
 	<groupId>com.microsoft.azure.android</groupId>
 	<artifactId>azure-storage-android</artifactId>
-	<version>0.7.0</version>
+	<version>1.0.0</version>
 	<type>aar</type>
 </dependency>
 ```
@@ -75,9 +75,9 @@ To use this SDK to call Microsoft Azure storage services, you need to first [cre
 
 Samples are provided in the microsoft-azure-storage-samples folder. The unit tests in microsoft-azure-storage-test can also be helpful.
 
-Make sure the storage client library is added as a project dependency. If using source and in Eclipse, right click on the project, select "Properties", navigate to the Android tab, and under "Library" click "Add.." and select the project. To do this, the storage client library should already be imported into Eclipse as an Android project.
+Make sure the storage client library is added as a project dependency. From Android Studio, go to File -> Project Structure. Click on the module (either sample or test). If 'microsoft-azure-storage' is not listed as a dependy, click the '+' sign. Then click module dependency and select 'microsoft-azure-storage'.
 
-If using Maven or Gradle, Jackson-Core should be automatically added to the build path. Otherwise, please download the jar and add it to your build path. Also, please make sure that the jar will be added to your project's apk. To do this in Eclipse, right click your project, select "Build Path->Configure Build Path", navigate to the "Order and Export" tab and check the box next to the jackson-core jar.
+If using Maven or Gradle, Jackson-Core should be automatically added to the build path. Otherwise, please download the jar and add it to your build path. Also, please make sure that the jar will be added to your project's apk. To do this in Android Studio, go to File -> Project Structure -> Modules. Click the Dependencies tab. Click the '+' sign and click 'File Dependency'. Navigate the .jar.
 
 ##Code Samples
 

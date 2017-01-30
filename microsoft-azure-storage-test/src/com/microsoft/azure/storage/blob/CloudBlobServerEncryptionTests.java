@@ -14,21 +14,27 @@
  */
 package com.microsoft.azure.storage.blob;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.RequestCompletedEvent;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 
-@Ignore
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+
+import static org.junit.Assert.*;
+
+@Category({ CloudTests.class, DevFabricTests.class, DevStoreTests.class })
+//@Ignore
 /* These test only works on accounts with server-side encryption enabled. */
 public class CloudBlobServerEncryptionTests {
 
@@ -52,11 +58,11 @@ public class CloudBlobServerEncryptionTests {
     @Test
     public void testBlobAttributesEncryption() throws URISyntaxException, StorageException, IOException {
         this.blob.downloadAttributes();
-        Assert.assertTrue(this.blob.getProperties().isServerEncrypted());
+        assertTrue(this.blob.getProperties().isServerEncrypted());
 
         CloudBlockBlob testBlob = this.container.getBlockBlobReference(this.blob.getName());
         testBlob.downloadText();
-        Assert.assertTrue(testBlob.getProperties().isServerEncrypted());
+        assertTrue(testBlob.getProperties().isServerEncrypted());
     }
 
     @Test
@@ -65,12 +71,12 @@ public class CloudBlobServerEncryptionTests {
 
         for (ListBlobItem b : this.container.listBlobs()) {
             CloudBlob blob = (CloudBlob) b;
-            Assert.assertTrue(blob.getProperties().isServerEncrypted());
+            assertTrue(blob.getProperties().isServerEncrypted());
 
             blobFound = true;
         }
 
-        Assert.assertTrue(blobFound);
+        assertTrue(blobFound);
     }
 
     @Test
@@ -81,12 +87,12 @@ public class CloudBlobServerEncryptionTests {
         ctxt.getRequestCompletedEventHandler().addListener(new StorageEvent<RequestCompletedEvent>() {
             @Override
             public void eventOccurred(RequestCompletedEvent eventArg) {
-                Assert.assertTrue(eventArg.getRequestResult().isRequestServiceEncrypted());
+                assertTrue(eventArg.getRequestResult().isRequestServiceEncrypted());
                 CloudBlobServerEncryptionTests.this.requestFound = true;
             }
         });
 
         this.blob.uploadText("test", null, null, null, ctxt);
-        Assert.assertTrue(this.requestFound);
+        assertTrue(this.requestFound);
     }
 }

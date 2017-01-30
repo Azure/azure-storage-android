@@ -1,5 +1,16 @@
 package com.microsoft.azure.storage.blob;
 
+import com.microsoft.azure.storage.ResultContinuation;
+import com.microsoft.azure.storage.ResultSegment;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.core.PathUtility;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -7,17 +18,14 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
-import com.microsoft.azure.storage.ResultContinuation;
-import com.microsoft.azure.storage.ResultSegment;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.core.PathUtility;
-
-public class CloudBlobDirectoryTests extends TestCase {
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
+public class CloudBlobDirectoryTests {
 
     private static final String[] delimiters = { "$", ":", "@", "-", "%", "/", "|", "//", "%%", " " };
 
+    @Test
     public void testGetDirectoryAbsoluteUriAppended() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -43,6 +51,7 @@ public class CloudBlobDirectoryTests extends TestCase {
                         + delimiter), dir.getUri());
     }
 
+    @Test
     public void testFlatListingWithContainer() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -151,6 +160,7 @@ public class CloudBlobDirectoryTests extends TestCase {
                 null), get42.getUri());
     }
 
+    @Test
     public void testListingWithDirectory() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -190,6 +200,7 @@ public class CloudBlobDirectoryTests extends TestCase {
                 get22.getUri());
     }
 
+    @Test
     public void testListingWithDirectorySegmented() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -225,6 +236,7 @@ public class CloudBlobDirectoryTests extends TestCase {
                 .getPath() + "/TopDir1" + delimiter + "MidDir2" + delimiter, null, null), get22.getUri());
     }
 
+    @Test
     public void testPrefixListingWithDirectory() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -262,6 +274,7 @@ public class CloudBlobDirectoryTests extends TestCase {
                 .getPath() + "/TopDir1" + delimiter + "MidDir2" + delimiter, null, null), get13.getUri());
     }
 
+    @Test
     public void testPrefixListingWithDirectorySegmented() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -297,6 +310,7 @@ public class CloudBlobDirectoryTests extends TestCase {
                 .getPath() + "/TopDir1" + delimiter + "MidDir2" + delimiter, null, null), get13.getUri());
     }
 
+    @Test
     public void testFlatListingWithDirectory() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -362,6 +376,7 @@ public class CloudBlobDirectoryTests extends TestCase {
                 null), get22.getUri());
     }
 
+    @Test
     public void testFlatListingWithDirectorySegmented() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -426,6 +441,7 @@ public class CloudBlobDirectoryTests extends TestCase {
                 null), get22.getUri());
     }
 
+    @Test
     public void testGetParent() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -454,6 +470,7 @@ public class CloudBlobDirectoryTests extends TestCase {
         }
     }
 
+    @Test
     public void testGetReferences() throws URISyntaxException, StorageException, IOException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -525,6 +542,7 @@ public class CloudBlobDirectoryTests extends TestCase {
         assertEquals(blockSnapshot.getParent().getPrefix(), blockSnapshotDir1.getParent().getPrefix());
     }
 
+    @Test
     public void testGetSubdirectoryAndTraverseBackToParent() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -547,6 +565,7 @@ public class CloudBlobDirectoryTests extends TestCase {
         assertEquals(parent.getUri(), directory.getUri());
     }
 
+    @Test
     public void testGetParentOnRoot() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -591,6 +610,7 @@ public class CloudBlobDirectoryTests extends TestCase {
         assertNull(empty);
     }
 
+    @Test
     public void testHierarchicalTraversal() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -626,6 +646,7 @@ public class CloudBlobDirectoryTests extends TestCase {
         assertEquals(parent4.getPrefix(), subdir3.getPrefix());
     }
 
+    @Test
     public void testParentValidate() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -704,6 +725,7 @@ public class CloudBlobDirectoryTests extends TestCase {
         }
     }
 
+    @Test
     public void testDelimitersInARow() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;
@@ -744,6 +766,7 @@ public class CloudBlobDirectoryTests extends TestCase {
         assertEquals(blob.getUri(), blob2.getUri());
     }
 
+    @Test
     public void testMultipleDelimiters() throws URISyntaxException, StorageException {
         for (int i = 0; i < delimiters.length; i++) {
             CloudBlobContainer container = null;

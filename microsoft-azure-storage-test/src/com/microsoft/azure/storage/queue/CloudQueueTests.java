@@ -14,6 +14,8 @@
  */
 package com.microsoft.azure.storage.queue;
 
+import static org.junit.Assert.*;
+
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,6 +31,10 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.microsoft.azure.storage.LocationMode;
 import com.microsoft.azure.storage.NameValidator;
@@ -40,29 +46,36 @@ import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.TestHelper;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 import com.microsoft.azure.storage.core.PathUtility;
+import com.microsoft.azure.storage.core.Utility;
 
 /**
  * Queue Tests
  */
-public class CloudQueueTests extends TestCase {
+@Category({ CloudTests.class })
+public class CloudQueueTests {
 
     private CloudQueue queue;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException {
+    @Before
+    public void queueTestMethodSetUp() throws URISyntaxException, StorageException {
         this.queue = QueueTestHelper.getRandomQueueReference();
         this.queue.createIfNotExists();
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void queueTestMethodTearDown() throws StorageException {
         this.queue.deleteIfExists();
     }
 
     /**
      * Tests queue name validation.
      */
+    @Test
     public void testCloudQueueNameValidation()
     {
         NameValidator.validateQueueName("alpha");
@@ -92,10 +105,12 @@ public class CloudQueueTests extends TestCase {
             assertEquals(exceptionMessage, e.getMessage());
         }
     }
-    
+
     /**
      * Get permissions from string
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueuePermissionsFromString() {
         Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
         Date start = cal.getTime();
@@ -123,6 +138,8 @@ public class CloudQueueTests extends TestCase {
         assertEquals(EnumSet.of(SharedAccessQueuePermissions.UPDATE), policy.getPermissions());
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testQueueGetSetPermissionTest() throws StorageException, InterruptedException {
         QueuePermissions expectedPermissions;
         QueuePermissions testPermissions;
@@ -156,6 +173,8 @@ public class CloudQueueTests extends TestCase {
         assertQueuePermissionsEqual(expectedPermissions, testPermissions);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testQueueSAS() throws StorageException, URISyntaxException, InvalidKeyException, InterruptedException {
         this.queue.addMessage(new CloudQueueMessage("sas queue test"));
         QueuePermissions expectedPermissions;
@@ -237,6 +256,7 @@ public class CloudQueueTests extends TestCase {
 
     }
 
+    @Test
     public void testQueueClientConstructor() throws URISyntaxException, StorageException {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final String queueName = QueueTestHelper.generateRandomQueueName();
@@ -253,6 +273,8 @@ public class CloudQueueTests extends TestCase {
         assertEquals(qClient.getCredentials(), queue2.getServiceClient().getCredentials());
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testGetMetadata() throws StorageException {
         HashMap<String, String> metadata = new HashMap<String, String>();
         metadata.put("ExistingMetadata", "ExistingMetadataValue");
@@ -269,9 +291,11 @@ public class CloudQueueTests extends TestCase {
         assertTrue(this.queue.getMetadata().size() == 0);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUploadMetadata() throws URISyntaxException, StorageException {
         CloudQueue queueForGet =  this.queue.getServiceClient().getQueueReference(this.queue.getName());
-        
+
         HashMap<String, String> metadata1 = new HashMap<String, String>();
         metadata1.put("ExistingMetadata1", "ExistingMetadataValue1");
         this.queue.setMetadata(metadata1);
@@ -284,6 +308,8 @@ public class CloudQueueTests extends TestCase {
         assertTrue(queueForGet.getMetadata().containsKey("ExistingMetadata1"));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUploadMetadataNullInput() throws URISyntaxException, StorageException {
         CloudQueue queueForGet =  this.queue.getServiceClient().getQueueReference(this.queue.getName());
 
@@ -305,6 +331,8 @@ public class CloudQueueTests extends TestCase {
         assertTrue(queueForGet.getMetadata().size() == 0);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUploadMetadataClearExisting() throws URISyntaxException, StorageException {
         CloudQueue queueForGet =  this.queue.getServiceClient().getQueueReference(this.queue.getName());
 
@@ -323,6 +351,8 @@ public class CloudQueueTests extends TestCase {
         assertTrue(queueForGet.getMetadata().size() == 0);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUploadMetadataNotFound() throws URISyntaxException, StorageException {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
         try {
@@ -335,6 +365,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueCreate() throws URISyntaxException, StorageException {
         CloudQueue queue = QueueTestHelper.getRandomQueueReference();
 
@@ -365,6 +397,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueCreateAlreadyExists() throws URISyntaxException, StorageException {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final String queueName = QueueTestHelper.generateRandomQueueName();
@@ -385,6 +419,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueCreateAfterDelete() throws URISyntaxException, StorageException {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final String queueName = QueueTestHelper.generateRandomQueueName();
@@ -413,6 +449,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueCreateIfNotExists() throws URISyntaxException, StorageException {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final String queueName = QueueTestHelper.generateRandomQueueName();
@@ -431,6 +469,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueCreateIfNotExistsAfterCreate() throws URISyntaxException, StorageException {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final String queueName = QueueTestHelper.generateRandomQueueName();
@@ -449,6 +489,9 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueCreateIfNotExistsAfterDelete() throws URISyntaxException, StorageException {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final String queueName = QueueTestHelper.generateRandomQueueName();
@@ -478,6 +521,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueDelete() throws URISyntaxException, StorageException {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final String queueName = QueueTestHelper.generateRandomQueueName();
@@ -506,6 +551,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testDeleteQueueIfExists() throws URISyntaxException, StorageException {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
 
@@ -535,6 +582,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudQueueDeleteIfExistsErrorCode() throws StorageException, URISyntaxException {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
         try {
@@ -573,6 +622,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testDeleteNonExistingQueue() throws URISyntaxException, StorageException {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
 
@@ -589,6 +640,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueExist() throws URISyntaxException, StorageException {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
 
@@ -610,12 +663,42 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
-    public void testClearMessages() throws  StorageException {
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
+    public void testAddMessageVerifyPopReceipt() throws StorageException
+    {
+        CloudQueueMessage message1 = new CloudQueueMessage("firstmessagetest1");
+        message1.setNextVisibleTime(null);
+        this.queue.addMessage(message1);
+
+        VerifyAddMessageResult(message1, "firstmessagetest1");
+    }
+
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
+    public void testDeleteMessageWithAddMessagePopReceipt() throws StorageException
+    {
+        CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
+        message1.setNextVisibleTime(null);
+        this.queue.addMessage(message1);
+
+        VerifyAddMessageResult(message1, "messagetest1");
+
+        queue.deleteMessage(message1);
+
+        assertNull(queue.retrieveMessage());
+    }
+
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
+    public void testClearMessages() throws StorageException {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
         this.queue.addMessage(message1);
+        VerifyAddMessageResult(message1, "messagetest1");
 
         CloudQueueMessage message2 = new CloudQueueMessage("messagetest2");
         this.queue.addMessage(message2);
+        VerifyAddMessageResult(message2, "messagetest2");
 
         int count = 0;
         for (CloudQueueMessage m : this.queue.peekMessages(32)) {
@@ -654,22 +737,27 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessage() throws  StorageException {
         String msgContent = UUID.randomUUID().toString();
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
         this.queue.addMessage(message);
+        VerifyAddMessageResult(message, msgContent);
         CloudQueueMessage msgFromRetrieve1 = this.queue.retrieveMessage();
         assertEquals(message.getMessageContentAsString(), msgContent);
         assertEquals(msgFromRetrieve1.getMessageContentAsString(), msgContent);
     }
-    
+
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessageUnicode() throws StorageException {
         ArrayList<String> messages = new ArrayList<String>();
-        messages.add("Le dÃƒÂ©bat sur l'identitÃƒÂ© nationale, l'idÃƒÂ©e du prÃƒÂ©sident Nicolas Sarkozy de dÃƒÂ©choir des personnes d'origine ÃƒÂ©trangÃƒÂ¨re de la nationalitÃƒÂ© franÃƒÂ§aise ... certains cas et les rÃƒÂ©centes mesures prises contre les Roms ont choquÃƒÂ© les experts, qui rendront leurs conclusions le 27 aoÃƒÂ»t.");
-        messages.add("Ã�â€™Ã�Â°Ã‘Ë† Ã�Â»Ã�Â¾Ã�Â³Ã�Â¸Ã�Â½ Yahoo! Ã�Â´Ã�Â°Ã�ÂµÃ‘â€š Ã�Â´Ã�Â¾Ã‘ï¿½Ã‘â€šÃ‘Æ’Ã�Â¿ Ã�Âº Ã‘â€šÃ�Â°Ã�ÂºÃ�Â¸Ã�Â¼ Ã�Â¼Ã�Â¾Ã‘â€°Ã�Â½Ã‘â€¹Ã�Â¼ Ã�Â¸Ã�Â½Ã‘ï¿½Ã‘â€šÃ‘â‚¬Ã‘Æ’Ã�Â¼Ã�ÂµÃ�Â½Ã‘â€šÃ�Â°Ã�Â¼ Ã‘ï¿½Ã�Â²Ã‘ï¿½Ã�Â·Ã�Â¸, Ã�ÂºÃ�Â°Ã�Âº Ã‘ï¿½Ã�Â»Ã�ÂµÃ�ÂºÃ‘â€šÃ‘â‚¬Ã�Â¾Ã�Â½Ã�Â½Ã�Â°Ã‘ï¿½ Ã�Â¿Ã�Â¾Ã‘â€¡Ã‘â€šÃ�Â°, Ã�Â¾Ã‘â€šÃ�Â¿Ã‘â‚¬Ã�Â°Ã�Â²Ã�ÂºÃ�Â° Ã�Â¼Ã�Â³Ã�Â½Ã�Â¾Ã�Â²Ã�ÂµÃ�Â½Ã�Â½Ã‘â€¹Ã‘â€¦ Ã‘ï¿½Ã�Â¾Ã�Â¾Ã�Â±Ã‘â€°Ã�ÂµÃ�Â½Ã�Â¸Ã�Â¹, Ã‘â€žÃ‘Æ’Ã�Â½Ã�ÂºÃ‘â€ Ã�Â¸Ã�Â¸ Ã�Â±Ã�ÂµÃ�Â·Ã�Â¾Ã�Â¿Ã�Â°Ã‘ï¿½Ã�Â½Ã�Â¾Ã‘ï¿½Ã‘â€šÃ�Â¸, Ã�Â² Ã‘â€¡Ã�Â°Ã‘ï¿½Ã‘â€šÃ�Â½Ã�Â¾Ã‘ï¿½Ã‘â€šÃ�Â¸, Ã�Â°Ã�Â½Ã‘â€šÃ�Â¸Ã�Â²Ã�Â¸Ã‘â‚¬Ã‘Æ’Ã‘ï¿½Ã�Â½Ã‘â€¹Ã�Âµ Ã‘ï¿½Ã‘â‚¬Ã�ÂµÃ�Â´Ã‘ï¿½Ã‘â€šÃ�Â²Ã�Â° Ã�Â¸ Ã�Â±Ã�Â»Ã�Â¾Ã�ÂºÃ�Â¸Ã‘â‚¬Ã�Â¾Ã�Â²Ã‘â€°Ã�Â¸Ã�Âº Ã�Â²Ã‘ï¿½Ã�Â¿Ã�Â»Ã‘â€¹Ã�Â²Ã�Â°Ã‘Å½Ã‘â€°Ã�ÂµÃ�Â¹ Ã‘â‚¬Ã�ÂµÃ�ÂºÃ�Â»Ã�Â°Ã�Â¼Ã‘â€¹, Ã�Â¸ Ã�Â¸Ã�Â·Ã�Â±Ã‘â‚¬Ã�Â°Ã�Â½Ã�Â½Ã�Â¾Ã�Âµ, Ã�Â½Ã�Â°Ã�Â¿Ã‘â‚¬Ã�Â¸Ã�Â¼Ã�ÂµÃ‘â‚¬, Ã‘â€žÃ�Â¾Ã‘â€šÃ�Â¾ Ã�Â¸ Ã�Â¼Ã‘Æ’Ã�Â·Ã‘â€¹Ã�ÂºÃ�Â° Ã�Â² Ã‘ï¿½Ã�ÂµÃ‘â€šÃ�Â¸ Ã¢â‚¬â€� Ã�Â²Ã‘ï¿½Ã�Âµ Ã�Â±Ã�ÂµÃ‘ï¿½Ã�Â¿Ã�Â»Ã�Â°Ã‘â€š");
-        messages.add("Ã¦ï¿½Â®Ã¦â€“Â°Ã¥ï¿½Å½Ã§Â¤Â¾8Ã¦Å“Ë†12Ã¦â€”Â¥Ã§â€�Âµ 8Ã¦Å“Ë†11Ã¦â€”Â¥Ã¦â„¢Å¡Ã¯Â¼Å’Ã¨Ë†Å¸Ã¦â€ºÂ²Ã¥Â¢Æ’Ã¥â€ â€¦Ã¥â€ ï¿½Ã¦Â¬Â¡Ã¥â€¡ÂºÃ§Å½Â°Ã¥Â¼ÂºÃ©â„¢ï¿½Ã©â€ºÂ¨Ã¥Â¤Â©Ã¦Â°â€�Ã¯Â¼Å’Ã¤Â½Â¿Ã§â€°Â¹Ã¥Â¤Â§Ã¥Â±Â±Ã¦Â´ÂªÃ¦Â³Â¥Ã§Å¸Â³Ã¦Âµï¿½Ã§ï¿½Â¾Ã¦Æ’â€¦Ã©â€ºÂªÃ¤Â¸Å Ã¥Å Â Ã©Å“Å“Ã£â‚¬â€šÃ§â„¢Â½Ã©Â¾â„¢Ã¦Â±Å¸Ã¦Â°Â´Ã¥Å“Â¨Ã¦Â¢Â¨Ã¥ï¿½ï¿½Ã¥Â­ï¿½Ã¦ï¿½â€˜Ã§Å¡â€žÃ¤ÂºÂ¤Ã¦Â±â€¡Ã¥Å“Â°Ã¥Â¸Â¦Ã¥Â½Â¢Ã¦Ë†ï¿½Ã¤Â¸â‚¬Ã¤Â¸ÂªÃ¦â€“Â°Ã§Å¡â€žÃ¥Â Â°Ã¥Â¡Å¾Ã¦Â¹â€“Ã¯Â¼Å’Ã¦Â°Â´Ã¤Â½ï¿½Ã¦Â¯â€�Ã¥Â¹Â³Ã¦â€”Â¶Ã©Â«ËœÃ¥â€¡Âº3Ã§Â±Â³Ã£â‚¬â€šÃ§â€�ËœÃ¨â€šÆ’Ã§Å“ï¿½Ã¥â€ºÂ½Ã¥Å“Å¸Ã¨Âµâ€žÃ¦Âºï¿½Ã¥Å½â€¦Ã¥â€°Â¯Ã¥Å½â€¦Ã©â€¢Â¿Ã¥Â¼Â Ã¥â€ºÂ½Ã¥ï¿½Å½Ã¥Â½â€œÃ¦â€”Â¥22Ã¦â€”Â¶Ã¨Â®Â¸Ã¥Å“Â¨Ã¦â€“Â°Ã©â€”Â»Ã¥ï¿½â€˜Ã¥Â¸Æ’Ã¤Â¼Å¡Ã¤Â¸Å Ã¤Â»â€¹Ã§Â»ï¿½Ã¯Â¼Å’Ã¦Ë†ÂªÃ¨â€¡Â³12Ã¦â€”Â¥21Ã¦â€”Â¶50Ã¥Ë†â€ Ã¯Â¼Å’Ã¨Ë†Å¸Ã¦â€ºÂ²Ã¥Â Â°Ã¥Â¡Å¾Ã¦Â¹â€“Ã¥Â Â°Ã¥Â¡Å¾Ã¤Â½â€œÃ¥Â·Â²Ã¦Â¶Ë†Ã©â„¢Â¤Ã¯Â¼Å’Ã¦ÂºÆ’Ã¥ï¿½ï¿½Ã©â„¢Â©Ã¦Æ’â€¦Ã¥Â·Â²Ã¦Â¶Ë†Ã©â„¢Â¤Ã¯Â¼Å’Ã§â€ºÂ®Ã¥â€°ï¿½Ã©â€™Ë†Ã¥Â¯Â¹Ã¥Â Â°Ã¥Â¡Å¾Ã¦Â¹â€“Ã§Å¡â€žÃ¤Â¸Â»Ã¨Â¦ï¿½Ã¥Â·Â¥Ã¤Â½Å“Ã¦ËœÂ¯Ã§â€“ï¿½Ã©â‚¬Å¡Ã¦Â²Â³Ã©ï¿½â€œÃ£â‚¬â€š");
-        messages.add("Ã—Å“ Ã—â€ºÃ—â€¢Ã—Å“Ã—ï¿½\", Ã—â€�Ã—â€œÃ—â€�Ã—â„¢Ã—ï¿½ Ã—â„¢Ã—Â¢Ã—Å“Ã—â€¢Ã—Å¸, Ã—â€¢Ã—â„¢Ã—â„¢Ã—Â©Ã—Â¨ Ã—Â§Ã—â€¢ Ã—Â¢Ã—ï¿½ Ã—â€�Ã—Â¢Ã—â€œÃ—â€¢Ã—Âª Ã—Â©Ã—Å¾Ã—Â¡Ã—Â¨ Ã—Â¨Ã—ï¿½Ã—Â© Ã—â€�Ã—Å¾Ã—Å¾Ã—Â©Ã—Å“Ã—â€�, Ã—â€˜Ã—Â Ã—â„¢Ã—Å¾Ã—â„¢Ã—Å¸ Ã—Â Ã—ÂªÃ—Â Ã—â„¢Ã—â€�Ã—â€¢, Ã—Å“Ã—â€¢Ã—â€¢Ã—Â¢Ã—â€œÃ—Âª Ã—ËœÃ—â„¢Ã—Â¨Ã—Â§Ã—Å“. Ã—Å“Ã—â€œÃ—â€˜Ã—Â¨Ã—â„¢Ã—â€¢, Ã—ï¿½Ã—â€ºÃ—Å¸ Ã—â€�Ã—Â©Ã—Â¨Ã—â„¢Ã—ï¿½ Ã—â€œÃ—Â Ã—â€¢ Ã—Â¨Ã—Â§ Ã—â€˜Ã—â€�Ã—â„¢Ã—â€˜Ã—ËœÃ—â„¢Ã—ï¿½ Ã—â€�Ã—ÂªÃ—Â§Ã—Â©Ã—â€¢Ã—Â¨Ã—ÂªÃ—â„¢Ã—â„¢Ã—ï¿½ Ã—Â©Ã—Å“ Ã—Â¢Ã—Â¦Ã—â„¢Ã—Â¨Ã—Âª Ã—â€�Ã—Å¾Ã—Â©Ã—Ëœ: \"Ã—â€˜Ã—Â©Ã—â€˜Ã—â„¢Ã—Â¢Ã—â„¢Ã—â„¢Ã—â€� Ã—Å“Ã—ï¿½ Ã—â€�Ã—ÂªÃ—Â§Ã—â„¢Ã—â„¢Ã—ï¿½ Ã—â€œÃ—â„¢Ã—â€¢Ã—Å¸ Ã—Â¢Ã—Å“ Ã—â€�Ã—ï¿½Ã—Å“Ã—ËœÃ—Â¨Ã—Â Ã—ËœÃ—â„¢Ã—â€˜Ã—â€¢Ã—Âª. Ã—Â¢Ã—Â¡Ã—Â§Ã—Â Ã—â€¢ Ã—â€˜Ã—â€�Ã—â„¢Ã—â€˜Ã—ËœÃ—â„¢Ã—ï¿½ ");
-        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis MÃƒÂ¤rz um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprÃƒÂ¼nglich waren es hier 1,7 Prozent");
+        messages.add("Le débat sur l'identité nationale, l'idée du président Nicolas Sarkozy de déchoir des personnes d'origine étrangère de la nationalité française ... certains cas et les récentes mesures prises contre les Roms ont choqué les experts, qui rendront leurs conclusions le 27 août.");
+        messages.add("Ваш логин Yahoo! дает доступ к таким мощным инструментам связи, как электронная почта, отправка мгновенных сообщений, функции безопасности, в частности, антивирусные средства и блокировщик всплывающей рекламы, и избранное, например, фото и музыка в сети — все бесплат");
+        messages.add("据新华社8月12日电 8月11日晚，舟曲境内再次出现强降雨天气，使特大山洪泥石流灾情雪上加霜。白龙江水在梨坝子村的交汇地带形成一个新的堰塞湖，水位比平时高出3米。甘肃省国土资源厅副厅长张国华当日22时许在新闻发布会上介绍，截至12日21时50分，舟曲堰塞湖堰塞体已消除，溃坝险情已消除，目前针对堰塞湖的主要工作是疏通河道。");
+        messages.add("ל כולם\", הדהים יעלון, ויישר קו עם העדות שמסר ראש הממשלה, בנימין נתניהו, לוועדת טירקל. לדבריו, אכן השרים דנו רק בהיבטים התקשורתיים של עצירת המשט: \"בשביעייה לא התקיים דיון על האלטרנטיבות. עסקנו בהיבטים ");
+        messages.add("Prozent auf 0,5 Prozent. Im Vergleich zum Vorjahresquartal wuchs die deutsche Wirtschaft von Januar bis März um 2,1 Prozent. Auch das ist eine Korrektur nach oben, ursprünglich waren es hier 1,7 Prozent");
         messages.add("<?xml version=\"1.0\"?>\n<!DOCTYPE PARTS SYSTEM \"parts.dtd\">\n<?xml-stylesheet type=\"text/css\" href=\"xmlpartsstyle.css\"?>\n<PARTS>\n   <TITLE>Computer Parts</TITLE>\n   <PART>\n      <ITEM>Motherboard</ITEM>\n      <MANUFACTURER>ASUS</MANUFACTURER>\n      <MODEL>"
                 + "P3B-F</MODEL>\n      <COST> 123.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Video Card</ITEM>\n      <MANUFACTURER>ATI</MANUFACTURER>\n      <MODEL>All-in-Wonder Pro</MODEL>\n      <COST> 160.00</COST>\n   </PART>\n   <PART>\n      <ITEM>Sound Card</ITEM>\n      <MANUFACTURER>"
                 + "Creative Labs</MANUFACTURER>\n      <MODEL>Sound Blaster Live</MODEL>\n      <COST> 80.00</COST>\n   </PART>\n   <PART>\n      <ITEM> inch Monitor</ITEM>\n      <MANUFACTURER>LG Electronics</MANUFACTURER>\n      <MODEL> 995E</MODEL>\n      <COST> 290.00</COST>\n   </PART>\n</PARTS>");
@@ -692,8 +780,10 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessageLargeVisibilityDelay() throws  StorageException
-            {
+    {
         String msgContent = UUID.randomUUID().toString();
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
         this.queue.addMessage(message, 100, 50, null, null);
@@ -701,8 +791,10 @@ public class CloudQueueTests extends TestCase {
         assertNull(msgFromRetrieve1);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testDeleteMessageWithDifferentQueueInstance() throws  StorageException, URISyntaxException
-            {
+    {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final String queueName = QueueTestHelper.generateRandomQueueName();
         final CloudQueue queue1 = qClient.getQueueReference(queueName);
@@ -722,8 +814,10 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessageToNonExistingQueue() throws  StorageException, URISyntaxException
-            {
+    {
         final CloudQueueClient qClient = TestHelper.createCloudQueueClient();
         final CloudQueue queue = qClient.getQueueReference(QueueTestHelper.generateRandomQueueName());
 
@@ -739,8 +833,10 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueUnicodeAndXmlMessageTest() throws  StorageException
-            {
+    {
         String msgContent = "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½<?xml version= 1.0  encoding= utf-8  ?>";
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
         this.queue.addMessage(message);
@@ -749,8 +845,10 @@ public class CloudQueueTests extends TestCase {
         assertEquals(msgFromRetrieve1.getMessageContentAsString(), msgContent);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessageLargeMessageInput() throws  StorageException
-            {
+    {
         final Random rand = new Random();
 
         byte[] content = new byte[64 * 1024];
@@ -767,6 +865,8 @@ public class CloudQueueTests extends TestCase {
         this.queue.delete();
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testAddMessageWithVisibilityTimeout() throws StorageException, InterruptedException {
         this.queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
         CloudQueueMessage m1 = this.queue.retrieveMessage();
@@ -782,6 +882,8 @@ public class CloudQueueTests extends TestCase {
         assertTrue(d1.before(d2));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessageNullMessage() throws  StorageException {
         try {
             this.queue.addMessage(null);
@@ -791,19 +893,14 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testAddMessageSpecialVisibilityTimeout() throws  StorageException
-            {
+    {
         CloudQueueMessage message = new CloudQueueMessage("test");
         this.queue.addMessage(message, 1, 0, null, null);
         this.queue.addMessage(message, 7 * 24 * 60 * 60, 0, null, null);
         this.queue.addMessage(message, 7 * 24 * 60 * 60, 7 * 24 * 60 * 60 - 1, null, null);
-
-        try {
-            this.queue.addMessage(message, -1, 0, null, null);
-            fail();
-        }
-        catch (final IllegalArgumentException e) {
-        }
 
         try {
             this.queue.addMessage(message, 0, -1, null, null);
@@ -832,15 +929,10 @@ public class CloudQueueTests extends TestCase {
         }
         catch (final IllegalArgumentException e) {
         }
-
-        try {
-            this.queue.updateMessage(message, 0, EnumSet.of(MessageUpdateFields.CONTENT), null, null);
-            fail();
-        }
-        catch (final IllegalArgumentException e) {
-        }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testDeleteMessage() throws  StorageException {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
         this.queue.addMessage(message1);
@@ -857,6 +949,8 @@ public class CloudQueueTests extends TestCase {
         assertTrue(this.queue.retrieveMessage() == null);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueCreateAddingMetadata() throws  StorageException, URISyntaxException {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
 
@@ -878,8 +972,10 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testDeleteMessageNullMessage() throws  StorageException
-            {
+    {
         try {
             this.queue.deleteMessage(null);
             fail();
@@ -888,6 +984,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
     public void testRetrieveMessage() throws StorageException, InterruptedException {
         this.queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
         OperationContext opContext = new OperationContext();
@@ -913,8 +1011,10 @@ public class CloudQueueTests extends TestCase {
         assertTrue(nextVisibleTime1.before(nextVisibleTime2));
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessageNonExistingQueue() throws  StorageException, URISyntaxException
-            {
+    {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
         try {
             queue.retrieveMessage();
@@ -926,8 +1026,10 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessageInvalidInput() throws  StorageException, URISyntaxException
-            {
+    {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
 
         try {
@@ -945,6 +1047,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessagesFromEmptyQueue() throws StorageException {
         for (CloudQueueMessage m : this.queue.retrieveMessages(32)) {
             assertTrue(m.getId() != null);
@@ -952,8 +1056,10 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessagesNonFound() throws  StorageException, URISyntaxException
-            {
+    {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
         try {
             queue.retrieveMessages(1);
@@ -965,6 +1071,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testDequeueCountIncreases() throws StorageException, InterruptedException {
         this.queue.addMessage(new CloudQueueMessage("message"), 20, 0, null, null);
         CloudQueueMessage message1 = this.queue.retrieveMessage(1, null, null);
@@ -978,8 +1086,10 @@ public class CloudQueueTests extends TestCase {
 
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessageSpecialVisibilityTimeout() throws  StorageException
-            {
+    {
         try {
             this.queue.retrieveMessage(-1, null, null);
             fail();
@@ -988,6 +1098,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessages() throws  StorageException {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
         this.queue.addMessage(message1);
@@ -1001,8 +1113,10 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testRetrieveMessagesInvalidInput() throws  StorageException
-            {
+    {
         for (int i = 0; i < 33; i++) {
             this.queue.addMessage(new CloudQueueMessage("test" + i));
         }
@@ -1032,6 +1146,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testPeekMessage() throws  StorageException {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
         this.queue.addMessage(message1);
@@ -1043,6 +1159,8 @@ public class CloudQueueTests extends TestCase {
         this.queue.delete();
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testPeekMessages() throws  StorageException {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
         this.queue.addMessage(message1);
@@ -1056,8 +1174,10 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testPeekMessagesInvalidInput() throws  StorageException
-            {
+    {
         for (int i = 0; i < 33; i++) {
             this.queue.addMessage(new CloudQueueMessage("test" + i));
         }
@@ -1087,8 +1207,10 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testPeekMessageNonExistingQueue() throws  StorageException, URISyntaxException
-            {
+    {
         CloudQueue queue = QueueTestHelper.getRandomQueueReference();
         try {
             queue.peekMessage();
@@ -1100,6 +1222,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testPeekMessagesNonFound() throws  StorageException, URISyntaxException {
         CloudQueue queue = QueueTestHelper.getRandomQueueReference();
         try {
@@ -1112,6 +1236,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testPeekMessagesFromEmptyQueue() throws StorageException {
         for (CloudQueueMessage m : this.queue.peekMessages(32)) {
             assertTrue(m.getId() != null);
@@ -1119,7 +1245,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
-
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUpdateMessage() throws StorageException {
         this.queue.clear();
 
@@ -1142,8 +1269,9 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
-    public void testUpdateMessageFullPass() throws  StorageException, InterruptedException
-             {
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, SlowTests.class })
+    public void testUpdateMessageFullPass() throws  StorageException, InterruptedException {
         CloudQueueMessage message = new CloudQueueMessage("message");
         this.queue.addMessage(message, 20, 0, null, null);
         CloudQueueMessage message1 = this.queue.retrieveMessage();
@@ -1175,8 +1303,10 @@ public class CloudQueueTests extends TestCase {
         assertEquals(messageFromGet.getMessageContentAsString(), message1.getMessageContentAsString());
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUpdateMessageWithContentChange() throws  StorageException
-            {
+    {
         CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
         this.queue.addMessage(message1);
 
@@ -1191,8 +1321,10 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUpdateMessageNullMessage() throws  StorageException
-            {
+    {
         try {
             this.queue.updateMessage(null, 0);
             fail();
@@ -1201,21 +1333,19 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testUpdateMessageInvalidMessage() throws  StorageException
-            {
+    {
         CloudQueueMessage message = new CloudQueueMessage("test");
         this.queue.addMessage(message, 1, 0, null, null);
-
-        try {
-            this.queue.updateMessage(message, 0, EnumSet.of(MessageUpdateFields.CONTENT), null, null);
-            fail();
-        }
-        catch (final IllegalArgumentException e) {
-        }
+        this.queue.updateMessage(message, 0, EnumSet.of(MessageUpdateFields.CONTENT), null, null);
 
         this.queue.delete();
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testGetApproximateMessageCount() throws StorageException {
         assertTrue(this.queue.getApproximateMessageCount() == 0);
         this.queue.addMessage(new CloudQueueMessage("message1"));
@@ -1226,6 +1356,8 @@ public class CloudQueueTests extends TestCase {
         this.queue.delete();
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testShouldEncodeMessage() throws  StorageException {
         String msgContent = UUID.randomUUID().toString();
         final CloudQueueMessage message = new CloudQueueMessage(msgContent);
@@ -1244,6 +1376,8 @@ public class CloudQueueTests extends TestCase {
         this.queue.setShouldEncodeMessage(true);
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueDownloadAttributes() throws  StorageException, URISyntaxException {
         final CloudQueueMessage message1 = new CloudQueueMessage("messagetest1");
         this.queue.addMessage(message1);
@@ -1267,6 +1401,8 @@ public class CloudQueueTests extends TestCase {
         assertEquals(sum, queue2.getMetadata().size());
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueDownloadAttributesNotFound() throws  StorageException, URISyntaxException {
         final CloudQueue queue = QueueTestHelper.getRandomQueueReference();
         try {
@@ -1279,6 +1415,8 @@ public class CloudQueueTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testQueueUpdateMetaData() throws  StorageException {
         final HashMap<String, String> metadata = new HashMap<String, String>(5);
         for (int i = 0; i < 5; i++) {
@@ -1289,6 +1427,8 @@ public class CloudQueueTests extends TestCase {
         this.queue.uploadMetadata();
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testSASClientParse() throws StorageException,  InvalidKeyException, URISyntaxException {
         // Add a policy, check setting and getting.
         SharedAccessQueuePolicy policy1 = new SharedAccessQueuePolicy();
@@ -1316,5 +1456,16 @@ public class CloudQueueTests extends TestCase {
                 new StorageCredentialsSharedAccessSignature(sasString));
         CloudQueue queue2 = new CloudQueue(queueUri, queueClient2.getCredentials());
         queue2.getName();
+    }
+
+    private void VerifyAddMessageResult(CloudQueueMessage originalMessage, String expectedMessageContent)
+    {
+        assertFalse(Utility.isNullOrEmpty(originalMessage.getId()));
+        assertNotNull(originalMessage.getInsertionTime());
+        assertNotNull(originalMessage.getExpirationTime());
+        assertFalse(Utility.isNullOrEmpty(originalMessage.getPopReceipt()));
+
+        assertTrue(originalMessage.messageContent.equals(expectedMessageContent));
+        assertNotNull(originalMessage.getNextVisibleTime());
     }
 }

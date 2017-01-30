@@ -15,6 +15,9 @@
 
 package com.microsoft.azure.storage.file;
 
+import static org.junit.Assert.*;
+
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -31,14 +34,21 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.TimeZone;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.IPRange;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.ResponseReceivedEvent;
+import com.microsoft.azure.storage.SecondaryTests;
 import com.microsoft.azure.storage.SendingRequestEvent;
+import com.microsoft.azure.storage.SharedAccessAccountPermissions;
+import com.microsoft.azure.storage.SharedAccessAccountPolicy;
+import com.microsoft.azure.storage.SharedAccessAccountResourceType;
+import com.microsoft.azure.storage.SharedAccessAccountService;
 import com.microsoft.azure.storage.SharedAccessProtocols;
 import com.microsoft.azure.storage.StorageCredentials;
 import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
@@ -46,17 +56,32 @@ import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.StorageUri;
 import com.microsoft.azure.storage.TestHelper;
+import com.microsoft.azure.storage.TestRunners;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
+import com.microsoft.azure.storage.blob.BlobProperties;
+import com.microsoft.azure.storage.blob.BlobTestHelper;
+import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import com.microsoft.azure.storage.blob.SharedAccessBlobPermissions;
+import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
 import com.microsoft.azure.storage.core.PathUtility;
 import com.microsoft.azure.storage.core.SR;
 
-public class FileSasTests extends TestCase {
+import junit.framework.Assert;
+
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
+public class FileSasTests {
 
     protected static CloudFileClient fileClient = null;
     protected CloudFileShare share;
     protected CloudFile file;
 
-    @Override
-    public void setUp() throws URISyntaxException, StorageException, IOException {
+    @Before
+    public void fileSASTestMethodSetUp() throws URISyntaxException, StorageException, IOException {
         if (fileClient == null) {
             fileClient = TestHelper.createCloudFileClient();
         }
@@ -66,11 +91,12 @@ public class FileSasTests extends TestCase {
         this.file = (CloudFile) FileTestHelper.uploadNewFile(this.share, 100, null);
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void fileSASTestMethodTearDown() throws StorageException {
         this.share.deleteIfExists();
     }
-    
+
+    @Test
     public void testApiVersion() throws InvalidKeyException, StorageException, URISyntaxException {
         SharedAccessFilePolicy policy = createSharedAccessPolicy(
                 EnumSet.of(SharedAccessFilePermissions.READ, SharedAccessFilePermissions.WRITE,
@@ -94,7 +120,8 @@ public class FileSasTests extends TestCase {
         CloudFile sasFile = new CloudFile(new URI(this.file.getUri().toString() + "?" + sas));
         sasFile.uploadMetadata(null, null, ctx);
     }
-    
+
+    @Test
     public void testDirectorySas() throws InvalidKeyException, IllegalArgumentException, StorageException,
             URISyntaxException, InterruptedException {
         CloudFileDirectory dir = this.share.getRootDirectoryReference().getDirectoryReference("dirFile");
@@ -123,6 +150,8 @@ public class FileSasTests extends TestCase {
         sasDir.downloadAttributes();
     }
 
+    @Test
+    @Category({ SecondaryTests.class })
     public void testIpAcl()
             throws StorageException, URISyntaxException, InvalidKeyException, InterruptedException, UnknownHostException {
         
@@ -181,6 +210,8 @@ public class FileSasTests extends TestCase {
         allFile.download(new ByteArrayOutputStream());
     }
 
+    @Test
+    @Category({ SecondaryTests.class })
     public void testProtocolRestrictions()
             throws StorageException, URISyntaxException, InvalidKeyException, InterruptedException {
         
@@ -238,6 +269,8 @@ public class FileSasTests extends TestCase {
         httpsFile.download(new ByteArrayOutputStream());
     }
 
+    @Test
+    @Category({ SecondaryTests.class, SlowTests.class })
     public void testShareSAS() throws IllegalArgumentException, StorageException, URISyntaxException,
             InvalidKeyException, InterruptedException {
         SharedAccessFilePolicy policy1 = createSharedAccessPolicy(
@@ -279,6 +312,8 @@ public class FileSasTests extends TestCase {
         assertEquals(client, shareFromClient.getServiceClient());
     }
 
+    @Test
+    @Category({ SlowTests.class })
     public void testShareUpdateSAS()
             throws InvalidKeyException, StorageException, IOException, URISyntaxException, InterruptedException {
         // Create a policy with read/write access and get SAS.
@@ -317,6 +352,8 @@ public class FileSasTests extends TestCase {
         }
     }
 
+    @Test
+    @Category({ SlowTests.class })
     public void testShareSASCombinations()
             throws StorageException, URISyntaxException, IOException, InvalidKeyException, InterruptedException {
         EnumSet<SharedAccessFilePermissions> permissionSet = null;
@@ -351,6 +388,7 @@ public class FileSasTests extends TestCase {
         }
     }
 
+    @Test
     public void testFileSASCombinations() throws URISyntaxException, StorageException, InvalidKeyException, IOException {
         EnumSet<SharedAccessFilePermissions> permissionSet = null;
 
@@ -365,6 +403,7 @@ public class FileSasTests extends TestCase {
         }
     }
 
+    @Test
     public void testFileSAS() throws InvalidKeyException, IllegalArgumentException, StorageException,
             URISyntaxException, InterruptedException {
         SharedAccessFilePolicy policy = createSharedAccessPolicy(
@@ -397,6 +436,7 @@ public class FileSasTests extends TestCase {
         assertEquals(client, fileFromClient.getServiceClient());
     }
 
+    @Test
     public void testFileSASWithSharedAccessFileHeaders() throws InvalidKeyException, IllegalArgumentException,
             StorageException, URISyntaxException, InterruptedException {
         SharedAccessFilePolicy policy = createSharedAccessPolicy(EnumSet.of(SharedAccessFilePermissions.READ,
@@ -433,6 +473,68 @@ public class FileSasTests extends TestCase {
         });
 
         sasFile.download(new ByteArrayOutputStream(), null, null, context);
+    }
+    
+    @Test
+    public void testFileCopyFromBlobWithSasAndSnapshot()
+            throws URISyntaxException, StorageException, InterruptedException, IOException, InvalidKeyException {
+        String blobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testblob");
+        CloudBlobContainer container = TestHelper.createCloudBlobClient().getContainerReference(BlobTestHelper.generateRandomContainerName());
+        container.createIfNotExists();
+        CloudBlockBlob source = container.getBlockBlobReference(blobName);
+        String data = "String data";
+        source.uploadText(data, Constants.UTF8_CHARSET, null, null, null);
+
+        byte[] buffer = BlobTestHelper.getRandomBuffer(512);
+        ByteArrayInputStream stream = new ByteArrayInputStream(buffer);
+        source.upload(stream, buffer.length);
+        source.getMetadata().put("Test", "value");
+        source.uploadMetadata();
+
+        SharedAccessFilePolicy policy = createSharedAccessPolicy(
+                EnumSet.of(SharedAccessFilePermissions.READ, SharedAccessFilePermissions.WRITE,
+                      SharedAccessFilePermissions.LIST, SharedAccessFilePermissions.DELETE), 5000);
+
+        CloudFile copy = this.share.getRootDirectoryReference().getFileReference("copy");
+        String sasToken = copy.generateSharedAccessSignature(policy, null);
+        CloudFile copySas = new CloudFile(new URI(copy.getUri().toString() + "?" + sasToken));
+        
+        // Generate account SAS for the source
+        // Cannot generate a SAS directly on a snapshot and the SAS for the destination is only for the destination
+        SharedAccessAccountPolicy accountPolicy = new SharedAccessAccountPolicy();
+        accountPolicy.setPermissions(EnumSet.of(SharedAccessAccountPermissions.READ, SharedAccessAccountPermissions.WRITE));
+        accountPolicy.setServices(EnumSet.of(SharedAccessAccountService.BLOB));
+        accountPolicy.setResourceTypes(EnumSet.of(SharedAccessAccountResourceType.OBJECT, SharedAccessAccountResourceType.CONTAINER));
+        accountPolicy.setSharedAccessExpiryTime(policy.getSharedAccessExpiryTime());
+        final CloudBlobClient sasClient = TestHelper.createCloudBlobClient(accountPolicy, false);
+
+        CloudBlockBlob snapshot = (CloudBlockBlob) source.createSnapshot();
+        CloudBlockBlob sasBlob = (CloudBlockBlob) sasClient.getContainerReference(container.getName())
+                .getBlobReferenceFromServer(snapshot.getName(), snapshot.getSnapshotID(), null, null, null);
+        sasBlob.exists();
+
+        String copyId = copySas.startCopy(BlobTestHelper.defiddler(sasBlob));
+        FileTestHelper.waitForCopy(copySas);
+        
+        copySas.downloadAttributes();
+        FileProperties prop1 = copySas.getProperties();
+        BlobProperties prop2 = sasBlob.getProperties();
+
+        assertEquals(prop1.getCacheControl(), prop2.getCacheControl());
+        assertEquals(prop1.getContentEncoding(), prop2.getContentEncoding());
+        assertEquals(prop1.getContentDisposition(),
+                prop2.getContentDisposition());
+        assertEquals(prop1.getContentLanguage(), prop2.getContentLanguage());
+        assertEquals(prop1.getContentMD5(), prop2.getContentMD5());
+        assertEquals(prop1.getContentType(), prop2.getContentType());
+
+        assertEquals("value", copySas.getMetadata().get("Test"));
+        assertEquals(copyId, copySas.getCopyState().getCopyId());
+
+        snapshot.delete();
+        source.delete();
+        copySas.delete();
+        container.delete();
     }
 
     private final static SharedAccessFilePolicy createSharedAccessPolicy(EnumSet<SharedAccessFilePermissions> sap,

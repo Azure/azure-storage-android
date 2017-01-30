@@ -14,6 +14,23 @@
  */
 package com.microsoft.azure.storage.file;
 
+import com.microsoft.azure.storage.NameValidator;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.SendingRequestEvent;
+import com.microsoft.azure.storage.StorageErrorCodeStrings;
+import com.microsoft.azure.storage.StorageEvent;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
+import com.microsoft.azure.storage.core.SR;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
@@ -24,37 +41,31 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.TimeZone;
 
-import junit.framework.TestCase;
-
-import com.microsoft.azure.storage.NameValidator;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.SendingRequestEvent;
-import com.microsoft.azure.storage.StorageErrorCodeStrings;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.core.SR;
+import static org.junit.Assert.*;
 
 /**
  * File Share Tests
  */
-public class CloudFileShareTests extends TestCase {
+@Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
+public class CloudFileShareTests {
 
     protected static CloudFileClient client;
     protected CloudFileShare share;
 
-    @Override
-    public void setUp() throws StorageException, URISyntaxException {
+    @Before
+    public void fileShareTestMethodSetUp() throws StorageException, URISyntaxException {
         this.share = FileTestHelper.getRandomShareReference();
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void fileShareTestMethodTearDown() throws StorageException {
         this.share.deleteIfExists();
     }
     
     /**
      * Test share name validation.
      */
+    @Test
     public void testCloudShareNameValidation()
     {
         NameValidator.validateShareName("alpha");
@@ -91,6 +102,7 @@ public class CloudFileShareTests extends TestCase {
      * @throws StorageException
      * @throws URISyntaxException
      */
+    @Test
     public void testCloudFileShareReference() throws StorageException, URISyntaxException {
         CloudFileClient client = FileTestHelper.createCloudFileClient();
         CloudFileShare share = client.getShareReference("share");
@@ -108,6 +120,7 @@ public class CloudFileShareTests extends TestCase {
      * 
      * @throws StorageException
      */
+    @Test
     public void testCloudFileShareCreate() throws StorageException {
         this.share.create();
         assertTrue(this.share.exists());
@@ -127,6 +140,7 @@ public class CloudFileShareTests extends TestCase {
      * 
      * @throws StorageException
      */
+    @Test
     public void testCloudFileShareCreateIfNotExists() throws StorageException {
         assertTrue(this.share.createIfNotExists());
         assertTrue(this.share.exists());
@@ -138,6 +152,7 @@ public class CloudFileShareTests extends TestCase {
      * 
      * @throws StorageException
      */
+    @Test
     public void testCloudFileShareDeleteIfExists() throws StorageException {
         assertFalse(this.share.deleteIfExists());
         this.share.create();
@@ -151,6 +166,7 @@ public class CloudFileShareTests extends TestCase {
      * 
      * @throws StorageException
      */
+    @Test
     public void testCloudFileShareExists() throws StorageException {
         assertFalse(this.share.exists());
 
@@ -169,6 +185,8 @@ public class CloudFileShareTests extends TestCase {
      * @throws StorageException
      * @throws InterruptedException
      */
+    @Test
+    @Category({ SlowTests.class, DevFabricTests.class, DevStoreTests.class })
     public void testCloudFileShareSetPermissions()
             throws StorageException, InterruptedException, URISyntaxException {
         CloudFileClient client = FileTestHelper.createCloudFileClient();
@@ -208,6 +226,8 @@ public class CloudFileShareTests extends TestCase {
     /**
      * Get permissions from string
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudFileSharePermissionsFromString() {
         SharedAccessFilePolicy policy = new SharedAccessFilePolicy();
 
@@ -235,6 +255,8 @@ public class CloudFileShareTests extends TestCase {
     /**
      * Write permission to string
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testCloudFileSharePermissionsToString() {
         SharedAccessFilePolicy policy = new SharedAccessFilePolicy();
 
@@ -263,26 +285,41 @@ public class CloudFileShareTests extends TestCase {
      * @throws StorageException
      * @throws URISyntaxException
      */
+    @Test
     public void testCloudFileShareUploadMetadata() throws StorageException, URISyntaxException {
+        this.share.getMetadata().put("key1", "value1");
         this.share.create();
+        assertEquals(1, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
 
         CloudFileShare share2 = this.share.getServiceClient().getShareReference(this.share.getName());
         share2.downloadAttributes();
-        assertEquals(0, share2.getMetadata().size());
-
-        this.share.getMetadata().put("key1", "value1");
-        this.share.uploadMetadata();
-
-        share2.downloadAttributes();
         assertEquals(1, share2.getMetadata().size());
         assertEquals("value1", share2.getMetadata().get("key1"));
+
+        this.share.getMetadata().put("key2", "value2");
+
+        assertEquals(2, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
+        assertEquals("value2", this.share.getMetadata().get("key2"));
+        this.share.uploadMetadata();
+
+        assertEquals(2, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
+        assertEquals("value2", this.share.getMetadata().get("key2"));
+
+        share2.downloadAttributes();
+        assertEquals(2, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
+        assertEquals("value2", this.share.getMetadata().get("key2"));
 
         Iterable<CloudFileShare> shares = this.share.getServiceClient().listShares(this.share.getName(),
                 ShareListingDetails.METADATA, null, null);
 
         for (CloudFileShare share3 : shares) {
-            assertEquals(1, share3.getMetadata().size());
+            assertEquals(2, share3.getMetadata().size());
             assertEquals("value1", share3.getMetadata().get("key1"));
+            assertEquals("value2", this.share.getMetadata().get("key2"));
         }
 
         this.share.getMetadata().clear();
@@ -295,6 +332,7 @@ public class CloudFileShareTests extends TestCase {
     /**
      * Check uploading/downloading invalid share metadata.
      */
+    @Test
     public void testCloudFileShareInvalidMetadata() {
         // test client-side fails correctly
         testMetadataFailures(this.share, null, "value1", true);
@@ -333,6 +371,8 @@ public class CloudFileShareTests extends TestCase {
      * @throws IOException
      * @throws URISyntaxException
      */
+    @Test
+    @Category({ CloudTests.class })
     public void testGetShareStats() throws StorageException, IOException, URISyntaxException {
         share.createIfNotExists();
         ShareStats stats = share.getStats();
@@ -352,6 +392,7 @@ public class CloudFileShareTests extends TestCase {
      * @throws StorageException 
      * @throws URISyntaxException 
      */
+    @Test
     public void testCloudFileShareQuota() throws StorageException, URISyntaxException {
         // Share quota defaults to 5120
         this.share.createIfNotExists();
@@ -374,6 +415,8 @@ public class CloudFileShareTests extends TestCase {
         this.share = FileTestHelper.getRandomShareReference();
         this.share.getProperties().setShareQuota(shareQuota);
         this.share.create();
+        assertNotNull(this.share.getProperties().getShareQuota());
+        assertEquals(shareQuota, this.share.getProperties().getShareQuota().intValue());
         this.share.downloadAttributes();
         assertNotNull(this.share.getProperties().getShareQuota());
         assertEquals(shareQuota, this.share.getProperties().getShareQuota().intValue());
@@ -395,6 +438,7 @@ public class CloudFileShareTests extends TestCase {
      * @throws StorageException 
      * @throws URISyntaxException 
      */
+    @Test
     public void testCloudFileShareQuotaListing() throws StorageException, URISyntaxException {
         int shareQuota = 16;
         this.share.getProperties().setShareQuota(shareQuota);
@@ -412,6 +456,7 @@ public class CloudFileShareTests extends TestCase {
      * 
      * @throws StorageException
      */
+    @Test
     public void testCloudFileShareDeleteIfExistsErrorCode() throws StorageException {
         try {
             this.share.delete();

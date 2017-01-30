@@ -1,25 +1,25 @@
 If you intend to contribute to the project, please make sure you've followed the instructions provided in the [Azure Projects Contribution Guidelines](http://azure.github.io/guidelines/).
 ## Project Setup
-The Azure Storage development team uses Eclipse so instructions will be tailored to that preference. However, any preferred IDE or other toolset should be usable.
+The Azure Storage development team uses Android Studio so instructions will be tailored to that preference. However, any preferred IDE or other toolset should be usable.
 
 ### Install
 * Java SE 6+
-* [Eclipse](https://eclipse.org/downloads/)
-* [Maven plugin for Eclipse](http://www.eclipse.org/m2e/index.html). Some Eclipse packages (ex Eclipse IDE for Java Developers) may come with this plugin already installed.
+* [Android](https://developer.android.com/studio/index.html)
 * [Maven](https://maven.apache.org/install.html)
 * [Jackson-Core](https://github.com/FasterXML/jackson-core) is used for JSON parsing. 
 * Clone the source code from GitHub
 
 ### Open Solution
-Open the project from Eclipse using File->Import->Maven->Existing Maven Projects and navigating to the azure-storage-java folder. Select the listed pom. This imports the source and the test files and downloads the required dependencies via Maven. If you'd like to import the samples, follow the same procedure but navigate to the azure-storage-java\microsoft-azure-storage-samples folder and select that pom. Both projects can be opened at the same time and will be shown in the Package Explorer.
+Open the project from Android Studio using File->Open and navigating to the azure-storage-android folder.
 
 ## Tests
 
 ### Configuration
-The only step to configure testing is to setup a configuration file or connection string via environment variables. To use the connection string route, create an environment variable named "storageConnection". To use the configuration file route, create an environment variable named "storageTestConfiguration" with the path to a TestConfigurations.xml file with this [template](https://github.com/Azure/azure-storage-java/blob/master/microsoft-azure-storage-test/res/TestConfigurations.xml).
+The only step to configure testing is to populate the accountName, accountKey, and service endpoints in TestHelper.java.
 
 ### Running
-To actually run tests, right click on the test class in the Package Explorer or the individual test in the Outline and select Run As-> Android JUnit Test. All tests or tests grouped by service can be run using the test runners in the com.microsoft.azure.storage package TestRunners file. Running all tests from the top of the package explorer will result in each test being run multiple times as the package explorer will also run every test runner.
+To actually run tests, right click on the test class in the Package Explorer or the individual test in the Outline and select Run -> Run. All tests or tests grouped by service can be run using the test runners in the com.microsoft.azure.storage package TestRunners file. Running all tests from the top of the package explorer will result in each test being run multiple times as the package explorer will also run every test runner.
+If a test run failed to test runner not found, go to Run -> Edig Configurations... -> Specifc instrumentation runner (optional) -> ... ->AndroidJUnitRunner (android.support.test.runner). Then rerun the test.
 
 ### Testing Features
 As you develop a feature, you'll need to write tests to ensure quality. You should also run existing tests related to your change to address any unexpected breaks.

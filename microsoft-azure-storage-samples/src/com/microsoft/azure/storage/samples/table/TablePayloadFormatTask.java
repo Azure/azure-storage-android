@@ -86,7 +86,7 @@ public class TablePayloadFormatTask extends AsyncTask<String, Void, Void> {
             // Submit the operation to the table service.
             table.execute(insertCustomer1);
 
-            // When using JsonNoMetadata the client library will “infer” the property types(int, double,
+            // When using JsonNoMetadata the client library will "infer" the property types(int, double,
             // String and some booleans) by inspecting the type information on the POJO entity type
             // provided by the client. Additionally, in some scenarios clients may wish to provide
             // the property type information at runtime such as when querying with the DynamicTableEntity

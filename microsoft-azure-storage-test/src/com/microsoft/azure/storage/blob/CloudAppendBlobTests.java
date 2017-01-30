@@ -14,6 +14,24 @@
  */
 package com.microsoft.azure.storage.blob;
 
+import com.microsoft.azure.storage.AccessCondition;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.ResponseReceivedEvent;
+import com.microsoft.azure.storage.RetryNoRetry;
+import com.microsoft.azure.storage.SendingRequestEvent;
+import com.microsoft.azure.storage.StorageErrorCodeStrings;
+import com.microsoft.azure.storage.StorageEvent;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.core.SR;
+import com.microsoft.azure.storage.core.Utility;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -27,31 +45,21 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.Random;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
-import com.microsoft.azure.storage.AccessCondition;
-import com.microsoft.azure.storage.OperationContext;
-import com.microsoft.azure.storage.ResponseReceivedEvent;
-import com.microsoft.azure.storage.RetryNoRetry;
-import com.microsoft.azure.storage.SendingRequestEvent;
-import com.microsoft.azure.storage.StorageErrorCodeStrings;
-import com.microsoft.azure.storage.StorageEvent;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.core.SR;
-import com.microsoft.azure.storage.core.Utility;
-
-public class CloudAppendBlobTests extends TestCase {
+@Category({ DevFabricTests.class, CloudTests.class })
+public class CloudAppendBlobTests {
     protected CloudBlobContainer container;
 
-    @Override
-    public void setUp() throws URISyntaxException,
+    @Before
+    public void appendBlobTestMethodSetUp() throws URISyntaxException,
             StorageException {
         this.container = BlobTestHelper.getRandomContainerReference();
         this.container.create();
     }
 
-    @Override
-    public void tearDown() throws StorageException {
+    @After
+    public void appendBlobTestMethodTearDown() throws StorageException {
         this.container.deleteIfExists();
     }
 
@@ -61,6 +69,7 @@ public class CloudAppendBlobTests extends TestCase {
      * @throws StorageException
      * @throws URISyntaxException
      */
+    @Test
     public void testAppendBlobCreate() throws StorageException, URISyntaxException {
         final CloudAppendBlob blob = this.container.getAppendBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("testBlob"));
@@ -111,6 +120,7 @@ public class CloudAppendBlobTests extends TestCase {
      * @throws StorageException
      * @throws URISyntaxException 
      */
+    @Test
     public void testAppendBlobDelete() throws StorageException, URISyntaxException {
         final CloudAppendBlob blob = this.container.getAppendBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("testBlob"));
@@ -142,6 +152,7 @@ public class CloudAppendBlobTests extends TestCase {
      * @throws StorageException
      * @throws URISyntaxException 
      */
+    @Test
     public void testAppendBlobDeleteIfExists() throws URISyntaxException, StorageException {
         final CloudAppendBlob blob = this.container.getAppendBlobReference(BlobTestHelper
                 .generateRandomBlobNameWithPrefix("testBlob"));
@@ -181,6 +192,7 @@ public class CloudAppendBlobTests extends TestCase {
     /**
      * Start copying a blob and then abort
      */
+    @Test
     public void testCopyFromAppendBlobAbortTest() throws StorageException,
             URISyntaxException, IOException {
         final int length = 512;
@@ -201,6 +213,7 @@ public class CloudAppendBlobTests extends TestCase {
     /**
      * Create a snapshot
      */
+    @Test
     public void testAppendBlobSnapshotValidationTest() throws StorageException,
             URISyntaxException, IOException {
         final int length = 1024;
@@ -283,6 +296,7 @@ public class CloudAppendBlobTests extends TestCase {
     /**
      * Create a blob and try to download a range of its contents
      */
+    @Test
     public void testAppendBlobDownloadRangeValidationTest()
             throws StorageException, URISyntaxException, IOException {
         final int length = 5 * 1024 * 1024;
@@ -307,6 +321,7 @@ public class CloudAppendBlobTests extends TestCase {
         assertEquals(100, downloadLength);
     }
 
+    @Test
     public void testAppendBlobUploadFromStreamTest() throws URISyntaxException,
             StorageException, IOException {
         final String appendBlobName = BlobTestHelper
@@ -332,6 +347,7 @@ public class CloudAppendBlobTests extends TestCase {
                 new ByteArrayInputStream(dstStream.toByteArray()));
     }
 
+    @Test
     public void testBlobUploadWithoutMD5Validation() throws URISyntaxException,
             StorageException, IOException {
         final String appendBlobName = BlobTestHelper
@@ -365,6 +381,7 @@ public class CloudAppendBlobTests extends TestCase {
                 .download(new ByteArrayOutputStream(), null, options, null);
     }
 
+    @Test
     public void testBlobEmptyHeaderSigningTest() throws URISyntaxException,
             StorageException, IOException {
         final String appendBlobName = BlobTestHelper
@@ -393,6 +410,7 @@ public class CloudAppendBlobTests extends TestCase {
                 .download(new ByteArrayOutputStream(), null, null, context);
     }
 
+    @Test
     public void testAppendBlobDownloadRangeTest() throws URISyntaxException,
             StorageException, IOException {
         byte[] buffer = BlobTestHelper.getRandomBuffer(2 * 1024);
@@ -443,6 +461,7 @@ public class CloudAppendBlobTests extends TestCase {
                 512);
     }
 
+    @Test
     public void testCloudAppendBlobDownloadRangeToByteArray()
             throws URISyntaxException, StorageException, IOException {
         CloudAppendBlob blob = this.container
@@ -485,6 +504,7 @@ public class CloudAppendBlobTests extends TestCase {
                 new Long(1023), new Long(1));
     }
 
+    @Test
     public void testCloudAppendBlobDownloadRangeToByteArrayNegativeTest()
             throws URISyntaxException, StorageException, IOException {
         CloudAppendBlob blob = this.container
@@ -493,6 +513,7 @@ public class CloudAppendBlobTests extends TestCase {
         BlobTestHelper.doDownloadRangeToByteArrayNegativeTests(blob);
     }
 
+    @Test
     public void testCloudAppendBlobUploadFromStreamWithAccessCondition()
             throws URISyntaxException, StorageException, IOException {
         CloudAppendBlob blob1 = this.container.getAppendBlobReference("blob1");
@@ -537,6 +558,7 @@ public class CloudAppendBlobTests extends TestCase {
         blob1.upload(srcStream, length, accessCondition, null, null);
     }
 
+    @Test
     public void testAppendBlobNamePlusEncodingTest() throws StorageException,
             URISyntaxException, IOException, InterruptedException {
         final int length = 1 * 1024;
@@ -550,6 +572,7 @@ public class CloudAppendBlobTests extends TestCase {
         copyBlob.downloadAttributes();
     }
 
+    @Test
     public void testAppendBlobInputStream() throws URISyntaxException,
             StorageException, IOException {
         final int blobLength = 16 * 1024;
@@ -584,7 +607,8 @@ public class CloudAppendBlobTests extends TestCase {
 
         blobRef.delete();
     }
-    
+
+    @Test
     public void testAppendBlobUploadNegativeLength() throws URISyntaxException,
             StorageException, IOException {
         final int blobLength = 16 * 1024;
@@ -603,6 +627,7 @@ public class CloudAppendBlobTests extends TestCase {
         assertEquals(blobRef.getProperties().getLength(), blobLength);
     }
 
+    @Test
     public void testAppendBlobMaxSizeCondition() throws URISyntaxException,
             StorageException, IOException {
         final int blobLength = 16 * 1024;
@@ -626,7 +651,8 @@ public class CloudAppendBlobTests extends TestCase {
             assertEquals(SR.INVALID_BLOCK_SIZE, ex.getMessage());
         }
     }
-    
+
+    @Test
     public void testAppendBlobWriteStreamConditionalRetry() throws URISyntaxException,
             StorageException, IOException {
         final int blobLength = 16 * 1024;
@@ -693,6 +719,7 @@ public class CloudAppendBlobTests extends TestCase {
         blobRef.upload(sourceStream, blobLength, cond, options, ctx);
     }
 
+    @Test
     public void testUploadFromByteArray() throws Exception {
         String blobName = BlobTestHelper
                 .generateRandomBlobNameWithPrefix("testblob");
@@ -705,6 +732,7 @@ public class CloudAppendBlobTests extends TestCase {
         this.doUploadFromByteArrayTest(blob, 4 * 512, 2 * 512, 2 * 512);
     }
 
+    @Test
     public void testUploadDownloadFromFile() throws IOException,
             StorageException, URISyntaxException {
         String blobName = BlobTestHelper
@@ -718,6 +746,7 @@ public class CloudAppendBlobTests extends TestCase {
         this.doUploadDownloadFileTest(blob, 11 * 1024 * 1024);
     }
 
+    @Test
     public void testAppendBlobCopyTest() throws URISyntaxException,
             StorageException, InterruptedException, IOException {
         Calendar calendar = Calendar.getInstance(Utility.UTC_ZONE);
@@ -736,7 +765,7 @@ public class CloudAppendBlobTests extends TestCase {
         BlobTestHelper.waitForCopy(copy);
 
         assertEquals(CopyStatus.SUCCESS, copy.getCopyState().getStatus());
-        assertEquals(source.getQualifiedUri().getPath(), copy.getCopyState()
+        assertEquals(source.getSnapshotQualifiedUri().getPath(), copy.getCopyState()
                 .getSource().getPath());
         assertEquals(buffer.length, copy.getCopyState().getTotalBytes()
                 .intValue());
@@ -782,6 +811,7 @@ public class CloudAppendBlobTests extends TestCase {
         copy.delete();
     }
 
+    @Test
     public void testAppendBlobCopyWithMetadataOverride()
             throws URISyntaxException, StorageException, IOException, InterruptedException {
         Calendar calendar = Calendar.getInstance(Utility.UTC_ZONE);
@@ -802,7 +832,7 @@ public class CloudAppendBlobTests extends TestCase {
         BlobTestHelper.waitForCopy(copy);
 
         assertEquals(CopyStatus.SUCCESS, copy.getCopyState().getStatus());
-        assertEquals(source.getQualifiedUri().getPath(), copy.getCopyState()
+        assertEquals(source.getSnapshotQualifiedUri().getPath(), copy.getCopyState()
                 .getSource().getPath());
         assertEquals(buffer.length, copy.getCopyState().getTotalBytes()
                 .intValue());
@@ -836,6 +866,7 @@ public class CloudAppendBlobTests extends TestCase {
         copy.delete();
     }
 
+    @Test
     public void testAppendBlobCopyFromSnapshot() throws StorageException,
             IOException, URISyntaxException, InterruptedException {
         CloudAppendBlob source = this.container
@@ -961,6 +992,7 @@ public class CloudAppendBlobTests extends TestCase {
         }
     }
 
+    @Test
     public void testUploadDownloadBlobProperties() throws URISyntaxException,
             StorageException, IOException {
         final int length = 512;
@@ -1014,6 +1046,7 @@ public class CloudAppendBlobTests extends TestCase {
         BlobTestHelper.assertAreEqual(props1, props2);
     }
 
+    @Test
     public void testOpenOutputStream() throws URISyntaxException,
             StorageException, IOException {
         int blobLengthToUse = 8 * 512;
@@ -1050,6 +1083,7 @@ public class CloudAppendBlobTests extends TestCase {
         }
     }
 
+    @Test
     public void testOpenOutputStreamNoArgs() throws URISyntaxException,
             StorageException {
         String blobName = BlobTestHelper
@@ -1074,7 +1108,8 @@ public class CloudAppendBlobTests extends TestCase {
         assertEquals(0, appendBlob2.getProperties().getLength());
         assertEquals(BlobType.APPEND_BLOB, appendBlob2.getProperties().getBlobType());
     }
-    
+
+    @Test
     public void testOpenOutputStreamWithConditions() throws StorageException, IOException, URISyntaxException
     {
         int blobSize = 1024;
@@ -1128,7 +1163,8 @@ public class CloudAppendBlobTests extends TestCase {
             assertEquals("AppendPositionConditionNotMet", internalException.getErrorCode());
         }
     }
-    
+
+    @Test
     public void testOpenOutputStreamMultiWriterFail() throws StorageException,
             IOException, URISyntaxException {
         int blobSize = 1024;
@@ -1172,7 +1208,8 @@ public class CloudAppendBlobTests extends TestCase {
                     internalException.getErrorCode());
         }
     }
-    
+
+    @Test
     public void testAppendBlockFromStream() throws StorageException, IOException, URISyntaxException
     {
         int blobSize = 2 * 1024;
@@ -1199,7 +1236,8 @@ public class CloudAppendBlobTests extends TestCase {
         pos = blob.appendBlock(sourceStream, -1);
         assertEquals(blobSize, pos);
     }
-    
+
+    @Test
     public void testAppendBlockFromStreamWithConditions() throws StorageException, IOException, URISyntaxException
     {
         int blobSize = 1024;
@@ -1253,6 +1291,7 @@ public class CloudAppendBlobTests extends TestCase {
         }
     }
 
+    @Test
     public void testAppendBlobUploadFromStream() throws StorageException, IOException, URISyntaxException
     {
         byte[] buffer = BlobTestHelper.getRandomBuffer(6 * 1024 * 1024);
@@ -1273,6 +1312,7 @@ public class CloudAppendBlobTests extends TestCase {
         assertEquals(6 * 1024 * 1024, blob.getProperties().getLength());
     }
 
+    @Test
     public void testAppendBlobAppendFromStream() throws StorageException, IOException, URISyntaxException
     {
         // Every time append a buffer that is bigger than a single block.
@@ -1295,6 +1335,7 @@ public class CloudAppendBlobTests extends TestCase {
         assertEquals(18 * 1024 * 1024, blob.getProperties().getLength());
     }
 
+    @Test
     public void testAppendBlobAppendFromStreamWithLength() throws StorageException, IOException, URISyntaxException
     {
         // Every time append a buffer that is bigger than a single block.

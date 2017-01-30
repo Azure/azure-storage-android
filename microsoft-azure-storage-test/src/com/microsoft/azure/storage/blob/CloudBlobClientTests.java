@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,12 +14,16 @@
  */
 package com.microsoft.azure.storage.blob;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.UUID;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.LocationMode;
@@ -29,19 +33,24 @@ import com.microsoft.azure.storage.ResultSegment;
 import com.microsoft.azure.storage.SendingRequestEvent;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.core.SR;
 
 /**
  * Blob Client Tests
  */
-public class CloudBlobClientTests extends TestCase {
+public class CloudBlobClientTests {
     /**
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      * @throws IOException
      * @throws InterruptedException
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListContainers() throws StorageException, URISyntaxException {
         CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
         ArrayList<String> containerList = new ArrayList<String>();
@@ -75,13 +84,15 @@ public class CloudBlobClientTests extends TestCase {
 
         assertEquals(0, containerList.size());
     }
-    
+
     /**
      * Try to list the containers to ensure maxResults validation is working.
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListContainersMaxResultsValidation()
             throws StorageException, URISyntaxException {
         CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
@@ -101,34 +112,136 @@ public class CloudBlobClientTests extends TestCase {
         }
         assertNotNull(bClient.listContainersSegmented("thereshouldntbeanycontainersswiththisprefix"));
     }
-    
+
     /**
      * Fetch result segments and ensure pageSize is null when unspecified and will cap at 5000.
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testListContainersResultSegment()
             throws StorageException, URISyntaxException {
         CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
 
-        ResultSegment<CloudBlobContainer> segment1 = bClient.listContainersSegmented(); 
+        ResultSegment<CloudBlobContainer> segment1 = bClient.listContainersSegmented();
         assertNotNull(segment1);
         assertNull(segment1.getPageSize());
-        
+
         ResultSegment<CloudBlobContainer> segment2 = bClient.listContainersSegmented(null,
-                ContainerListingDetails.ALL, 9001, null, null, null); 
+                ContainerListingDetails.ALL, 9001, null, null, null);
         assertNotNull(segment2);
         assertNotNull(segment2.getPageSize());
         assertEquals(5000, segment2.getPageSize().intValue());
     }
 
+    /**
+     * List containers and fetch attributes with public access
+     *
+     * @throws StorageException
+     * @throws URISyntaxException
+     */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
+    public void testCreateContainerWithPublicAccess() throws StorageException, URISyntaxException {
+        CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
+        BlobContainerPublicAccessType[] accessTypes = { BlobContainerPublicAccessType.CONTAINER, 
+                BlobContainerPublicAccessType.OFF, BlobContainerPublicAccessType.BLOB };
+        for(BlobContainerPublicAccessType accessType : accessTypes)
+        {
+            String name = UUID.randomUUID().toString();
+            CloudBlobContainer container = bClient.getContainerReference(name);
+            assertNull(container.properties.getPublicAccess());
+            container.create(accessType, null, null);
+            assertEquals(accessType, container.properties.getPublicAccess());
+
+            CloudBlobContainer containerRef = bClient.getContainerReference(name);
+            assertNull(containerRef.properties.getPublicAccess());
+            BlobContainerPermissions permissions = containerRef.downloadPermissions();
+            assertEquals(accessType, containerRef.properties.getPublicAccess());
+            assertEquals(accessType, permissions.getPublicAccess());
+            
+            CloudBlobContainer containerRef2 = bClient.getContainerReference(name);
+            assertEquals(null, containerRef2.properties.getPublicAccess());
+            containerRef2.exists();
+            assertEquals(accessType, containerRef2.properties.getPublicAccess());
+
+            String name2 = UUID.randomUUID().toString();
+            CloudBlobContainer container2 = bClient.getContainerReference(name2);
+            assertNull(container2.properties.getPublicAccess());
+            container2.create();
+            assertEquals(BlobContainerPublicAccessType.OFF, container2.properties.getPublicAccess());
+
+            BlobContainerPermissions permissions2 = new BlobContainerPermissions();
+            permissions2.setPublicAccess(accessType);
+            container2.uploadPermissions(permissions);
+            assertEquals(accessType, container2.properties.getPublicAccess());
+            
+            CloudBlobContainer containerRef3 = bClient.getContainerReference(name);
+            containerRef3.downloadAttributes();
+            assertEquals(accessType, containerRef3.properties.getPublicAccess());
+
+            String name3 = UUID.randomUUID().toString();
+            CloudBlobContainer container3 = bClient.getContainerReference(name3);
+            container3.create(null, null, null);
+            assertEquals(BlobContainerPublicAccessType.OFF, container3.properties.getPublicAccess());
+
+            container.delete();
+            container2.delete();
+            container3.delete();
+        }
+    }
+
+    /**
+     * List containers and fetch attributes with public access
+     *
+     * @throws StorageException
+     * @throws URISyntaxException
+     */
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
+    public void testListContainersAndFetchAttributesWithPublicAccess() throws StorageException, URISyntaxException {
+        CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
+        String name = UUID.randomUUID().toString();
+        CloudBlobContainer container = bClient.getContainerReference(name);
+        container.create();
+        BlobContainerPublicAccessType[] accessTypes = {BlobContainerPublicAccessType.BLOB,
+                BlobContainerPublicAccessType.CONTAINER, BlobContainerPublicAccessType.OFF};
+        BlobContainerPermissions permissions = new BlobContainerPermissions();
+        for (BlobContainerPublicAccessType accessType : accessTypes) {
+            permissions.setPublicAccess(accessType);
+            container.uploadPermissions(permissions);
+            assertEquals(accessType, container.properties.getPublicAccess());
+
+            CloudBlobContainer container2 = bClient.getContainerReference(name);
+            assertNull(container2.properties.getPublicAccess());
+            container2.downloadAttributes();
+            assertEquals(accessType, container2.properties.getPublicAccess());
+            
+            CloudBlobContainer container3 = bClient.getContainerReference(name);
+            assertNull(container3.properties.getPublicAccess());
+            assertEquals(accessType, container3.downloadPermissions().getPublicAccess());
+
+            Iterator<CloudBlobContainer> results = bClient.listContainers(name, ContainerListingDetails.NONE, null, null).iterator();
+            assertTrue(results.hasNext());
+            assertEquals(accessType, results.next().properties.getPublicAccess());
+            assertFalse(results.hasNext());
+        }
+
+        container.delete();
+    }
+
+    @Test
+    @Category({ CloudTests.class })
     public void testGetServiceStats() throws StorageException {
         CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
         bClient.getDefaultRequestOptions().setLocationMode(LocationMode.SECONDARY_ONLY);
         BlobTestHelper.verifyServiceStats(bClient.getServiceStats());
     }
 
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class, CloudTests.class })
     public void testSingleBlobPutThresholdInBytes() throws URISyntaxException, StorageException, IOException {
         CloudBlobClient bClient = BlobTestHelper.createCloudBlobClient();
 
