@@ -46,8 +46,6 @@ android {
             java.excludes = ['androidTest/**']
         }
 
-            //androidTest.setRoot('src')
-            //androidTest.setRoot('src')
             androidTest {
                 java.srcDirs = ['src']
             }
