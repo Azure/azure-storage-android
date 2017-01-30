@@ -296,7 +296,7 @@ public class CloudBlockBlobTests {
         BlobTestHelper.waitForCopy(copy);
 
         assertEquals(CopyStatus.SUCCESS, copy.getCopyState().getStatus());
-        assertEquals(source.getQualifiedUri().getPath(), copy.getCopyState().getSource().getPath());
+        assertEquals(source.getSnapshotQualifiedUri().getPath(), copy.getCopyState().getSource().getPath());
         assertEquals(data.length(), copy.getCopyState().getTotalBytes().intValue());
         assertEquals(data.length(), copy.getCopyState().getBytesCopied().intValue());
         assertEquals(copyId, copy.getCopyState().getCopyId());
@@ -1020,6 +1020,13 @@ public class CloudBlockBlobTests {
 
         options.setDisableContentMD5Validation(true);
         blockBlobRef.download(new ByteArrayOutputStream(), null, options, null);
+
+        final CloudBlockBlob blockBlobRef2 = this.container.getBlockBlobReference(blockBlobName);
+        assertNull(blockBlobRef2.getProperties().getContentMD5());
+
+        byte[] target = new byte[4];
+        blockBlobRef2.downloadRangeToByteArray(0L, 4L, target, 0);
+        assertEquals("MDAwMDAwMDA=", blockBlobRef2.properties.getContentMD5());
     }
 
     @Test
@@ -1665,7 +1672,7 @@ public class CloudBlockBlobTests {
 
         // Check original blob references for equality
         assertEquals(CopyStatus.SUCCESS, destination.getCopyState().getStatus());
-        assertEquals(source.getQualifiedUri().getPath(), destination.getCopyState().getSource().getPath());
+        assertEquals(source.getSnapshotQualifiedUri().getPath(), destination.getCopyState().getSource().getPath());
         assertEquals(data.length(), destination.getCopyState().getTotalBytes().intValue());
         assertEquals(data.length(), destination.getCopyState().getBytesCopied().intValue());
         assertEquals(copyId, destination.getProperties().getCopyState().getCopyId());

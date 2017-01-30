@@ -713,6 +713,13 @@ public class CloudFileTests {
             assertEquals(e.getCause().getMessage(),
                     "The conditionals specified for this operation did not match server.");
         }
+
+        final CloudFile fileRef2 = this.share.getRootDirectoryReference().getFileReference(fileName);
+        assertNull(fileRef2.getProperties().getContentMD5());
+
+        byte[] target = new byte[4];
+        fileRef2.downloadRangeToByteArray(0L, 4L, target, 0);
+        assertEquals(calculatedMD5, fileRef2.getProperties().getContentMD5());
     }
 
     @Test
@@ -733,17 +740,8 @@ public class CloudFileTests {
             }
         });
 
-        try {
-            fileRef.upload(srcStream, length, null, null, context);
-            fileRef.download(new ByteArrayOutputStream(), null, null, context);
-            fail("Shouldn't sign empty header, expected a 403.");
-        }
-        catch (StorageException e) {
-            assertEquals(e.getHttpStatusCode(), 403);
-            assertEquals(
-                    e.getMessage(),
-                    "Server failed to authenticate the request. Make sure the value of Authorization header is formed correctly including the signature.");
-        }
+        fileRef.upload(srcStream, length, null, null, context);
+        fileRef.download(new ByteArrayOutputStream(), null, null, context);
     }
 
     /**

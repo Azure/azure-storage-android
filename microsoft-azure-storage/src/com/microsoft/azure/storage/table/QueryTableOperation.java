@@ -233,6 +233,7 @@ public class QueryTableOperation extends TableOperation {
                 InputStream inStream = connection.getInputStream();
                 TableResult res = parseResponse(inStream, this.getResult().getStatusCode(), this.getConnection()
                         .getHeaderField(TableConstants.HeaderConstants.ETAG), context, options);
+                connection.getInputStream().close();
 
                 return res;
             }

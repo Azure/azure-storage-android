@@ -765,7 +765,7 @@ public class CloudAppendBlobTests {
         BlobTestHelper.waitForCopy(copy);
 
         assertEquals(CopyStatus.SUCCESS, copy.getCopyState().getStatus());
-        assertEquals(source.getQualifiedUri().getPath(), copy.getCopyState()
+        assertEquals(source.getSnapshotQualifiedUri().getPath(), copy.getCopyState()
                 .getSource().getPath());
         assertEquals(buffer.length, copy.getCopyState().getTotalBytes()
                 .intValue());
@@ -832,7 +832,7 @@ public class CloudAppendBlobTests {
         BlobTestHelper.waitForCopy(copy);
 
         assertEquals(CopyStatus.SUCCESS, copy.getCopyState().getStatus());
-        assertEquals(source.getQualifiedUri().getPath(), copy.getCopyState()
+        assertEquals(source.getSnapshotQualifiedUri().getPath(), copy.getCopyState()
                 .getSource().getPath());
         assertEquals(buffer.length, copy.getCopyState().getTotalBytes()
                 .intValue());

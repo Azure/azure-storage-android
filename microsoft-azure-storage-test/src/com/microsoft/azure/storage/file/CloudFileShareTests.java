@@ -287,25 +287,39 @@ public class CloudFileShareTests {
      */
     @Test
     public void testCloudFileShareUploadMetadata() throws StorageException, URISyntaxException {
+        this.share.getMetadata().put("key1", "value1");
         this.share.create();
+        assertEquals(1, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
 
         CloudFileShare share2 = this.share.getServiceClient().getShareReference(this.share.getName());
         share2.downloadAttributes();
-        assertEquals(0, share2.getMetadata().size());
-
-        this.share.getMetadata().put("key1", "value1");
-        this.share.uploadMetadata();
-
-        share2.downloadAttributes();
         assertEquals(1, share2.getMetadata().size());
         assertEquals("value1", share2.getMetadata().get("key1"));
+
+        this.share.getMetadata().put("key2", "value2");
+
+        assertEquals(2, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
+        assertEquals("value2", this.share.getMetadata().get("key2"));
+        this.share.uploadMetadata();
+
+        assertEquals(2, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
+        assertEquals("value2", this.share.getMetadata().get("key2"));
+
+        share2.downloadAttributes();
+        assertEquals(2, this.share.getMetadata().size());
+        assertEquals("value1", this.share.getMetadata().get("key1"));
+        assertEquals("value2", this.share.getMetadata().get("key2"));
 
         Iterable<CloudFileShare> shares = this.share.getServiceClient().listShares(this.share.getName(),
                 ShareListingDetails.METADATA, null, null);
 
         for (CloudFileShare share3 : shares) {
-            assertEquals(1, share3.getMetadata().size());
+            assertEquals(2, share3.getMetadata().size());
             assertEquals("value1", share3.getMetadata().get("key1"));
+            assertEquals("value2", this.share.getMetadata().get("key2"));
         }
 
         this.share.getMetadata().clear();
@@ -401,6 +415,8 @@ public class CloudFileShareTests {
         this.share = FileTestHelper.getRandomShareReference();
         this.share.getProperties().setShareQuota(shareQuota);
         this.share.create();
+        assertNotNull(this.share.getProperties().getShareQuota());
+        assertEquals(shareQuota, this.share.getProperties().getShareQuota().intValue());
         this.share.downloadAttributes();
         assertNotNull(this.share.getProperties().getShareQuota());
         assertEquals(shareQuota, this.share.getProperties().getShareQuota().intValue());
