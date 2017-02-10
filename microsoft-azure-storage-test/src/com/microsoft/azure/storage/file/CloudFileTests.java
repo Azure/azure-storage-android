@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,10 @@
 package com.microsoft.azure.storage.file;
 
 import com.microsoft.azure.storage.Constants;
+import com.microsoft.azure.storage.core.Base64;
+import com.microsoft.azure.storage.core.SR;
+import com.microsoft.azure.storage.core.Utility;
+import com.microsoft.azure.storage.core.UriQueryBuilder;
 import com.microsoft.azure.storage.NameValidator;
 import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.RetryNoRetry;
@@ -35,8 +39,10 @@ import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import com.microsoft.azure.storage.blob.CloudPageBlob;
 import com.microsoft.azure.storage.blob.SharedAccessBlobPermissions;
 import com.microsoft.azure.storage.blob.SharedAccessBlobPolicy;
-import com.microsoft.azure.storage.core.Base64;
-import com.microsoft.azure.storage.core.Utility;
+import com.microsoft.azure.storage.TestRunners.CloudTests;
+import com.microsoft.azure.storage.TestRunners.DevFabricTests;
+import com.microsoft.azure.storage.TestRunners.DevStoreTests;
+import com.microsoft.azure.storage.TestRunners.SlowTests;
 
 import org.junit.After;
 import org.junit.Before;
@@ -47,6 +53,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -106,7 +113,7 @@ public class CloudFileTests {
         invalidFileTestHelper("", "Between 1 and 255 characters.", "Invalid file name. The name may not be null, empty, or whitespace only.");
         invalidFileTestHelper(new String(new char[256]).replace("\0", "n"), "Between 1 and 255 characters.", "Invalid file name length. The name must be between 1 and 255 characters long.");
     }
-    
+
     private void invalidFileTestHelper(String fileName, String failMessage, String exceptionMessage)
     {
         try
@@ -119,10 +126,10 @@ public class CloudFileTests {
             assertEquals(exceptionMessage, e.getMessage());
         }
     }
-    
+
     /**
      * Test file creation and deletion.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -151,7 +158,7 @@ public class CloudFileTests {
 
     /**
      * Test file constructor.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -175,7 +182,7 @@ public class CloudFileTests {
 
     /**
      * Test file resizing.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -208,7 +215,7 @@ public class CloudFileTests {
 
     /**
      * Test file creation with invalid sizes.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -236,7 +243,7 @@ public class CloudFileTests {
 
     /**
      * Test file deleteIfExists.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -252,7 +259,7 @@ public class CloudFileTests {
 
     /**
      * Test file exits method.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -275,7 +282,7 @@ public class CloudFileTests {
 
     /**
      * Test file getProperties.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -310,7 +317,7 @@ public class CloudFileTests {
 
     /**
      * Test file setProperties.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -364,7 +371,7 @@ public class CloudFileTests {
 
     /**
      * Test file creation with metadata.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -483,23 +490,23 @@ public class CloudFileTests {
             @Override
             public void eventOccurred(SendingRequestEvent eventArg) {
                 HttpURLConnection con = (HttpURLConnection) eventArg.getConnectionObject();
-                
+
                 try {
                     CloudFileDirectory rootDirectory = CloudFileTests.this.share.getRootDirectoryReference();
-                    
+
                     // Test the copy destination request url
                     assertEquals(rootDirectory.getUri() + "/destchinesecharsblob%E9%98%BF%E4%B6%B5.txt",
                             con.getURL().toString());
-                    
+
                     // Test the copy source request property
                     assertEquals(rootDirectory.getUri() + "/sourcechinescharsblob%E9%98%BF%E4%B6%B5.txt",
                             con.getRequestProperty("x-ms-copy-source"));
                 } catch (Exception e) {
                     fail("This code should not generate any exceptions.");
-                } 
+                }
             }
         });
-        
+
         copyDestination.startCopy(copySource.getUri(), null, null, null, ctx);
         copyDestination.startCopy(copySource, null, null, null, ctx);
     }
@@ -512,7 +519,7 @@ public class CloudFileTests {
         String data = "String data";
         CloudFile source = this.share.getRootDirectoryReference().getFileReference("source");
         FileTestHelper.setFileProperties(source);
-        
+
         // do this to make sure the set MD5 can be compared, otherwise when the dummy value
         // doesn't match the actual MD5 an exception would be thrown
         FileRequestOptions options = new FileRequestOptions();
@@ -558,7 +565,7 @@ public class CloudFileTests {
 
     /**
      * Start copying a file and then abort
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      * @throws IOException
@@ -585,7 +592,7 @@ public class CloudFileTests {
 
     /**
      * Test file stream uploading.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -611,7 +618,7 @@ public class CloudFileTests {
 
     /**
      * Create a file and try to download a range of its contents
-     * 
+     *
      * @throws StorageException
      * @throws URISyntaxException
      * @throws IOException
@@ -746,7 +753,7 @@ public class CloudFileTests {
 
     /**
      * Test downloading a file range.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -877,7 +884,7 @@ public class CloudFileTests {
 
     /**
      * Test file input stream.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      * @throws IOException
@@ -916,7 +923,7 @@ public class CloudFileTests {
 
     /**
      * Test file uploading from byte arrays.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -933,7 +940,7 @@ public class CloudFileTests {
 
     /**
      * Test file upload and download using text.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -949,7 +956,7 @@ public class CloudFileTests {
 
     /**
      * Test file upload and download using io files.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -982,7 +989,7 @@ public class CloudFileTests {
         }
     }
 
-    private void doUploadDownloadFileTest(CloudFile file, int fileSize) throws IOException, StorageException {
+    private void doUploadDownloadFileTest(CloudFile file, int fileSize) throws IOException, StorageException, URISyntaxException {
         File sourceFile = File.createTempFile("sourceFile", ".tmp");
         File destinationFile = new File(sourceFile.getParentFile(), "destinationFile.tmp");
 
@@ -1019,7 +1026,7 @@ public class CloudFileTests {
 
     /**
      * Test file range uploads.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -1072,7 +1079,7 @@ public class CloudFileTests {
 
     /**
      * Test clearing file ranges.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -1111,7 +1118,7 @@ public class CloudFileTests {
 
     /**
      * Test file resizing.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -1141,7 +1148,7 @@ public class CloudFileTests {
 
     /**
      * Test file range downloading.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -1181,7 +1188,7 @@ public class CloudFileTests {
 
     /**
      * Test downloadAttributes.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -1193,7 +1200,7 @@ public class CloudFileTests {
         FileRequestOptions options = new FileRequestOptions();
         options.setDisableContentMD5Validation(true);
 
-        // with explicit upload/download of properties 
+        // with explicit upload/download of properties
         String fileName1 = FileTestHelper.generateRandomFileName();
         CloudFile fileRef1 = this.share.getRootDirectoryReference().getFileReference(fileName1);
 
@@ -1208,7 +1215,7 @@ public class CloudFileTests {
 
         FileTestHelper.assertAreEqual(props1, props2);
 
-        // by uploading/downloading the file   
+        // by uploading/downloading the file
         fileName1 = FileTestHelper.generateRandomFileName();
         fileRef1 = this.share.getRootDirectoryReference().getFileReference(fileName1);
 
@@ -1225,7 +1232,7 @@ public class CloudFileTests {
 
     /**
      * Test FileOutputStream.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -1265,7 +1272,7 @@ public class CloudFileTests {
 
     /**
      * Test FileOutputStream.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      */
@@ -1292,7 +1299,7 @@ public class CloudFileTests {
 
     /**
      * Test specific deleteIfExists case.
-     * 
+     *
      * @throws URISyntaxException
      * @throws StorageException
      * @throws IOException
@@ -1337,6 +1344,8 @@ public class CloudFileTests {
                     }
                     catch (StorageException e) {
                         fail("Delete should succeed.");
+                    } catch (URISyntaxException e) {
+                        fail("Delete should succeed.");
                     }
                 }
             }
@@ -1346,7 +1355,7 @@ public class CloudFileTests {
         file.create(2);
         assertFalse(file.deleteIfExists(null, null, ctx));
     }
-    
+
     /**
      * @throws StorageException
      * @throws URISyntaxException
@@ -1362,7 +1371,7 @@ public class CloudFileTests {
 
         copyFile.startCopy(originalFile);
         FileTestHelper.waitForCopy(copyFile);
-        
+
         copyFile.downloadAttributes();
         originalFile.downloadAttributes();
         FileProperties prop1 = copyFile.getProperties();
@@ -1375,12 +1384,12 @@ public class CloudFileTests {
         assertEquals(prop1.getContentMD5(), prop2.getContentMD5());
         assertEquals(prop1.getContentType(), prop2.getContentType());
     }
-    
+
     private CloudFile doCloudBlobCopy(CloudBlob source, int length) throws Exception {
         Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
         cal.setTime(new Date());
         cal.add(Calendar.MINUTE, 5);
-        
+
         // Source SAS must have read permissions
         SharedAccessBlobPolicy policy = new SharedAccessBlobPolicy();
         policy.setPermissions(EnumSet.of(SharedAccessBlobPermissions.READ));
@@ -1390,14 +1399,14 @@ public class CloudFileTests {
 
         // Get destination reference
         final CloudFile destination = this.share.getRootDirectoryReference().getFileReference("destination");
-        
+
         // Start copy and wait for completion
         StorageCredentialsSharedAccessSignature credentials = new StorageCredentialsSharedAccessSignature(sasToken);
         Constructor<? extends CloudBlob> blobType = source.getClass().getConstructor(URI.class);
         String copyId = destination.startCopy(blobType.newInstance(credentials.transformUri(source.getUri())));
         FileTestHelper.waitForCopy(destination);
         destination.downloadAttributes();
-        
+
         // Check original file references for equality
         assertEquals(CopyStatus.SUCCESS, destination.getCopyState().getStatus());
         assertEquals(source.getServiceClient().getCredentials().transformUri(source.getUri()).getPath(),
@@ -1515,8 +1524,108 @@ public class CloudFileTests {
         assertEquals(prop1.getContentType(), prop2.getContentType());
 
         assertEquals("value", destination.getMetadata().get("Test"));
-        
+
         destination.delete();
         source.delete();
+    }
+
+    @Test
+    public void testUnsupportedFileApisWithinShareSnapshot() throws StorageException, URISyntaxException {
+        CloudFileShare snapshot = this.share.createSnapshot();
+        CloudFile file = snapshot.getRootDirectoryReference().getFileReference("file");
+
+        try {
+            file.create(1024);
+            fail("Shouldn't get here");
+        }
+        catch (IllegalArgumentException e) {
+            assertEquals(SR.INVALID_OPERATION_FOR_A_SHARE_SNAPSHOT, e.getMessage());
+        }
+        try {
+            file.delete();
+            fail("Shouldn't get here");
+        }
+        catch (IllegalArgumentException e) {
+            assertEquals(SR.INVALID_OPERATION_FOR_A_SHARE_SNAPSHOT, e.getMessage());
+        }
+        try {
+            file.uploadMetadata();
+            fail("Shouldn't get here");
+        }
+        catch (IllegalArgumentException e) {
+            assertEquals(SR.INVALID_OPERATION_FOR_A_SHARE_SNAPSHOT, e.getMessage());
+        }
+        try {
+            file.abortCopy(null);
+            fail("Shouldn't get here");
+        }
+        catch (IllegalArgumentException e) {
+            assertEquals(SR.INVALID_OPERATION_FOR_A_SHARE_SNAPSHOT, e.getMessage());
+        }
+        try {
+            file.clearRange(0, 512);
+            fail("Shouldn't get here");
+        }
+        catch (IllegalArgumentException e) {
+            assertEquals(SR.INVALID_OPERATION_FOR_A_SHARE_SNAPSHOT, e.getMessage());
+        }
+        try {
+            file.startCopy(file);
+            fail("Shouldn't get here");
+        }
+        catch (IllegalArgumentException e) {
+            assertEquals(SR.INVALID_OPERATION_FOR_A_SHARE_SNAPSHOT, e.getMessage());
+        }
+        try {
+            file.upload(null, 512);
+            fail("Shouldn't get here");
+        }
+        catch (IllegalArgumentException e) {
+            assertEquals(SR.INVALID_OPERATION_FOR_A_SHARE_SNAPSHOT, e.getMessage());
+        } catch (IOException e) {
+            fail("Shouldn't get here");
+        }
+
+        snapshot.delete();
+    }
+
+    @Test
+    public void testSupportedFileApisInShareSnapshot() throws StorageException, URISyntaxException, UnsupportedEncodingException {
+        CloudFileDirectory dir = this.share.getRootDirectoryReference().getDirectoryReference("dir1");
+        dir.deleteIfExists();
+        dir.create();
+        CloudFile file = dir.getFileReference("file");
+        file.create(1024);
+
+        HashMap<String, String> meta = new HashMap<String, String>();
+        meta.put("key1", "value1");
+        file.setMetadata(meta);
+        file.uploadMetadata();
+
+        CloudFileShare snapshot = this.share.createSnapshot();
+        CloudFile snapshotFile = snapshot.getRootDirectoryReference()
+                .getDirectoryReference("dir1").getFileReference("file");
+
+        HashMap<String, String> meta2 = new HashMap<String, String>();
+        meta2.put("key2", "value2");
+        file.setMetadata(meta2);
+        file.uploadMetadata();
+        snapshotFile.downloadAttributes();
+
+        assertTrue(snapshotFile.getMetadata().size() == 1 && snapshotFile.getMetadata().get("key1").equals("value1"));
+        assertNotNull(snapshotFile.getProperties().getEtag());
+
+        file.downloadAttributes();
+        assertTrue(file.getMetadata().size() == 1 && file.getMetadata().get("key2").equals("value2"));
+        assertNotNull(file.getProperties().getEtag());
+        assertNotEquals(file.getProperties().getEtag(), snapshotFile.getProperties().getEtag());
+
+        final UriQueryBuilder uriBuilder = new UriQueryBuilder();
+        uriBuilder.add("sharesnapshot", snapshot.snapshotID);
+        CloudFile snapshotFile2 = new CloudFile(uriBuilder.addToURI(file.getUri()), this.share.getServiceClient().getCredentials());
+        assertEquals(snapshot.snapshotID, snapshotFile2.getShare().snapshotID);
+        assertTrue(snapshotFile2.exists());
+
+        snapshot.delete();
     }
 }
