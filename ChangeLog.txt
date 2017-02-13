@@ -1,3 +1,7 @@
+2017.XX.XX Version 2.0.0
+ * Added support for taking a snapshot of a share.
+ * Fixed Exists() calls on Shares and Directories to now populate metadata. This was already being done for Files.
+
 2017.01.30 Version 1.0.0
  * Android Studio support via Gradle build system.
  * Updated tests from JUnit 3 to Android Junit 4.
