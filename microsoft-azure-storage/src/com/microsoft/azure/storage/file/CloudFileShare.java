@@ -838,7 +838,7 @@ public final class CloudFileShare {
                 // use the specified metadata if not null : otherwise share's metadata
                 snapshot.setMetadata(metadata != null ? metadata : share.metadata);
 
-                share.updatePropertiesFromResponse(this.getConnection());
+                snapshot.updatePropertiesFromResponse(this.getConnection());
 
                 return snapshot;
             }
@@ -1493,6 +1493,15 @@ public final class CloudFileShare {
      */
     public URI getUri() {
         return this.storageUri.getPrimaryUri();
+    }
+
+    /**
+     * Returns the snapshotID for this share.
+     * 
+     * @return The snapshotID as a string for this share.
+     */
+    public final String getSnapshot() {
+        return this.snapshotID;
     }
 
     /**
