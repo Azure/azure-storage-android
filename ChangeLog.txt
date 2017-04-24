@@ -1,4 +1,5 @@
 2017.XX.XX Version 2.0.0
+ * Added support for taking a snapshot of a share.
  * Fixed Exists() calls on Shares and Directories to now populate metadata. This was already being done for Files.
  * Fixed a bug that prevented setting content MD5 to true when creating a new file.
  * Fixed a bug where access conditions, options, and operation context were not being passed when calling openWriteExisting() on a page blob or a file.

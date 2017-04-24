@@ -143,7 +143,7 @@ public final class CloudFileShare {
      *             If a storage service error occurred.
      */
     public CloudFileShare(final StorageUri storageUri) throws StorageException {
-        this(storageUri, (StorageCredentials) null);
+        this(storageUri, (StorageCredentials) null, null);
     }
 
     /**
@@ -159,8 +159,8 @@ public final class CloudFileShare {
      * @throws StorageException
      *             If a storage service error occurred.
      */
-    public CloudFileShare(final URI uri, final StorageCredentials credentials/*, String snapshotID*/) throws StorageException {
-        this(new StorageUri(uri), credentials /*, snapshotID*/);
+    public CloudFileShare(final URI uri, final StorageCredentials credentials, String snapshotID) throws StorageException {
+        this(new StorageUri(uri), credentials, snapshotID);
     }
 
     /**
@@ -175,17 +175,17 @@ public final class CloudFileShare {
      * @throws StorageException
      *             If a storage service error occurred.
      */
-    public CloudFileShare(final StorageUri storageUri, final StorageCredentials credentials/*, String snapshotID*/) throws StorageException {
+    public CloudFileShare(final StorageUri storageUri, final StorageCredentials credentials, String snapshotID) throws StorageException {
         this.parseQueryAndVerify(storageUri, credentials);
 
-//        if (snapshotID != null) {
-//            if (this.snapshotID != null) {
-//                throw new IllegalArgumentException(SR.SNAPSHOT_QUERY_OPTION_ALREADY_DEFINED);
-//            }
-//            else {
-//                this.snapshotID = snapshotID;
-//            }
-//        }
+        if (snapshotID != null) {
+            if (this.snapshotID != null) {
+                throw new IllegalArgumentException(SR.SNAPSHOT_QUERY_OPTION_ALREADY_DEFINED);
+            }
+            else {
+                this.snapshotID = snapshotID;
+            }
+        }
     }
 
     /**
@@ -393,7 +393,7 @@ public final class CloudFileShare {
      *             If a storage service error occurred.
      */
     @DoesServiceRequest
-    protected void delete(DeleteShareSnapshotsOption deleteSnapshotsOption, AccessCondition accessCondition, FileRequestOptions options, OperationContext opContext)
+    public void delete(DeleteShareSnapshotsOption deleteSnapshotsOption, AccessCondition accessCondition, FileRequestOptions options, OperationContext opContext)
             throws StorageException {
         if (opContext == null) {
             opContext = new OperationContext();
@@ -506,7 +506,7 @@ public final class CloudFileShare {
      *             If a storage service error occurred.
      */
     @DoesServiceRequest
-    protected boolean deleteIfExists(DeleteShareSnapshotsOption deleteSnapshotsOption, AccessCondition accessCondition, FileRequestOptions options,
+    public boolean deleteIfExists(DeleteShareSnapshotsOption deleteSnapshotsOption, AccessCondition accessCondition, FileRequestOptions options,
             OperationContext opContext) throws StorageException {
         options = FileRequestOptions.populateAndApplyDefaults(options, this.fileServiceClient);
 
@@ -726,7 +726,7 @@ public final class CloudFileShare {
      *             If a storage service error occurred.
      */
     @DoesServiceRequest
-    protected final CloudFileShare createSnapshot() throws StorageException {
+    public final CloudFileShare createSnapshot() throws StorageException {
         return this
                 .createSnapshot(null /* metadata */, null /* accessCondition */, null /* options */, null /* opContext */);
     }
@@ -751,7 +751,7 @@ public final class CloudFileShare {
      *             If a storage service error occurred.
      */
     @DoesServiceRequest
-    protected final CloudFileShare createSnapshot(final AccessCondition accessCondition, FileRequestOptions options,
+    public final CloudFileShare createSnapshot(final AccessCondition accessCondition, FileRequestOptions options,
             OperationContext opContext) throws StorageException {
         return this.createSnapshot(null /* metadata */, accessCondition, options, opContext);
     }
@@ -778,7 +778,7 @@ public final class CloudFileShare {
      *             If a storage service error occurred.
      */
     @DoesServiceRequest
-    protected final CloudFileShare createSnapshot(final HashMap<String, String> metadata,
+    public final CloudFileShare createSnapshot(final HashMap<String, String> metadata,
             final AccessCondition accessCondition, FileRequestOptions options, OperationContext opContext)
             throws StorageException {
         assertNoSnapshot();
@@ -1500,7 +1500,7 @@ public final class CloudFileShare {
      * 
      * @return The snapshotID as a string for this share.
      */
-    protected final String getSnapshot() {
+    public final String getSnapshot() {
         return this.snapshotID;
     }
 
@@ -1511,7 +1511,7 @@ public final class CloudFileShare {
      *
      * @see DeleteSnapshotsOption
      */
-    protected final boolean isSnapshot() {
+    public final boolean isSnapshot() {
         return this.snapshotID != null;
     }
 

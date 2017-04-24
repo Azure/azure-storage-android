@@ -1087,6 +1087,7 @@ public final class CloudFileDirectory implements ListFileItem {
                 StorageUri parentURI = PathUtility.appendPathToUri(this.getShare().getStorageUri(), parentName);
 
                 this.parent = new CloudFileDirectory(parentURI, this.getServiceClient().getCredentials());
+                //this.parent = new CloudFileDirectory(parentURI, parentName, this.getShare());
             }
         }
         return this.parent;

@@ -1568,7 +1568,7 @@ public class CloudFileTests {
         source.delete();
     }
 
-    //@Test
+    @Test
     public void testUnsupportedFileApisWithinShareSnapshot() throws StorageException, URISyntaxException {
         CloudFileShare snapshot = this.share.createSnapshot();
         CloudFile file = snapshot.getRootDirectoryReference().getFileReference("file");
@@ -1628,7 +1628,7 @@ public class CloudFileTests {
         snapshot.delete();
     }
 
-    //@Test
+    @Test
     public void testSupportedFileApisInShareSnapshot() throws StorageException, URISyntaxException, UnsupportedEncodingException {
         CloudFileDirectory dir = this.share.getRootDirectoryReference().getDirectoryReference("dir1");
         dir.deleteIfExists();
