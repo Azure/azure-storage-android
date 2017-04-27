@@ -22,6 +22,7 @@ import com.microsoft.azure.storage.RetryNoRetry;
 import com.microsoft.azure.storage.SendingRequestEvent;
 import com.microsoft.azure.storage.StorageCredentialsAnonymous;
 import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
+import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageEvent;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.TestRunners.CloudTests;
@@ -1027,6 +1028,29 @@ public class CloudBlockBlobTests {
         byte[] target = new byte[4];
         blockBlobRef2.downloadRangeToByteArray(0L, 4L, target, 0);
         assertEquals("MDAwMDAwMDA=", blockBlobRef2.properties.getContentMD5());
+    }
+
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
+    public void testVerifyTransactionalMD5ValidationMissingOverallMD5() throws URISyntaxException, StorageException, IOException {
+        final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
+        final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
+
+        final int length = 2 * 1024 * 1024;
+        ByteArrayInputStream srcStream = BlobTestHelper.getRandomDataStream(length);
+        BlobRequestOptions options = new BlobRequestOptions();
+        options.setSingleBlobPutThresholdInBytes(1024*1024);
+        options.setDisableContentMD5Validation(true);
+        options.setStoreBlobContentMD5(false);
+
+        blockBlobRef.upload(srcStream, -1, null, options, null);
+
+        options.setDisableContentMD5Validation(false);
+        options.setStoreBlobContentMD5(true);
+        options.setUseTransactionalContentMD5(true);
+        final CloudBlockBlob blockBlobRef2 = this.container.getBlockBlobReference(blockBlobName);
+        blockBlobRef2.downloadRange(1024, (long)1024, new ByteArrayOutputStream(), null, options, null);
+        assertNull(blockBlobRef2.getProperties().getContentMD5());
     }
 
     @Test
