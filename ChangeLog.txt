@@ -1,6 +1,8 @@
 2017.XX.XX Version 1.1.0
  * Fixed a bug that prevented setting content MD5 to true when creating a new file.
  * Fixed a bug where access conditions, options, and operation context were not being passed when calling openWriteExisting() on a page blob or a file.
+ * Fixed a bug where an exception was being thrown on a range get of a blob or file when the options disableContentMD5Validation is set to false and useTransactionalContentMD5 is set to true and there is no overall MD5.
+ * Fixed a bug where retries were happening immediately if a sock exception was thrown.
 
 2017.01.30 Version 1.0.0
  * Android Studio support via Gradle build system.
