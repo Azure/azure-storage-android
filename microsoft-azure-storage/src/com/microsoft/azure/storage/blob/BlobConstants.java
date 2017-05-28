@@ -157,6 +157,11 @@ final class BlobConstants {
     public static final int DEFAULT_SINGLE_BLOB_PUT_THRESHOLD_IN_BYTES = 32 * Constants.MB;
 
     /**
+     * Specifies snapshots are to be included.
+     */
+    public static final String INCLUDE_SNAPSHOTS_VALUE = "include";
+
+    /**
      * XML element for the latest.
      */
     public static final String LATEST_ELEMENT = "Latest";
