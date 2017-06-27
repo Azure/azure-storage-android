@@ -1,5 +1,6 @@
 2017.XX.XX Version 1.1.0
  * For Premium Accounts only, added support for getting and setting the tier on a page blob. The tier can also be set when creating or copying from an existing page blob.
+ * Added ErrorReceivingResponseEvent which fires when a network error occurs before the responseReceivedEvent fires. If the responseReceivedEvent fires sucessfully, this new event will not fire.
  * Fixed a bug where the transactional MD5 check would fail when downloading a range of blob or file and the recovery action is performed on a subsection of the range.
  * Added support for server side encryption for File Service.
  * Fixed a bug that prevented setting content MD5 to true when creating a new file.
