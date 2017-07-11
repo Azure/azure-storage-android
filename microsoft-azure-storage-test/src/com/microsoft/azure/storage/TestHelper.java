@@ -14,6 +14,12 @@
  */
 package com.microsoft.azure.storage;
 
+<<<<<<< HEAD
+=======
+import static org.junit.Assert.*;
+import static org.junit.Assume.assumeNotNull;
+
+>>>>>>> 44be010... Premium Page Blob Tiers
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -23,9 +29,28 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+<<<<<<< HEAD
 import junit.framework.Assert;
 
 import com.microsoft.azure.storage.SharedAccessAccountPolicy;
+=======
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.junit.AssumptionViolatedException;
+import org.w3c.dom.DOMException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import com.microsoft.azure.keyvault.extensions.RsaKey;
+import com.microsoft.azure.keyvault.extensions.SymmetricKey;
+>>>>>>> 44be010... Premium Page Blob Tiers
 import com.microsoft.azure.storage.analytics.CloudAnalyticsClient;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.file.CloudFileClient;
@@ -57,6 +82,11 @@ public class TestHelper {
 	public static CloudTableClient createCloudTableClient() throws StorageException {
 		return getAccount().createCloudTableClient();
 	}
+
+    public static CloudBlobClient createPremiumCloudBlobClient() throws StorageException {
+        CloudBlobClient client = getPremiumBlobAccount().createCloudBlobClient();
+        return client;
+    }
 
     public static CloudBlobClient createCloudBlobClient(SharedAccessAccountPolicy policy, boolean useHttps)
             throws StorageException, InvalidKeyException, URISyntaxException {
@@ -241,7 +271,7 @@ public class TestHelper {
             return uri;
         }
     }
-    
+
     public static void assertURIsEqual(URI expected, URI actual, boolean ignoreQueryOrder) {
         if (expected == null) {
         	Assert.assertEquals(null, actual);
