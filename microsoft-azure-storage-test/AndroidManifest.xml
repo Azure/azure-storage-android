@@ -20,7 +20,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <instrumentation
-        android:name="android.test.InstrumentationTestRunner"
+        android:name="android.support.test.runner.AndroidJUnitRunner"
         android:targetPackage="com.microsoft.azure.android.test" />
 
     <application
