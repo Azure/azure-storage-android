@@ -32,6 +32,7 @@ import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.StorageUri;
 import com.microsoft.azure.storage.core.Base64;
+import com.microsoft.azure.storage.core.BaseResponse;
 import com.microsoft.azure.storage.core.ExecutionEngine;
 import com.microsoft.azure.storage.core.RequestLocationMode;
 import com.microsoft.azure.storage.core.SR;

@@ -96,7 +96,7 @@ public final class Utility {
     /**
      * Stores a reference to the RFC1123 date/time pattern.
      */
-    private static final String RFC1123_GMT_PATTERN = "EEE, dd MMM yyyy HH:mm:ss 'GMT'";
+    private static final String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
 
     /**
      * Stores a reference to the ISO8601 date/time pattern.
@@ -1174,12 +1174,8 @@ public final class Utility {
      */
     public static StreamMd5AndLength writeToOutputStream(final InputStream sourceStream, final OutputStream outStream,
             long writeLength, final boolean rewindSourceStream, final boolean calculateMD5, OperationContext opContext,
-<<<<<<< HEAD
-            final RequestOptions options, StorageRequest<?, ?, Integer> request) throws IOException, StorageException {
-=======
             final RequestOptions options, final Boolean shouldFlush, StorageRequest<?, ?, Integer> request, StreamMd5AndLength descriptor)
             throws IOException, StorageException {
->>>>>>> 1c67198... Fix transactional MD5 validations on recovery
         if (rewindSourceStream && sourceStream.markSupported()) {
             sourceStream.reset();
             sourceStream.mark(Constants.MAX_MARK_LENGTH);
@@ -1238,7 +1234,7 @@ public final class Utility {
             count = sourceStream.read(retrievedBuff, 0, nextCopy);
         }
 
-        if (outStream != null) {
+        if (outStream != null && shouldFlush) {
             outStream.flush();
         }
 

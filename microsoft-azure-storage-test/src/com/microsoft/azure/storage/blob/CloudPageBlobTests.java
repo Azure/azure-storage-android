@@ -414,7 +414,7 @@ public class CloudPageBlobTests {
             blob1.upload(srcStream, length, accessCondition, null, null);
         }
         catch (StorageException ex) {
-            Assert.assertEquals(HttpURLConnection.HTTP_PRECON_FAILED, ex.getHttpStatusCode());
+            assertEquals(HttpURLConnection.HTTP_PRECON_FAILED, ex.getHttpStatusCode());
         }
 
         srcStream.reset();
@@ -429,7 +429,7 @@ public class CloudPageBlobTests {
             blob1.upload(srcStream, length, accessCondition, null, null);
         }
         catch (StorageException ex) {
-            Assert.assertEquals(HttpURLConnection.HTTP_PRECON_FAILED, ex.getHttpStatusCode());
+            assertEquals(HttpURLConnection.HTTP_PRECON_FAILED, ex.getHttpStatusCode());
         }
 
         srcStream.reset();

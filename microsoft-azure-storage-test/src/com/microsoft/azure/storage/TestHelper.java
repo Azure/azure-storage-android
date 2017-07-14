@@ -14,12 +14,6 @@
  */
 package com.microsoft.azure.storage;
 
-<<<<<<< HEAD
-=======
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeNotNull;
-
->>>>>>> 44be010... Premium Page Blob Tiers
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -29,28 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
-<<<<<<< HEAD
 import junit.framework.Assert;
 
-import com.microsoft.azure.storage.SharedAccessAccountPolicy;
-=======
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.junit.AssumptionViolatedException;
-import org.w3c.dom.DOMException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import com.microsoft.azure.keyvault.extensions.RsaKey;
-import com.microsoft.azure.keyvault.extensions.SymmetricKey;
->>>>>>> 44be010... Premium Page Blob Tiers
 import com.microsoft.azure.storage.analytics.CloudAnalyticsClient;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.file.CloudFileClient;
@@ -59,11 +33,16 @@ import com.microsoft.azure.storage.table.CloudTableClient;
 
 public class TestHelper {
 	private static CloudStorageAccount account;
+    private static CloudStorageAccount premiumAccount;
 
 	public static String connectionString;
+    public static String premiumConnectionString;
 	public static String accountName;
+    public static String premiumAccountName;
 	public static String accountKey;
+    public static String premiumAccountKey;
 	public static StorageUri blobEndpoint;
+    public static StorageUri premiumBlobEndpoint;
 	public static StorageUri queueEndpoint;
 	public static StorageUri tableEndpoint;
 
@@ -213,6 +192,38 @@ public class TestHelper {
 		}
 		return account;
 	}
+
+    private static CloudStorageAccount getPremiumBlobAccount() throws StorageException {
+        // Only do this the first time TestBase is called as storage account is static
+        if (premiumAccount == null) {
+            // if connectionString is set, use that as an account string
+            // if accountName and accountKey are set, use those to setup the account with default endpoints
+            // if all of the endpoints are set, use those to create custom endpoints
+            try {
+                if (premiumConnectionString != null) {
+                    premiumAccount = CloudStorageAccount.parse(connectionString);
+                }
+                else if (premiumAccountName != null && premiumAccountKey != null) {
+                    StorageCredentialsAccountAndKey credentials = new StorageCredentialsAccountAndKey(premiumAccountName, premiumAccountKey);
+                    if(premiumBlobEndpoint == null){
+                        premiumAccount = new CloudStorageAccount(credentials);
+                    } else {
+                        premiumAccount = new CloudStorageAccount(credentials,blobEndpoint, null , null);
+                    }
+                } else {
+                    throw new StorageException("CredentialsNotSpecified",
+                            "Credentials must be specified in the TestHelper class in order to run tests.",
+                            Constants.HeaderConstants.HTTP_UNUSED_306,
+                            null,
+                            null);
+                }
+            }
+            catch (Exception e) {
+                throw StorageException.translateException(null, e, null);
+            }
+        }
+        return premiumAccount;
+    }
 
     protected static void enableFiddler() {
         System.setProperty("http.proxyHost", "localhost");
