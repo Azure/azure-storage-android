@@ -1,15 +1,7 @@
-<<<<<<< HEAD
 2017.XX.XX Version 1.1.0
  * For Premium Accounts only, added support for getting and setting the tier on a page blob. The tier can also be set when creating or copying from an existing page blob.
-
  * Fixed a bug where the transactional MD5 check would fail when downloading a range of blob or file and the recovery action is performed on a subsection of the range.
-=======
-2017.XX.XX Version X.X.0
  * Added support for server side encryption for File Service.
-2017.05.23 Version 5.2.0
- * Fixed Exists() calls on Shares and Directories to now populate metadata. This was already being done for Files.
- * Changed blob constants to support up to 256 MB on put blob for block blobs. The default value for put blob threshold has also been updated to half of the maximum, or 128 MB currently.
->>>>>>> 6dea7a9... Encryption at REST for files
  * Fixed a bug that prevented setting content MD5 to true when creating a new file.
  * Fixed a bug where access conditions, options, and operation context were not being passed when calling openWriteExisting() on a page blob or a file.
  * Fixed a bug where an exception was being thrown on a range get of a blob or file when the options disableContentMD5Validation is set to false and useTransactionalContentMD5 is set to true and there is no overall MD5.
