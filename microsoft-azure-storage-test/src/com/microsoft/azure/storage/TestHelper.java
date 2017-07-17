@@ -47,8 +47,8 @@ public class TestHelper {
 	public static StorageUri tableEndpoint;
 
 	public static CloudBlobClient createCloudBlobClient() throws StorageException {
-		return getAccount().createCloudBlobClient();
-	}
+        return getAccount().createCloudBlobClient();
+    }
 	
 	public static CloudFileClient createCloudFileClient() throws StorageException {
 		return getAccount().createCloudFileClient();
@@ -201,14 +201,14 @@ public class TestHelper {
             // if all of the endpoints are set, use those to create custom endpoints
             try {
                 if (premiumConnectionString != null) {
-                    premiumAccount = CloudStorageAccount.parse(connectionString);
+                    premiumAccount = CloudStorageAccount.parse(premiumConnectionString);
                 }
                 else if (premiumAccountName != null && premiumAccountKey != null) {
                     StorageCredentialsAccountAndKey credentials = new StorageCredentialsAccountAndKey(premiumAccountName, premiumAccountKey);
                     if(premiumBlobEndpoint == null){
                         premiumAccount = new CloudStorageAccount(credentials);
                     } else {
-                        premiumAccount = new CloudStorageAccount(credentials,blobEndpoint, null , null);
+                        premiumAccount = new CloudStorageAccount(credentials, premiumBlobEndpoint, null , null);
                     }
                 } else {
                     throw new StorageException("CredentialsNotSpecified",
