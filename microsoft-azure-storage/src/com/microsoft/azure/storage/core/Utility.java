@@ -66,19 +66,6 @@ import com.microsoft.azure.storage.StorageExtendedErrorInformation;
 public final class Utility {
 
     /**
-     * Thread local for storing GMT date format.
-     */
-    private static ThreadLocal<DateFormat>
-        RFC1123_GMT_DATE_TIME_FORMATTER = new ThreadLocal<DateFormat>() {
-        @Override
-        protected DateFormat initialValue() {
-            final DateFormat formatter = new SimpleDateFormat(RFC1123_PATTERN, LOCALE_US);
-            formatter.setTimeZone(GMT_ZONE);
-            return formatter;
-        }
-    };
-
-    /**
      * Stores a reference to the GMT time zone.
      */
     public static final TimeZone GMT_ZONE = TimeZone.getTimeZone("GMT");
@@ -96,7 +83,7 @@ public final class Utility {
     /**
      * Stores a reference to the RFC1123 date/time pattern.
      */
-    private static final String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
+    private static final String RFC1123_GMT_PATTERN = "EEE, dd MMM yyyy HH:mm:ss 'GMT'";
 
     /**
      * Stores a reference to the ISO8601 date/time pattern.
@@ -496,7 +483,9 @@ public final class Utility {
      *         pattern.
      */
     public static String getGMTTime(final Date date) {
-        return RFC1123_GMT_DATE_TIME_FORMATTER.get().format(date);
+        final DateFormat formatter = new SimpleDateFormat(RFC1123_GMT_PATTERN, LOCALE_US);
+        formatter.setTimeZone(GMT_ZONE);
+        return formatter.format(date);
     }
 
     /**
@@ -693,7 +682,9 @@ public final class Utility {
      *             If the specified string is invalid.
      */
     public static Date parseRFC1123DateFromStringInGMT(final String value) throws ParseException {
-        return RFC1123_GMT_DATE_TIME_FORMATTER.get().parse(value);
+        final DateFormat format = new SimpleDateFormat(RFC1123_GMT_PATTERN, Utility.LOCALE_US);
+        format.setTimeZone(GMT_ZONE);
+        return format.parse(value);
     }
 
     /**
