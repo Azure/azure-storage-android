@@ -1124,7 +1124,7 @@ public final class Utility {
             long writeLength, final boolean rewindSourceStream, final boolean calculateMD5, OperationContext opContext,
             final RequestOptions options, final Boolean shouldFlush) throws IOException, StorageException {
         return writeToOutputStream(sourceStream, outStream, writeLength, rewindSourceStream, calculateMD5, opContext,
-                options, shouldFlush, null /*StorageRequest*/, null /* descriptor */);
+                options, null /*StorageRequest*/, null /* descriptor */);
     }
 
     /**
@@ -1165,7 +1165,7 @@ public final class Utility {
      */
     public static StreamMd5AndLength writeToOutputStream(final InputStream sourceStream, final OutputStream outStream,
             long writeLength, final boolean rewindSourceStream, final boolean calculateMD5, OperationContext opContext,
-            final RequestOptions options, final Boolean shouldFlush, StorageRequest<?, ?, Integer> request, StreamMd5AndLength descriptor)
+            final RequestOptions options, StorageRequest<?, ?, Integer> request, StreamMd5AndLength descriptor)
             throws IOException, StorageException {
         if (rewindSourceStream && sourceStream.markSupported()) {
             sourceStream.reset();
@@ -1225,7 +1225,7 @@ public final class Utility {
             count = sourceStream.read(retrievedBuff, 0, nextCopy);
         }
 
-        if (outStream != null && shouldFlush) {
+        if (outStream != null) {
             outStream.flush();
         }
 
