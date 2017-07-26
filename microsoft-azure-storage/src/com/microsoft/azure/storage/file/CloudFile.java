@@ -50,6 +50,7 @@ import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.core.Base64;
+import com.microsoft.azure.storage.core.BaseResponse;
 import com.microsoft.azure.storage.core.ExecutionEngine;
 import com.microsoft.azure.storage.core.Logger;
 import com.microsoft.azure.storage.core.NetworkInputStream;
@@ -659,6 +660,7 @@ public final class CloudFile implements ListFileItem {
                 }
 
                 file.updateEtagAndLastModifiedFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
 
@@ -1401,7 +1403,7 @@ public final class CloudFile implements ListFileItem {
                     // writeToOutputStream will update the currentRequestByteCount on this request in case a retry
                     // is needed and download should resume from that point
                     final StreamMd5AndLength descriptor = Utility.writeToOutputStream(streamRef, outStream, -1, false,
-                            validateMD5, context, options, this);
+                            validateMD5, context, options, true, this, this.getCurrentDescriptor());
 
                     // length was already checked by the NetworkInputStream, now check Md5
                     if (validateMD5 && !this.getContentMD5().equals(descriptor.getMd5())) {
@@ -2270,6 +2272,7 @@ public final class CloudFile implements ListFileItem {
                 }
 
                 file.updateEtagAndLastModifiedFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
         };
@@ -2360,6 +2363,7 @@ public final class CloudFile implements ListFileItem {
                 }
 
                 file.updateEtagAndLastModifiedFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
         };
@@ -2444,6 +2448,7 @@ public final class CloudFile implements ListFileItem {
                 }
 
                 file.updateEtagAndLastModifiedFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
         };
@@ -2524,6 +2529,7 @@ public final class CloudFile implements ListFileItem {
 
                 file.getProperties().setLength(size);
                 file.updateEtagAndLastModifiedFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
         };

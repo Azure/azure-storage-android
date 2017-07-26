@@ -25,7 +25,6 @@ import java.util.Random;
 
 import junit.framework.Assert;
 
-import com.microsoft.azure.storage.SharedAccessAccountPolicy;
 import com.microsoft.azure.storage.analytics.CloudAnalyticsClient;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.file.CloudFileClient;
@@ -34,17 +33,22 @@ import com.microsoft.azure.storage.table.CloudTableClient;
 
 public class TestHelper {
 	private static CloudStorageAccount account;
+    private static CloudStorageAccount premiumAccount;
 
 	public static String connectionString;
+    public static String premiumConnectionString;
 	public static String accountName;
+    public static String premiumAccountName;
 	public static String accountKey;
+    public static String premiumAccountKey;
 	public static StorageUri blobEndpoint;
+    public static StorageUri premiumBlobEndpoint;
 	public static StorageUri queueEndpoint;
 	public static StorageUri tableEndpoint;
 
 	public static CloudBlobClient createCloudBlobClient() throws StorageException {
-		return getAccount().createCloudBlobClient();
-	}
+        return getAccount().createCloudBlobClient();
+    }
 	
 	public static CloudFileClient createCloudFileClient() throws StorageException {
 		return getAccount().createCloudFileClient();
@@ -57,6 +61,11 @@ public class TestHelper {
 	public static CloudTableClient createCloudTableClient() throws StorageException {
 		return getAccount().createCloudTableClient();
 	}
+
+    public static CloudBlobClient createPremiumCloudBlobClient() throws StorageException {
+        CloudBlobClient client = getPremiumBlobAccount().createCloudBlobClient();
+        return client;
+    }
 
     public static CloudBlobClient createCloudBlobClient(SharedAccessAccountPolicy policy, boolean useHttps)
             throws StorageException, InvalidKeyException, URISyntaxException {
@@ -184,6 +193,38 @@ public class TestHelper {
 		return account;
 	}
 
+    private static CloudStorageAccount getPremiumBlobAccount() throws StorageException {
+        // Only do this the first time TestBase is called as storage account is static
+        if (premiumAccount == null) {
+            // if connectionString is set, use that as an account string
+            // if accountName and accountKey are set, use those to setup the account with default endpoints
+            // if all of the endpoints are set, use those to create custom endpoints
+            try {
+                if (premiumConnectionString != null) {
+                    premiumAccount = CloudStorageAccount.parse(premiumConnectionString);
+                }
+                else if (premiumAccountName != null && premiumAccountKey != null) {
+                    StorageCredentialsAccountAndKey credentials = new StorageCredentialsAccountAndKey(premiumAccountName, premiumAccountKey);
+                    if(premiumBlobEndpoint == null){
+                        premiumAccount = new CloudStorageAccount(credentials);
+                    } else {
+                        premiumAccount = new CloudStorageAccount(credentials, premiumBlobEndpoint, null , null);
+                    }
+                } else {
+                    throw new StorageException("CredentialsNotSpecified",
+                            "Credentials must be specified in the TestHelper class in order to run tests.",
+                            Constants.HeaderConstants.HTTP_UNUSED_306,
+                            null,
+                            null);
+                }
+            }
+            catch (Exception e) {
+                throw StorageException.translateException(null, e, null);
+            }
+        }
+        return premiumAccount;
+    }
+
     protected static void enableFiddler() {
         System.setProperty("http.proxyHost", "localhost");
         System.setProperty("http.proxyPort", "8888");
@@ -241,7 +282,7 @@ public class TestHelper {
             return uri;
         }
     }
-    
+
     public static void assertURIsEqual(URI expected, URI actual, boolean ignoreQueryOrder) {
         if (expected == null) {
         	Assert.assertEquals(null, actual);

@@ -64,6 +64,7 @@ import com.microsoft.azure.storage.StorageExtendedErrorInformation;
  * RESERVED FOR INTERNAL USE. A class which provides utility methods.
  */
 public final class Utility {
+
     /**
      * Stores a reference to the GMT time zone.
      */
@@ -473,11 +474,11 @@ public final class Utility {
 
     /**
      * Returns the GTM date/time String for the specified value using the RFC1123 pattern.
-     * 
+     *
      * @param date
      *            A <code>Date</code> object that represents the date to convert to GMT date/time in the RFC1123
      *            pattern.
-     * 
+     *
      * @return A <code>String</code> that represents the GMT date/time for the specified value using the RFC1123
      *         pattern.
      */
@@ -487,7 +488,6 @@ public final class Utility {
         return formatter.format(date);
     }
 
-    
     /**
      * Returns the UTC date/time String for the specified value using Java's version of the ISO8601 pattern,
      * which is limited to millisecond precision.
@@ -1088,7 +1088,43 @@ public final class Utility {
             long writeLength, final boolean rewindSourceStream, final boolean calculateMD5, OperationContext opContext,
             final RequestOptions options) throws IOException, StorageException {
         return writeToOutputStream(sourceStream, outStream, writeLength, rewindSourceStream, calculateMD5, opContext,
-                options, null /*StorageRequest*/);
+                options, true);
+    }
+
+    /**
+     * Reads data from an input stream and writes it to an output stream, calculates the length of the data written, and
+     * optionally calculates the MD5 hash for the data.
+     * 
+     * @param sourceStream
+     *            An <code>InputStream</code> object that represents the input stream to use as the source.
+     * @param outStream
+     *            An <code>OutputStream</code> object that represents the output stream to use as the destination.
+     * @param writeLength
+     *            The number of bytes to read from the stream.
+     * @param rewindSourceStream
+     *            <code>true</code> if the input stream should be rewound <strong>before</strong> it is read; otherwise,
+     *            <code>false</code>
+     * @param calculateMD5
+     *            <code>true</code> if an MD5 hash will be calculated; otherwise, <code>false</code>.
+     * @param opContext
+     *            An {@link OperationContext} object that represents the context for the current operation. This object
+     *            is used to track requests to the storage service, and to provide additional runtime information about
+     *            the operation.
+     * @param options
+     *            A {@link RequestOptions} object that specifies any additional options for the request. Namely, the
+     *            maximum execution time.
+     * @return A {@link StreamMd5AndLength} object that contains the output stream length, and optionally the MD5 hash.
+     * 
+     * @throws IOException
+     *             If an I/O error occurs.
+     * @throws StorageException
+     *             If a storage service error occurred.
+     */
+    public static StreamMd5AndLength writeToOutputStream(final InputStream sourceStream, final OutputStream outStream,
+            long writeLength, final boolean rewindSourceStream, final boolean calculateMD5, OperationContext opContext,
+            final RequestOptions options, final Boolean shouldFlush) throws IOException, StorageException {
+        return writeToOutputStream(sourceStream, outStream, writeLength, rewindSourceStream, calculateMD5, opContext,
+                options, null /*StorageRequest*/, null /* descriptor */);
     }
 
     /**
@@ -1115,6 +1151,11 @@ public final class Utility {
      *            maximum execution time.
      * @param request
      *            Used by download resume to set currentRequestByteCount on the request. Otherwise, null is always used.
+     * @param descriptor
+     *                A {@Link StreamMd5AndLength} object to append to in the case of recovery action or null if this is not called
+     *                from a recovery. This value needs to be passed for recovery in case part of the body has already been read,
+     *                the recovery will attempt to download the remaining bytes but will do MD5 validation on the originally
+     *                requested range size.
      * @return A {@link StreamMd5AndLength} object that contains the output stream length, and optionally the MD5 hash.
      * 
      * @throws IOException
@@ -1124,22 +1165,27 @@ public final class Utility {
      */
     public static StreamMd5AndLength writeToOutputStream(final InputStream sourceStream, final OutputStream outStream,
             long writeLength, final boolean rewindSourceStream, final boolean calculateMD5, OperationContext opContext,
-            final RequestOptions options, StorageRequest<?, ?, Integer> request) throws IOException, StorageException {
+            final RequestOptions options, StorageRequest<?, ?, Integer> request, StreamMd5AndLength descriptor)
+            throws IOException, StorageException {
         if (rewindSourceStream && sourceStream.markSupported()) {
             sourceStream.reset();
             sourceStream.mark(Constants.MAX_MARK_LENGTH);
         }
 
-        final StreamMd5AndLength retVal = new StreamMd5AndLength();
-
-        if (calculateMD5) {
-            try {
-                retVal.setDigest(MessageDigest.getInstance("MD5"));
+        if (descriptor == null) {
+            descriptor = new StreamMd5AndLength();
+            if (calculateMD5) {
+                try {
+                    descriptor.setDigest(MessageDigest.getInstance("MD5"));
+                }
+                catch (final NoSuchAlgorithmException e) {
+                    // This wont happen, throw fatal.
+                    throw Utility.generateNewUnexpectedStorageException(e);
+                }
             }
-            catch (final NoSuchAlgorithmException e) {
-                // This wont happen, throw fatal.
-                throw Utility.generateNewUnexpectedStorageException(e);
-            }
+        }
+        else {
+            descriptor.setMd5(null);
         }
 
         if (writeLength < 0) {
@@ -1164,17 +1210,18 @@ public final class Utility {
             }
 
             if (calculateMD5) {
-                retVal.getDigest().update(retrievedBuff, 0, count);
+                descriptor.getDigest().update(retrievedBuff, 0, count);
             }
 
-            retVal.setLength(retVal.getLength() + count);
-            retVal.setCurrentOperationByteCount(retVal.getCurrentOperationByteCount() + count);
+            descriptor.setLength(descriptor.getLength() + count);
+            descriptor.setCurrentOperationByteCount(descriptor.getCurrentOperationByteCount() + count);
 
             if (request != null) {
                 request.setCurrentRequestByteCount(request.getCurrentRequestByteCount() + count);
+                request.setCurrentDescriptor(descriptor);
             }
 
-            nextCopy = (int) Math.min(retrievedBuff.length, writeLength - retVal.getLength());
+            nextCopy = (int) Math.min(retrievedBuff.length, writeLength - descriptor.getLength());
             count = sourceStream.read(retrievedBuff, 0, nextCopy);
         }
 
@@ -1182,7 +1229,7 @@ public final class Utility {
             outStream.flush();
         }
 
-        return retVal;
+        return descriptor;
     }
 
     /**
