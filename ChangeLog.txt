@@ -1,4 +1,4 @@
-2017.07.26 Version 1.1.0
+2017.07.31 Version 1.1.0
  * Support for 2017-04-17 REST version. Please see our REST API documentation and blogs for information about the related added features.
  * For Premium Accounts only, added support for getting and setting the tier on a page blob. The tier can also be set when creating or copying from an existing page blob.
  * Fixed a bug where the transactional MD5 check would fail when downloading a range of blob or file and the recovery action is performed on a subsection of the range.
