@@ -32,6 +32,7 @@ import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.StorageCredentials;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.StorageUri;
+import com.microsoft.azure.storage.core.BaseResponse;
 import com.microsoft.azure.storage.core.ExecutionEngine;
 import com.microsoft.azure.storage.core.SR;
 import com.microsoft.azure.storage.core.StorageRequest;
@@ -307,7 +308,7 @@ public final class CloudAppendBlob extends CloudBlob {
                 }
 
                 blob.updateEtagAndLastModifiedFromResponse(this.getConnection());
-                this.getResult().setRequestServiceEncrypted(CloudBlob.isServerRequestEncrypted(this.getConnection()));
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 blob.getProperties().setLength(0);
                 return null;
             }
@@ -455,7 +456,7 @@ public final class CloudAppendBlob extends CloudBlob {
                 blob.updateEtagAndLastModifiedFromResponse(this.getConnection());
                 blob.updateCommittedBlockCountFromResponse(this.getConnection());
 
-                this.getResult().setRequestServiceEncrypted(CloudBlob.isServerRequestEncrypted(this.getConnection()));
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return appendOffset;
             }
 

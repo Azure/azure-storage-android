@@ -1,3 +1,13 @@
+2017.07.31 Version 1.1.0
+ * Support for 2017-04-17 REST version. Please see our REST API documentation and blogs for information about the related added features.
+ * For Premium Accounts only, added support for getting and setting the tier on a page blob. The tier can also be set when creating or copying from an existing page blob.
+ * Fixed a bug where the transactional MD5 check would fail when downloading a range of blob or file and the recovery action is performed on a subsection of the range.
+ * Added support for server side encryption for File Service.
+ * Fixed a bug that prevented setting content MD5 to true when creating a new file.
+ * Fixed a bug where access conditions, options, and operation context were not being passed when calling openWriteExisting() on a page blob or a file.
+ * Fixed a bug where an exception was being thrown on a range get of a blob or file when the options disableContentMD5Validation is set to false and useTransactionalContentMD5 is set to true and there is no overall MD5.
+ * Fixed a bug where retries were happening immediately if a sock exception was thrown.
+
 2017.01.30 Version 1.0.0
  * Android Studio support via Gradle build system.
  * Updated tests from JUnit 3 to Android Junit 4.

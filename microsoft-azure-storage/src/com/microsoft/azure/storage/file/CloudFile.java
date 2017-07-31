@@ -50,6 +50,7 @@ import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.CloudBlob;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.core.Base64;
+import com.microsoft.azure.storage.core.BaseResponse;
 import com.microsoft.azure.storage.core.ExecutionEngine;
 import com.microsoft.azure.storage.core.Logger;
 import com.microsoft.azure.storage.core.NetworkInputStream;
@@ -659,6 +660,7 @@ public final class CloudFile implements ListFileItem {
                 }
 
                 file.updateEtagAndLastModifiedFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
 
@@ -1354,18 +1356,18 @@ public final class CloudFile implements ListFileItem {
                     final FileAttributes retrievedAttributes = FileResponse.getFileAttributes(this.getConnection(),
                             file.getStorageUri());
 
-                    if (!options.getDisableContentMD5Validation() && options.getUseTransactionalContentMD5()
-                            && Utility.isNullOrEmpty(retrievedAttributes.getProperties().getContentMD5())) {
-                        throw new StorageException(StorageErrorCodeStrings.MISSING_MD5_HEADER, SR.MISSING_MD5,
-                                Constants.HeaderConstants.HTTP_UNUSED_306, null, null);
-                    }
-
                     file.properties = retrievedAttributes.getProperties();
                     file.metadata = retrievedAttributes.getMetadata();
 
                     // Need to store the Content MD5 in case we fail part way through.
                     // We would still need to verify the entire range.
                     this.setContentMD5(this.getConnection().getHeaderField(Constants.HeaderConstants.CONTENT_MD5));
+
+                    if (!options.getDisableContentMD5Validation() && options.getUseTransactionalContentMD5()
+                            && Utility.isNullOrEmpty(this.getContentMD5())) {
+                        throw new StorageException(StorageErrorCodeStrings.MISSING_MD5_HEADER, SR.MISSING_MD5,
+                                Constants.HeaderConstants.HTTP_UNUSED_306, null, null);
+                    }
 
                     this.setLockedETag(file.properties.getEtag());
                     this.setArePropertiesPopulated(true);
@@ -1401,7 +1403,7 @@ public final class CloudFile implements ListFileItem {
                     // writeToOutputStream will update the currentRequestByteCount on this request in case a retry
                     // is needed and download should resume from that point
                     final StreamMd5AndLength descriptor = Utility.writeToOutputStream(streamRef, outStream, -1, false,
-                            validateMD5, context, options, this);
+                            validateMD5, context, options, this, this.getCurrentDescriptor());
 
                     // length was already checked by the NetworkInputStream, now check Md5
                     if (validateMD5 && !this.getContentMD5().equals(descriptor.getMd5())) {
@@ -1855,8 +1857,7 @@ public final class CloudFile implements ListFileItem {
     @DoesServiceRequest
     public FileOutputStream openWriteExisting(AccessCondition accessCondition, FileRequestOptions options,
             OperationContext opContext) throws StorageException {
-        return this
-                .openOutputStreamInternal(null /* length */, null /* accessCondition */, null /* options */, null /* opContext */);
+        return this.openOutputStreamInternal(null /* length */, accessCondition, options, opContext);
     }
 
     /**
@@ -1946,13 +1947,13 @@ public final class CloudFile implements ListFileItem {
         options = FileRequestOptions.populateAndApplyDefaults(options, this.fileServiceClient, false /* setStartTime */);
 
         if (length != null) {
+            this.create(length, accessCondition, options, opContext);
+        }
+        else {
             if (options.getStoreFileContentMD5()) {
                 throw new IllegalArgumentException(SR.FILE_MD5_NOT_POSSIBLE);
             }
 
-            this.create(length, accessCondition, options, opContext);
-        }
-        else {
             this.downloadAttributes(accessCondition, options, opContext);
             length = this.getProperties().getLength();
         }
@@ -2271,6 +2272,7 @@ public final class CloudFile implements ListFileItem {
                 }
 
                 file.updateEtagAndLastModifiedFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
         };
@@ -2361,6 +2363,7 @@ public final class CloudFile implements ListFileItem {
                 }
 
                 file.updateEtagAndLastModifiedFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
         };
@@ -2445,6 +2448,7 @@ public final class CloudFile implements ListFileItem {
                 }
 
                 file.updateEtagAndLastModifiedFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
         };
@@ -2525,6 +2529,7 @@ public final class CloudFile implements ListFileItem {
 
                 file.getProperties().setLength(size);
                 file.updateEtagAndLastModifiedFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
         };
@@ -2557,8 +2562,8 @@ public final class CloudFile implements ListFileItem {
      * @param sourceStream
      *            An {@link InputStream} object to read from.
      * @param length
-     *            A <code>long</code> which represents the length, in bytes, of the stream data. This must be great than
-     *            zero.
+     *            A <code>long</code> which represents the length, in bytes, of the stream data. This must be greater than
+     *            or equal to zero.
      * @param accessCondition
      *            An {@link AccessCondition} object which represents the access conditions for the file.
      * @param options
@@ -2584,7 +2589,7 @@ public final class CloudFile implements ListFileItem {
 
         options = FileRequestOptions.populateAndApplyDefaults(options, this.fileServiceClient);
 
-        if (length <= 0) {
+        if (length < 0) {
             throw new IllegalArgumentException(SR.INVALID_FILE_LENGTH);
         }
 

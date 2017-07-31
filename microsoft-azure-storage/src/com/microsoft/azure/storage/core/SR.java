@@ -80,7 +80,7 @@ public class SR {
     public static final String INVALID_CORS_RULE = "A CORS rule must contain at least one allowed origin and allowed method, and MaxAgeInSeconds cannot have a value less than zero.";
     public static final String INVALID_DATE_STRING = "Invalid Date String: %s.";
     public static final String INVALID_EDMTYPE_VALUE = "Invalid value '%s' for EdmType.";
-    public static final String INVALID_FILE_LENGTH = "File length must be greater than 0 bytes.";
+    public static final String INVALID_FILE_LENGTH = "File length must be greater than or equal to 0 bytes.";
     public static final String INVALID_GEO_REPLICATION_STATUS = "Null or Invalid geo-replication status in response: %s.";
     public static final String INVALID_IP_ADDRESS = "Error when parsing IPv4 address: IP address '%s' is invalid.";
     public static final String INVALID_KEY = "Storage Key is not a valid base64 encoded string.";

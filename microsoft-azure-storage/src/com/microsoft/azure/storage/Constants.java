@@ -575,7 +575,7 @@ public final class Constants {
         /**
          * The current storage version header value.
          */
-        public static final String TARGET_STORAGE_VERSION = "2016-05-31";
+        public static final String TARGET_STORAGE_VERSION = "2017-04-17";
 
         /**
          * The header that specifies the next visible time for a queue message.
@@ -595,7 +595,7 @@ public final class Constants {
         /**
          * Specifies the value to use for UserAgent header.
          */
-        public static final String USER_AGENT_VERSION = "1.0.0";
+        public static final String USER_AGENT_VERSION = "1.1.0";
 
         /**
          * The default type for content-type and accept
@@ -822,7 +822,12 @@ public final class Constants {
      * XML element for an access policy.
      */
     public static final String ACCESS_POLICY = "AccessPolicy";
-    
+
+    /**
+     * XML element for access tier.
+     */
+    public static final String ACCESS_TIER = "AccessTier";
+
     /**
      * Buffer width used to copy data to output streams.
      */
