@@ -18,6 +18,10 @@ package com.microsoft.azure.storage.file;
  * Specifies which details to include when listing the shares in this storage account.
  */
 public enum ShareListingDetails {
+    /**
+     * Specifies including all available details.
+     */
+    ALL(1),
 
     /**
      * Specifies including share metadata.
@@ -25,9 +29,9 @@ public enum ShareListingDetails {
     METADATA(1),
 
     /**
-     * Specifies listing share snapshots.
+     * Specifies including no additional details.
      */
-    SNAPSHOTS(2);
+    NONE(0);
 
     /**
      * Returns the value of this enum.

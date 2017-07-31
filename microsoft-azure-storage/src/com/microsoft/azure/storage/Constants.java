@@ -439,12 +439,7 @@ public final class Constants {
          * The blob sequence number equal condition header.
          */
         public static final String IF_SEQUENCE_NUMBER_EQUAL = PREFIX_FOR_STORAGE_HEADER + "if-sequence-number-eq";
-
-        /**
-         * Specifies snapshots are to be included.
-         */
-        public static final String INCLUDE_SNAPSHOTS_VALUE = "include";
-
+        
         /**
          * The header that specifies the lease action to perform
          */
@@ -580,7 +575,7 @@ public final class Constants {
         /**
          * The current storage version header value.
          */
-        public static final String TARGET_STORAGE_VERSION = "2016-10-16";
+        public static final String TARGET_STORAGE_VERSION = "2017-04-17";
 
         /**
          * The header that specifies the next visible time for a queue message.
@@ -600,7 +595,7 @@ public final class Constants {
         /**
          * Specifies the value to use for UserAgent header.
          */
-        public static final String USER_AGENT_VERSION = "1.0.0";
+        public static final String USER_AGENT_VERSION = "1.1.0";
 
         /**
          * The default type for content-type and accept
@@ -753,11 +748,6 @@ public final class Constants {
         public static final String SNAPSHOT = "snapshot";
 
         /**
-         * The query component for snapshot time.
-         */
-        public static final String SHARE_SNAPSHOT = "sharesnapshot";
-
-        /**
          * The query component for the SAS start partition key.
          */
         public static final String START_PARTITION_KEY = "spk";
@@ -832,7 +822,12 @@ public final class Constants {
      * XML element for an access policy.
      */
     public static final String ACCESS_POLICY = "AccessPolicy";
-    
+
+    /**
+     * XML element for access tier.
+     */
+    public static final String ACCESS_TIER = "AccessTier";
+
     /**
      * Buffer width used to copy data to output streams.
      */

@@ -32,6 +32,7 @@ import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.StorageUri;
 import com.microsoft.azure.storage.core.Base64;
+import com.microsoft.azure.storage.core.BaseResponse;
 import com.microsoft.azure.storage.core.ExecutionEngine;
 import com.microsoft.azure.storage.core.RequestLocationMode;
 import com.microsoft.azure.storage.core.SR;
@@ -383,7 +384,7 @@ public final class CloudBlockBlob extends CloudBlob {
                     }
 
                     blob.updateEtagAndLastModifiedFromResponse(this.getConnection());
-                    this.getResult().setRequestServiceEncrypted(CloudBlob.isServerRequestEncrypted(this.getConnection()));
+                    this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                     return null;
                 }
 
@@ -763,7 +764,7 @@ public final class CloudBlockBlob extends CloudBlob {
                 }
 
                 blob.updateEtagAndLastModifiedFromResponse(this.getConnection());
-                this.getResult().setRequestServiceEncrypted(CloudBlob.isServerRequestEncrypted(this.getConnection()));
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
 
@@ -954,7 +955,7 @@ public final class CloudBlockBlob extends CloudBlob {
                     return null;
                 }
 
-                this.getResult().setRequestServiceEncrypted(CloudBlob.isServerRequestEncrypted(this.getConnection()));
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
 

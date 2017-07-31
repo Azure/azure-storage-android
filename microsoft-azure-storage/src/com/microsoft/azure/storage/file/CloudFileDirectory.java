@@ -34,6 +34,7 @@ import com.microsoft.azure.storage.StorageCredentialsSharedAccessSignature;
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.StorageUri;
+import com.microsoft.azure.storage.core.BaseResponse;
 import com.microsoft.azure.storage.core.ExecutionEngine;
 import com.microsoft.azure.storage.core.LazySegmentedIterable;
 import com.microsoft.azure.storage.core.ListResponse;
@@ -94,9 +95,8 @@ public final class CloudFileDirectory implements ListFileItem {
      * @param directoryAbsoluteUri
      *            A {@link URI} that represents the file directory's address.
      * @throws StorageException
-     * @throws URISyntaxException 
      */
-    public CloudFileDirectory(final URI directoryAbsoluteUri) throws StorageException, URISyntaxException {
+    public CloudFileDirectory(final URI directoryAbsoluteUri) throws StorageException {
         this(new StorageUri(directoryAbsoluteUri));
     }
     
@@ -106,9 +106,8 @@ public final class CloudFileDirectory implements ListFileItem {
      * @param directoryAbsoluteUri
      *            A {@link StorageUri} that represents the file directory's address.
      * @throws StorageException
-     * @throws URISyntaxException 
      */
-    public CloudFileDirectory(final StorageUri directoryAbsoluteUri) throws StorageException, URISyntaxException {
+    public CloudFileDirectory(final StorageUri directoryAbsoluteUri) throws StorageException {
         this(directoryAbsoluteUri, (StorageCredentials) null);
     }
 
@@ -121,10 +120,9 @@ public final class CloudFileDirectory implements ListFileItem {
      * @param credentials
      *            A {@link StorageCredentials} object used to authenticate access.
      * @throws StorageException
-     * @throws URISyntaxException 
      */
     public CloudFileDirectory(final URI directoryAbsoluteUri, final StorageCredentials credentials) 
-            throws StorageException, URISyntaxException {
+            throws StorageException {
         this(new StorageUri(directoryAbsoluteUri), credentials);
     }
 
@@ -137,10 +135,9 @@ public final class CloudFileDirectory implements ListFileItem {
      * @param credentials
      *            A {@link StorageCredentials} object used to authenticate access.
      * @throws StorageException
-     * @throws URISyntaxException 
      */
     public CloudFileDirectory(final StorageUri directoryAbsoluteUri, final StorageCredentials credentials)
-            throws StorageException, URISyntaxException {
+            throws StorageException {
         this.parseQueryAndVerify(directoryAbsoluteUri, credentials);
     }
     
@@ -171,10 +168,9 @@ public final class CloudFileDirectory implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
-     * @throws URISyntaxException 
      */
     @DoesServiceRequest
-    public void create() throws StorageException, URISyntaxException {
+    public void create() throws StorageException {
         this.create(null /* options */, null /* opContext */);
     }
 
@@ -192,15 +188,12 @@ public final class CloudFileDirectory implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
-     * @throws URISyntaxException 
      */
     @DoesServiceRequest
-    public void create(FileRequestOptions options, OperationContext opContext) throws StorageException, URISyntaxException {
+    public void create(FileRequestOptions options, OperationContext opContext) throws StorageException {
         if (opContext == null) {
             opContext = new OperationContext();
         }
-
-        this.getShare().assertNoSnapshot();
 
         opContext.initialize();
         options = FileRequestOptions.populateAndApplyDefaults(options, this.fileServiceClient);
@@ -244,6 +237,7 @@ public final class CloudFileDirectory implements ListFileItem {
                 final FileDirectoryAttributes attributes = FileResponse
                         .getFileDirectoryAttributes(this.getConnection(), client.isUsePathStyleUris());
                 directory.setProperties(attributes.getProperties());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
         };
@@ -258,10 +252,9 @@ public final class CloudFileDirectory implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
-     * @throws URISyntaxException 
      */
     @DoesServiceRequest
-    public boolean createIfNotExists() throws StorageException, URISyntaxException {
+    public boolean createIfNotExists() throws StorageException {
         return this.createIfNotExists(null /* options */, null /* opContext */);
     }
 
@@ -281,13 +274,10 @@ public final class CloudFileDirectory implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
-     * @throws URISyntaxException 
      */
     @DoesServiceRequest
-    public boolean createIfNotExists(FileRequestOptions options, OperationContext opContext) throws StorageException, URISyntaxException {
+    public boolean createIfNotExists(FileRequestOptions options, OperationContext opContext) throws StorageException {
         options = FileRequestOptions.populateAndApplyDefaults(options, this.fileServiceClient);
-
-        this.getShare().assertNoSnapshot();
 
         boolean exists = this.exists(true /* primaryOnly */, null /* accessCondition */, options, opContext);
         if (exists) {
@@ -315,10 +305,9 @@ public final class CloudFileDirectory implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
-     * @throws URISyntaxException 
      */
     @DoesServiceRequest
-    public void delete() throws StorageException, URISyntaxException {
+    public void delete() throws StorageException {
         this.delete(null /* accessCondition */, null /* options */, null /* opContext */);
     }
 
@@ -338,16 +327,13 @@ public final class CloudFileDirectory implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
-     * @throws URISyntaxException 
      */
     @DoesServiceRequest
     public void delete(AccessCondition accessCondition, FileRequestOptions options, OperationContext opContext)
-            throws StorageException, URISyntaxException {
+            throws StorageException {
         if (opContext == null) {
             opContext = new OperationContext();
         }
-
-        this.getShare().assertNoSnapshot();
 
         opContext.initialize();
         options = FileRequestOptions.populateAndApplyDefaults(options, this.fileServiceClient);
@@ -394,10 +380,9 @@ public final class CloudFileDirectory implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
-     * @throws URISyntaxException 
      */
     @DoesServiceRequest
-    public boolean deleteIfExists() throws StorageException, URISyntaxException {
+    public boolean deleteIfExists() throws StorageException {
         return this.deleteIfExists(null /* accessCondition */, null /* options */, null /* opContext */);
     }
 
@@ -419,11 +404,10 @@ public final class CloudFileDirectory implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
-     * @throws URISyntaxException 
      */
     @DoesServiceRequest
     public boolean deleteIfExists(AccessCondition accessCondition, FileRequestOptions options,
-            OperationContext opContext) throws StorageException, URISyntaxException {
+            OperationContext opContext) throws StorageException {
         options = FileRequestOptions.populateAndApplyDefaults(options, this.fileServiceClient);
 
         boolean exists = this.exists(true /* primaryOnly */, accessCondition, options, opContext);
@@ -516,7 +500,7 @@ public final class CloudFileDirectory implements ListFileItem {
                     OperationContext context) throws Exception {
                 return FileRequest.getDirectoryProperties(
                         directory.getTransformedAddress().getUri(this.getCurrentLocation()), options, context,
-                        accessCondition, directory.getShare().snapshotID);
+                        accessCondition);
             }
 
             @Override
@@ -529,12 +513,7 @@ public final class CloudFileDirectory implements ListFileItem {
             public Boolean preProcessResponse(CloudFileDirectory directory, CloudFileClient client,
                     OperationContext context) throws Exception {
                 if (this.getResult().getStatusCode() == HttpURLConnection.HTTP_OK) {
-                    // Set properties
-                    final FileDirectoryAttributes attributes =
-                            FileResponse.getFileDirectoryAttributes(this.getConnection(), client.isUsePathStyleUris());
-                    directory.setMetadata(attributes.getMetadata());
-                    directory.setProperties(attributes.getProperties());
-
+                    directory.updatePropertiesFromResponse(this.getConnection());
                     return Boolean.valueOf(true);
                 }
                 else if (this.getResult().getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
@@ -569,10 +548,9 @@ public final class CloudFileDirectory implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
-     * @throws URISyntaxException 
      */
     @DoesServiceRequest
-    public void uploadMetadata() throws StorageException, URISyntaxException {
+    public void uploadMetadata() throws StorageException {
         this.uploadMetadata(null /* accessCondition */, null /* options */, null /* opContext */);
     }
 
@@ -592,16 +570,13 @@ public final class CloudFileDirectory implements ListFileItem {
      * 
      * @throws StorageException
      *             If a storage service error occurred.
-     * @throws URISyntaxException 
      */
     @DoesServiceRequest
     public void uploadMetadata(AccessCondition accessCondition, FileRequestOptions options, OperationContext opContext)
-            throws StorageException, URISyntaxException {
+            throws StorageException {
         if (opContext == null) {
             opContext = new OperationContext();
         }
-
-        this.getShare().assertNoSnapshot();
 
         opContext.initialize();
         options = FileRequestOptions.populateAndApplyDefaults(options, this.fileServiceClient);
@@ -642,6 +617,7 @@ public final class CloudFileDirectory implements ListFileItem {
                 }
 
                 directory.updatePropertiesFromResponse(this.getConnection());
+                this.getResult().setRequestServiceEncrypted(BaseResponse.isServerRequestEncrypted(this.getConnection()));
                 return null;
             }
         };
@@ -706,7 +682,7 @@ public final class CloudFileDirectory implements ListFileItem {
                     OperationContext context) throws Exception {
                 return FileRequest.getDirectoryProperties(
                         directory.getTransformedAddress().getUri(this.getCurrentLocation()), options, context,
-                        accessCondition, directory.getShare().snapshotID);
+                        accessCondition);
             }
             
             @Override
@@ -927,7 +903,7 @@ public final class CloudFileDirectory implements ListFileItem {
                         .getNextMarker() : null);
                 return FileRequest.listFilesAndDirectories(
                         directory.getTransformedAddress().getUri(this.getCurrentLocation()),
-                        options, context, listingContext, directory.getShare().snapshotID);
+                        options, context, listingContext);
             }
 
             @Override
@@ -1085,9 +1061,7 @@ public final class CloudFileDirectory implements ListFileItem {
 
             if (parentName != null) {
                 StorageUri parentURI = PathUtility.appendPathToUri(this.getShare().getStorageUri(), parentName);
-
                 this.parent = new CloudFileDirectory(parentURI, this.getServiceClient().getCredentials());
-                //this.parent = new CloudFileDirectory(parentURI, parentName, this.getShare());
             }
         }
         return this.parent;
@@ -1164,10 +1138,9 @@ public final class CloudFileDirectory implements ListFileItem {
      *            A {@link StorageCredentials} object used to authenticate access.
      * @throws StorageException
      *             If a storage service error occurred.
-     * @throws URISyntaxException 
      */
     private void parseQueryAndVerify(final StorageUri completeUri, final StorageCredentials credentials)
-            throws StorageException, URISyntaxException {
+            throws StorageException {
        Utility.assertNotNull("completeUri", completeUri);
 
         if (!completeUri.isAbsolute()) {
@@ -1175,7 +1148,7 @@ public final class CloudFileDirectory implements ListFileItem {
         }
 
         this.storageUri = PathUtility.stripURIQueryAndFragment(completeUri);
-
+        
         final StorageCredentialsSharedAccessSignature parsedCredentials = 
                 SharedAccessSignatureHelper.parseQuery(completeUri);
 
@@ -1191,13 +1164,6 @@ public final class CloudFileDirectory implements ListFileItem {
         }
         catch (final URISyntaxException e) {
             throw Utility.generateNewUnexpectedStorageException(e);
-        }
-
-        final HashMap<String, String[]> queryParameters = PathUtility.parseQueryString(completeUri.getQuery());
-
-        final String[] snapshotIDs = queryParameters.get(Constants.QueryConstants.SHARE_SNAPSHOT);
-        if (snapshotIDs != null && snapshotIDs.length > 0) {
-            this.getShare().snapshotID = snapshotIDs[0];
         }
     }
 

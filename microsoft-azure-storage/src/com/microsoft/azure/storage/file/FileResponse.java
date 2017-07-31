@@ -125,6 +125,8 @@ final class FileResponse extends BaseResponse {
         directoryProperties.setEtag(BaseResponse.getEtag(request));
         directoryProperties.setLastModified(new Date(request.getLastModified()));
         directoryAttributes.setMetadata(getMetadata(request));
+        directoryProperties.setServerEncrypted(
+                Constants.TRUE.equals(request.getHeaderField(Constants.HeaderConstants.SERVER_ENCRYPTED)));
 
         return directoryAttributes;
     }
@@ -161,6 +163,8 @@ final class FileResponse extends BaseResponse {
         properties.setContentType(request.getHeaderField(Constants.HeaderConstants.CONTENT_TYPE));
         properties.setEtag(BaseResponse.getEtag(request));
         properties.setCopyState(FileResponse.getCopyState(request));
+        properties.setServerEncrypted(
+                Constants.TRUE.equals(request.getHeaderField(Constants.HeaderConstants.SERVER_ENCRYPTED)));
 
         final Calendar lastModifiedCalendar = Calendar.getInstance(Utility.LOCALE_US);
         lastModifiedCalendar.setTimeZone(Utility.UTC_ZONE);
@@ -203,17 +207,6 @@ final class FileResponse extends BaseResponse {
     static Integer parseShareQuota(final HttpURLConnection request) {
         Integer shareQuota = request.getHeaderFieldInt(FileConstants.SHARE_QUOTA_HEADER, -1);
         return (shareQuota == -1) ? null : shareQuota;
-    }
-
-    /**
-     * Gets the snapshot ID from the request header.
-     *
-     * @param request
-     *            The response from server.
-     * @return the snapshot ID from the request header.
-     */
-    public static String getSnapshotTime(final HttpURLConnection request) {
-        return request.getHeaderField(Constants.HeaderConstants.SNAPSHOT_ID_HEADER);
     }
 
     /**

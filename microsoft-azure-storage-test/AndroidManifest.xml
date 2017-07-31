@@ -11,7 +11,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.microsoft.azure.android.test"
     android:versionCode="0"
-    android:versionName="1.0.0" >
+    android:versionName="1.1.0" >
 
     <uses-sdk
         android:minSdkVersion="15"
@@ -20,7 +20,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <instrumentation
-        android:name="android.test.InstrumentationTestRunner"
+        android:name="android.support.test.runner.AndroidJUnitRunner"
         android:targetPackage="com.microsoft.azure.android.test" />
 
     <application

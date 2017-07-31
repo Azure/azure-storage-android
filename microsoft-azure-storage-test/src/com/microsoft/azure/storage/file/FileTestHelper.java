@@ -96,7 +96,7 @@ public class FileTestHelper extends TestHelper {
     }
 
     protected static void doDownloadTest(CloudFile file, int fileSize, int bufferSize, int bufferOffset)
-            throws StorageException, IOException, URISyntaxException {
+            throws StorageException, IOException {
         final Random randGenerator = new Random();
         final byte[] buffer = new byte[fileSize];
         randGenerator.nextBytes(buffer);
@@ -118,7 +118,7 @@ public class FileTestHelper extends TestHelper {
     }
 
     protected static void doDownloadRangeToByteArrayTest(CloudFile file, int fileSize, int bufferSize,
-            int bufferOffset, Long fileOffset, Long length) throws IOException, StorageException, URISyntaxException {
+            int bufferOffset, Long fileOffset, Long length) throws IOException, StorageException {
         final Random randGenerator = new Random();
         final byte[] buffer = new byte[fileSize];
         randGenerator.nextBytes(buffer);
@@ -152,7 +152,7 @@ public class FileTestHelper extends TestHelper {
         }
     }
 
-    protected static void doDownloadRangeToByteArrayNegativeTests(CloudFile file) throws StorageException, IOException, URISyntaxException {
+    protected static void doDownloadRangeToByteArrayNegativeTests(CloudFile file) throws StorageException, IOException {
         int fileLength = 1024;
         int resultBufSize = 1024;
         final Random randGenerator = new Random();

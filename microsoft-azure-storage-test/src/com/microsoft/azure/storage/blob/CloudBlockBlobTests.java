@@ -1031,6 +1031,29 @@ public class CloudBlockBlobTests {
 
     @Test
     @Category({ DevFabricTests.class, DevStoreTests.class })
+    public void testVerifyTransactionalMD5ValidationMissingOverallMD5() throws URISyntaxException, StorageException, IOException {
+        final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
+        final CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
+
+        final int length = 2 * 1024 * 1024;
+        ByteArrayInputStream srcStream = BlobTestHelper.getRandomDataStream(length);
+        BlobRequestOptions options = new BlobRequestOptions();
+        options.setSingleBlobPutThresholdInBytes(1024*1024);
+        options.setDisableContentMD5Validation(true);
+        options.setStoreBlobContentMD5(false);
+
+        blockBlobRef.upload(srcStream, -1, null, options, null);
+
+        options.setDisableContentMD5Validation(false);
+        options.setStoreBlobContentMD5(true);
+        options.setUseTransactionalContentMD5(true);
+        final CloudBlockBlob blockBlobRef2 = this.container.getBlockBlobReference(blockBlobName);
+        blockBlobRef2.downloadRange(1024, (long)1024, new ByteArrayOutputStream(), null, options, null);
+        assertNull(blockBlobRef2.getProperties().getContentMD5());
+    }
+
+    @Test
+    @Category({ DevFabricTests.class, DevStoreTests.class })
     public void testBlockBlobUploadContentMD5() throws URISyntaxException, StorageException, IOException {
         final String blockBlobName = BlobTestHelper.generateRandomBlobNameWithPrefix("testBlockBlob");
         CloudBlockBlob blockBlobRef = this.container.getBlockBlobReference(blockBlobName);
