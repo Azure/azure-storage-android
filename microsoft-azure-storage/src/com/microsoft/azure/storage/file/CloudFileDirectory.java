@@ -349,7 +349,7 @@ public final class CloudFileDirectory implements ListFileItem {
             @Override
             public HttpURLConnection buildRequest(CloudFileClient client, CloudFileDirectory directory,
                     OperationContext context) throws Exception {
-                return FileRequest.deleteDirectory(directory.getStorageUri().getPrimaryUri(), options, context,
+                return FileRequest.deleteDirectory(directory.getTransformedAddress().getUri(this.getCurrentLocation()), options, context,
                         accessCondition);
             }
 
