@@ -500,7 +500,7 @@ public final class CloudFileShare {
         boolean exists = this.exists(true /* primaryOnly */, accessCondition, options, opContext);
         if (exists) {
             try {
-                this.delete(accessCondition, options, opContext);
+                this.delete(deleteSnapshotsOption, accessCondition, options, opContext);
                 return true;
             }
             catch (StorageException e) {
