@@ -26,6 +26,7 @@ import com.microsoft.azure.storage.TestRunners.DevFabricTests;
 import com.microsoft.azure.storage.TestRunners.DevStoreTests;
 import com.microsoft.azure.storage.core.PathUtility;
 import com.microsoft.azure.storage.core.SR;
+import com.microsoft.azure.storage.core.UriQueryBuilder;
 
 import junit.framework.Assert;
 
@@ -39,6 +40,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static org.junit.Assert.*;
 
@@ -58,7 +60,7 @@ public class CloudFileDirectoryTests {
 
     @After
     public void cloudFileDirectoryTearDown() throws StorageException {
-        this.share.deleteIfExists();
+        this.share.deleteIfExists(DeleteShareSnapshotsOption.INCLUDE_SNAPSHOTS, null, null, null);
     }
     
     /**
@@ -460,7 +462,7 @@ public class CloudFileDirectoryTests {
         testMetadataFailures(directory, "key1", "\n \t", false);
     }
     
-    private static void testMetadataFailures(CloudFileDirectory directory, String key, String value, boolean badKey) {
+    private static void testMetadataFailures(CloudFileDirectory directory, String key, String value, boolean badKey) throws URISyntaxException {
         directory.getMetadata().put(key, value);
         try {
             directory.uploadMetadata();
@@ -476,6 +478,71 @@ public class CloudFileDirectoryTests {
         }
 
         directory.getMetadata().remove(key);
+    }
+
+    @Test
+    public void testUnsupportedDirectoryApisWithinShareSnapshot() throws StorageException, URISyntaxException {
+        CloudFileShare snapshot = this.share.createSnapshot();
+        CloudFileDirectory rootDir = snapshot.getRootDirectoryReference();
+        try {
+            rootDir.create();
+            fail("Shouldn't get here");
+        }
+        catch (IllegalArgumentException e) {
+            assertEquals(SR.INVALID_OPERATION_FOR_A_SHARE_SNAPSHOT, e.getMessage());
+        }
+        try {
+            rootDir.delete();
+            fail("Shouldn't get here");
+        }
+        catch (IllegalArgumentException e) {
+            assertEquals(SR.INVALID_OPERATION_FOR_A_SHARE_SNAPSHOT, e.getMessage());
+        }
+        try {
+            rootDir.uploadMetadata();
+            fail("Shouldn't get here");
+        }
+        catch (IllegalArgumentException e) {
+            assertEquals(SR.INVALID_OPERATION_FOR_A_SHARE_SNAPSHOT, e.getMessage());
+        }
+        
+        snapshot.delete();
+    }
+
+    @Test
+    public void testSupportedDirectoryApisInShareSnapshot() throws StorageException, URISyntaxException {
+        CloudFileDirectory dir = this.share.getRootDirectoryReference().getDirectoryReference("dir1");
+        dir.deleteIfExists();
+        dir.create();
+        HashMap<String, String> meta = new HashMap<String, String>();
+        meta.put("key1", "value1");
+        dir.setMetadata(meta);
+        dir.uploadMetadata();
+        CloudFileShare snapshot = this.share.createSnapshot();
+        CloudFileDirectory snapshotDir = snapshot.getRootDirectoryReference().getDirectoryReference("dir1");
+        
+        HashMap<String, String> meta2 = new HashMap<String, String>();
+        meta2.put("key2", "value2");
+        dir.setMetadata(meta2);
+        dir.uploadMetadata();
+        snapshotDir.downloadAttributes();
+        
+        assertTrue(snapshotDir.getMetadata().size() == 1 && snapshotDir.getMetadata().get("key1").equals("value1"));
+        assertNotNull(snapshotDir.getProperties().getEtag());
+        
+        dir.downloadAttributes();
+        assertTrue(dir.getMetadata().size() == 1 && dir.getMetadata().get("key2").equals("value2"));
+        assertNotNull(dir.getProperties().getEtag());
+        assertNotEquals(dir.getProperties().getEtag(), snapshotDir.getProperties().getEtag());
+        
+        final UriQueryBuilder uriBuilder = new UriQueryBuilder();
+        uriBuilder.add("sharesnapshot", snapshot.snapshotID);
+        uriBuilder.add("restype", "directory");
+        CloudFileDirectory snapshotDir2 = new CloudFileDirectory(uriBuilder.addToURI(dir.getUri()), this.share.getServiceClient().getCredentials());
+        assertEquals(snapshot.snapshotID, snapshotDir2.getShare().snapshotID);
+        assertTrue(snapshotDir2.exists());
+
+        snapshot.delete();
     }
 
     /*
@@ -798,7 +865,7 @@ public class CloudFileDirectoryTests {
                         directory.delete();
                         assertFalse(directory.exists());
                     }
-                    catch (StorageException e) {
+                    catch (Exception e) {
                         fail("Delete should succeed.");
                     }
                 }

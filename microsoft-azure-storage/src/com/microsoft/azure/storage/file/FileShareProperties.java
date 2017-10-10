@@ -40,6 +40,27 @@ public final class FileShareProperties {
     private Integer shareQuota;
 
     /**
+     * Creates an instance of the <code>FileShareProperties</code> class.
+     */
+    public FileShareProperties() {
+    }
+
+    /**
+     * Creates an instance of the <code>FileShareProperties</code> class by copying values from another
+     * <code>FileShareProperties</code> instance.
+     *
+     * @param other
+     *            A {@link FileShareProperties} object which represents the file share properties to copy.
+     */
+    public FileShareProperties(final FileShareProperties other) {
+        if (other != null) {
+            this.setEtag(other.getEtag());
+            this.setLastModified(other.getLastModified());
+            this.setShareQuota(other.getShareQuota());
+        }
+    }
+
+    /**
      * Gets the ETag value of the share.
      * <p>
      * The ETag value is a unique identifier that is updated when a write operation is performed against the share. It
