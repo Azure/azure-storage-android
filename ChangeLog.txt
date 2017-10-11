@@ -1,4 +1,4 @@
-2017.XX.XX Version 2.0.0
+2017.10.11 Version 2.0.0
  * Added support for taking a snapshot of a share.
  * IOExceptions wrapping StorageExceptions will now contain the StorageException message in the outer exception.
  * Connection string support expanded to allow AccountName to be specified with SharedAccessSignature and DefaultEndpointsProtocol.  In this case, SharedAccessSignature is used for credentials, while having both DefaultEndpointsProtocol and AccountName allows the library to infer a set of default endpoints.  Additionally, we have added support for BlobSecondaryEndpoint, QueueSecondaryEndpoint, TableSecondaryEndpoint, and FileSecondaryEndpoint.  Specifying a secondary endpoint requires the specification of the corresponding primary.
