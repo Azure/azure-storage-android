@@ -42,6 +42,7 @@ import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -141,7 +142,8 @@ public class GenericTests {
             fail("Bad proxy should throw an exception.");
         } catch (StorageException e) {
             if (e.getCause().getClass() != ConnectException.class &&
-                    e.getCause().getClass() != SocketTimeoutException.class) {
+                    e.getCause().getClass() != SocketTimeoutException.class &&
+                    e.getCause().getClass() != SocketException.class) {
                 Assert.fail("Unepected exception for bad proxy");
             }
         }
@@ -167,7 +169,8 @@ public class GenericTests {
             fail("Bad proxy should throw an exception.");
         } catch (StorageException e) {
             if (e.getCause().getClass() != ConnectException.class &&
-                    e.getCause().getClass() != SocketTimeoutException.class) {
+                    e.getCause().getClass() != SocketTimeoutException.class &&
+                    e.getCause().getClass() != SocketException.class) {
                 Assert.fail("Unepected exception for bad proxy");
             }
         }
