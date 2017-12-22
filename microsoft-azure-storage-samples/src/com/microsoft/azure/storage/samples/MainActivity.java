@@ -24,6 +24,13 @@ public class MainActivity extends Activity {
      * MODIFY THIS!
      * 
      * Stores the storage connection string.
+     * Only use Shared Key authentication (Account Key) for testing purposes! 
+     * Your account name and account key, which give full read/write access to the associated Storage account, 
+     * will be distributed to every person that downloads your app. 
+     * This is not a good practice as you risk having your key compromised by untrusted clients. 
+     * Please consult following documents to understand and use Shared Access Signatures instead. 
+     * https://docs.microsoft.com/en-us/rest/api/storageservices/delegating-access-with-a-shared-access-signature
+     * https://docs.microsoft.com/en-us/azure/storage/common/storage-dotnet-shared-access-signature-part-1
      */
     public static final String storageConnectionString = "DefaultEndpointsProtocol=https;"
             + "AccountName=[MY_ACCOUNT_NAME];"
