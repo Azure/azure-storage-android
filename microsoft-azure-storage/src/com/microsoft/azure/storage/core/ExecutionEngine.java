@@ -1,11 +1,11 @@
 /**
  * Copyright Microsoft Corporation
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@ package com.microsoft.azure.storage.core;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.Date;
 import java.util.Map.Entry;
@@ -30,7 +31,7 @@ import com.microsoft.azure.storage.*;
 public final class ExecutionEngine {
     /**
      * Executes an operation and enforces a retrypolicy to handle any potential errors
-     * 
+     *
      * @param <CLIENT_TYPE>
      *            The type of the service client
      * @param <PARENT_TYPE>
@@ -72,6 +73,7 @@ public final class ExecutionEngine {
         int currentRetryCount = 0;
         StorageException translatedException = null;
         HttpURLConnection request = null;
+        OutputStream requestOutputStream = null;
         final long startTime = new Date().getTime();
 
         while (true) {
@@ -87,8 +89,9 @@ public final class ExecutionEngine {
                 try {
                     if (task.getSendStream() != null) {
                         Logger.info(opContext, LogConstants.UPLOAD);
+                        requestOutputStream = request.getOutputStream();
                         final StreamMd5AndLength descriptor = Utility.writeToOutputStream(task.getSendStream(),
-                                request.getOutputStream(), task.getLength(), false /* rewindStream */,
+                                requestOutputStream, task.getLength(), false /* rewindStream */,
                                 false /* calculate MD5 */, opContext, task.getRequestOptions());
 
                         task.validateStreamWrite(descriptor);
@@ -130,6 +133,12 @@ public final class ExecutionEngine {
                         }
 
                         ExecutionEngine.fireErrorReceivingResponseEvent(opContext, request, task.getResult());
+                    }
+                    if (requestOutputStream != null) {
+                        try {
+                            requestOutputStream.close();
+                        } catch (IOException logOrIgnore) {
+                        }
                     }
                 }
 
@@ -196,7 +205,7 @@ public final class ExecutionEngine {
                 task.getResult().setStatusCode(e.getHttpStatusCode());
                 task.getResult().setStatusMessage(e.getMessage());
                 task.getResult().setException(e);
-                
+
                 Logger.warn(opContext, LogConstants.RETRYABLE_EXCEPTION, e.getClass().getName(), e.getMessage());
                 translatedException = e;
             }
@@ -212,6 +221,13 @@ public final class ExecutionEngine {
                 // 10. Fire RequestCompleted Event
                 if (task.isSent()) {
                     ExecutionEngine.fireRequestCompletedEvent(opContext, request, task.getResult());
+                }
+                if (request != null) {
+                    try {
+                        if (request.getInputStream() != null)
+                            request.getInputStream().close();
+                    } catch (IOException logOrIgnore) {
+                    }
                 }
             }
 
