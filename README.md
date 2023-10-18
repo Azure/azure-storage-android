@@ -1,4 +1,8 @@
-# Microsoft Azure Storage SDK for Android
+# Microsoft Azure Storage SDK for Android (Deprecated)
+
+This project will be in [Community Support](https://azure.github.io/azure-sdk/policies_support.html#package-lifecycle) until 13 September 2024. After this date the project and associated client libraries will be retired permanently. For more details on the retirement and alternatives to using this project, visit [Retirement notice: The Azure Storage Android client libraries will be retired on 13 September 2024](https://azure.microsoft.com/updates/retirement-notice-the-azure-storage-android-client-libraries-will-be-retired-on-13-september-2024/).
+
+---
 
 This project provides a client library for Android that makes it easy to consume Microsoft Azure Storage services. For documentation please see the [AndroidDocs](http://azure.github.io/azure-storage-android/).
 
